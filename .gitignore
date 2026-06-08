@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Logs / temp
+*.log
+node_modules/
+.cache/
+
+# Local personal copies (keep private résumé/letters out of the repo)
+*_PRIVATE.*
+my_*.html
+applications.csv
