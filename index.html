@@ -3,7 +3,7 @@
 {
   "name": "Apply Copilot",
   "schemaVersion": 1,
-  "description": "Apply Co-Pilot: paste a job description and it generates an ATS-tuned resume + tailored cover letter (editable preview, Save-as-PDF), a keyword/gap analysis with an ATS match score, an outreach kit (LinkedIn people-search links, connection note, referral email + follow-up, email-pattern guess), and a localStorage application tracker. Uses window.cowork.askClaude for AI tailoring when run inside Cowork, with a deterministic fallback so it also works as a standalone HTML file."
+  "description": "Apply Co-Pilot: add your master résumé once (upload a PDF, paste text, or let Claude auto-structure it), then paste any job description to get an ATS-tuned resume + tailored cover letter (editable preview, Save-as-PDF), a keyword/gap analysis with an ATS match score, an outreach kit (LinkedIn people-search links, connection note, referral email + follow-up, email-pattern guess), a job finder, and a localStorage application tracker. Uses window.cowork.askClaude for AI tailoring when run inside Cowork, with a deterministic fallback so it also works as a standalone HTML file. All profile data stays in the browser."
 }
 </script>
 <html lang="en">
@@ -12,6 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Apply Co-Pilot — JD → ATS Résumé, Cover Letter & Outreach</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" onerror="window.__noPdf=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" onerror="window.__noPdfJs=1"></script>
 <style>
   :root{ color-scheme: light;
     --bg:#eef1f5;--card:#fff;--ink:#16202e;--muted:#5d6b7d;--line:#e1e7ef;
@@ -30,16 +31,22 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
   .card h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--brand);margin:0 0 10px}
   label.fld{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
-  input[type=text],textarea,select{width:100%;font:13px inherit;border:1px solid var(--line);border-radius:8px;padding:8px 9px;background:#fff;color:var(--ink)}
+  input[type=text],input[type=file],textarea,select{width:100%;font:13px inherit;border:1px solid var(--line);border-radius:8px;padding:8px 9px;background:#fff;color:var(--ink)}
+  input[type=file]{padding:6px 8px;font-size:12px}
   textarea{min-height:210px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.45}
   textarea.short{min-height:80px}
   button{font:13px inherit;border:1px solid var(--brand);background:var(--brand);color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:600}
   button.ghost{background:#fff;color:var(--brand)} button.sm{padding:5px 10px;font-size:12px;font-weight:500}
   button:hover{filter:brightness(1.05)} button:disabled{opacity:.5;cursor:wait}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .frm{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+  .frm .f2{grid-column:1/-1}
+  @media(max-width:560px){.frm{grid-template-columns:1fr}}
   .tabs{display:flex;gap:3px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:12px}
   .tab{padding:8px 11px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
   .tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+  .tab .dot{display:none;color:var(--bad);font-size:9px;vertical-align:3px}
+  .tab.todo .dot{display:inline}
   .pane{display:none}.pane.active{display:block}
   .chip{display:inline-block;border-radius:20px;padding:3px 10px;font-size:12px;margin:3px 4px 3px 0;font-weight:600}
   .chip.have{background:#e7f5ee;color:#1f7d56}.chip.miss{background:#fdeee2;color:#a85d12}
@@ -66,7 +73,7 @@
   .empty{color:var(--muted);text-align:center;padding:24px}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:6px}
   @keyframes s{to{transform:rotate(360deg)}}
-  .jobsgrid{display:grid;grid-template-columns:120px repeat(4,1fr);gap:6px;align-items:center;font-size:12px}
+  .jobsgrid{display:grid;gap:6px;align-items:center;font-size:12px}
   .jobsgrid .rl{font-weight:600;color:var(--ink)}
   .jobsgrid a button{width:100%;padding:5px 4px}
   .stmt{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;color:#fff}
@@ -77,22 +84,22 @@
 <body>
 <div class="wrap">
   <header class="top"><h1>🧭 Apply Co-Pilot</h1><span id="modeBadge" class="mode man">Manual mode</span></header>
-  <div class="sub">Paste a JD → ATS-tuned résumé + cover letter (download as PDF), keyword gap vs your held master résumé, a company-specific outreach kit, a job finder, and an application tracker.</div>
+  <div class="sub">Add your <b>master résumé once</b> → paste any job description → get an ATS-tuned résumé + tailored cover letter (download as PDF), a keyword-gap score, a company-specific outreach kit, a job finder, and an application tracker. Your data stays in your browser.</div>
 
   <div class="grid">
     <div class="card">
       <h2>1 · Paste the job</h2>
-      <label class="fld">Company</label><input type="text" id="inCompany" placeholder="e.g. Tiger Analytics">
+      <label class="fld">Company</label><input type="text" id="inCompany" placeholder="e.g. Acme Analytics">
       <label class="fld">Role title</label><input type="text" id="inRole" placeholder="e.g. Data Analyst">
       <label class="fld">Job / careers URL (optional)</label><input type="text" id="inUrl" placeholder="https://…">
       <label class="fld">Full job description</label><textarea id="inJD" placeholder="Paste the entire JD here…"></textarea>
-      <div class="row" style="margin-top:10px"><button id="goBtn" onclick="run(false)">Analyze &amp; generate</button><button class="ghost sm" onclick="loadSample()">Sample JD</button></div>
+      <div class="row" style="margin-top:10px"><button id="goBtn" onclick="run(false)">Analyze &amp; generate</button><button class="ghost sm" onclick="loadSampleJD()">Sample JD</button></div>
       <div class="hint" id="inMsg" style="margin-top:8px"></div>
     </div>
 
     <div class="card">
       <div class="tabs">
-        <div class="tab" data-t="mr" onclick="tab('mr')">⓪ Master</div>
+        <div class="tab" data-t="mr" onclick="tab('mr')">⓪ Master <span class="dot">●</span></div>
         <div class="tab active" data-t="kw" onclick="tab('kw')">① Fit</div>
         <div class="tab" data-t="cv" onclick="tab('cv')">② Résumé</div>
         <div class="tab" data-t="cl" onclick="tab('cl')">③ Cover</div>
@@ -103,11 +110,48 @@
 
       <!-- MASTER -->
       <div class="pane" id="pane-mr">
-        <div class="banner">This is your <b>held master résumé</b> — the single source every tailoring starts from. Edit the summary, add skills, set your filename prefix; saved in your browser. Tailoring only <b>reorders &amp; emphasizes</b> from here — it never invents experience.</div>
-        <label class="fld">Filename prefix (used when saving PDFs)</label><input type="text" id="mName">
-        <label class="fld">Master summary</label><textarea id="mSummary" class="short"></textarea>
-        <label class="fld">Extra skills / keywords to recognise (comma-separated)</label><input type="text" id="mExtra" placeholder="e.g. Tableau, Power BI, dbt">
-        <div class="row" style="margin:10px 0"><button class="sm" onclick="saveMaster()">Save master</button><button class="sm ghost" onclick="resetMaster()">Reset to default</button><span class="hint" id="mMsg"></span></div>
+        <div class="banner" id="mSetup">👋 <b>Start here.</b> Upload your <b>master résumé (PDF)</b> — your optimized, all-in-one résumé — or paste its text, hit <b>Auto-fill</b>, fix anything below, then <b>Save</b>. This becomes your single source of truth: every JD you paste later is tailored <i>from</i> it (reorder &amp; emphasize only — it never invents experience). New here? <a href="#" onclick="loadSample();return false;">Load a sample profile</a> to see how it all works.</div>
+
+        <div class="box">
+          <h5>📥 Import your master résumé</h5>
+          <div class="row">
+            <input type="file" id="mFileIn" accept=".pdf,.txt" onchange="onResumeFile(this)" style="max-width:260px">
+            <button class="sm" onclick="fillFromText()">✨ Auto-fill from text</button>
+            <span class="hint" id="imMsg"></span>
+          </div>
+          <label class="fld">…or paste your résumé text here</label>
+          <textarea id="mResumeText" class="short" placeholder="Paste the full text of your master résumé…"></textarea>
+          <div class="hint" id="imMode"></div>
+        </div>
+
+        <div class="frm">
+          <div><label class="fld">Full name</label><input type="text" id="mName" placeholder="Your Name"></div>
+          <div><label class="fld">Headline / target title</label><input type="text" id="mTitle" placeholder="e.g. Data Analyst"></div>
+          <div><label class="fld">Phone</label><input type="text" id="mPhone" placeholder="+1 …"></div>
+          <div><label class="fld">Email</label><input type="text" id="mEmail" placeholder="you@email.com"></div>
+          <div><label class="fld">Location</label><input type="text" id="mLoc" placeholder="City · Open to remote"></div>
+          <div><label class="fld">Links</label><input type="text" id="mLinks" placeholder="linkedin.com/in/… · github.com/…"></div>
+          <div><label class="fld">PDF filename prefix</label><input type="text" id="mFile" placeholder="YourName"></div>
+          <div><label class="fld">Extra skills to recognise (comma-sep)</label><input type="text" id="mExtra" placeholder="Tableau, Power BI, dbt"></div>
+        </div>
+
+        <label class="fld">Professional summary</label><textarea id="mSummary" class="short" placeholder="2–3 lines on who you are and your strongest, true selling points."></textarea>
+
+        <label class="fld">Skills — one group per line, e.g. <i>Analytics: A/B testing, SQL, Python</i></label>
+        <textarea id="mSkills" class="short" placeholder="Languages: SQL, Python, JavaScript&#10;Analytics: A/B testing, Regression, Segmentation"></textarea>
+
+        <label class="fld">Experience — header line <i>Role | Company | Location | Dates</i>, then <i>-</i> bullets; leave a blank line between roles</label>
+        <textarea id="mExp" placeholder="Data Analyst | Northwind | Remote | 2023 – Present&#10;- Ran 15+ A/B tests, lifting conversion 6%&#10;- Built KPI dashboards used daily by leadership&#10;&#10;Analytics Intern | BrightLabs | Boston | 2022 – 2023&#10;- Automated a Python ETL, 4h → 5min"></textarea>
+
+        <div class="frm">
+          <div class="f2"><label class="fld">Projects — one per line, <i>Name — description</i></label><textarea id="mProj" class="short" placeholder="RFM Segmentation — Python, K-Means cohorts &amp; targeting insights"></textarea></div>
+          <div><label class="fld">Education — one per line</label><textarea id="mEdu" class="short" placeholder="B.S. Statistics — State University · 2019–2023"></textarea></div>
+          <div><label class="fld">Certifications — one per line</label><textarea id="mCerts" class="short" placeholder="Google Data Analytics Certificate"></textarea></div>
+          <div><label class="fld">Target roles for Find Jobs (comma-sep)</label><input type="text" id="mRoles" placeholder="Data Analyst, Business Analyst"></div>
+          <div><label class="fld">Target locations (comma-sep)</label><input type="text" id="mLocs" placeholder="Remote, New York, London"></div>
+        </div>
+
+        <div class="row" style="margin:12px 0"><button onclick="saveMaster()">Save master</button><button class="sm ghost" onclick="loadSample()">Load sample</button><button class="sm ghost" onclick="resetMaster()">Clear all</button><span class="hint" id="mMsg"></span></div>
         <div class="doc" id="masterDoc"></div>
       </div>
 
@@ -143,10 +187,10 @@
 
       <!-- FIND JOBS -->
       <div class="pane" id="pane-find">
-        <div class="banner">Live, filtered searches into LinkedIn &amp; Naukri for your target roles (0–3 yrs). I can't auto-scan LinkedIn for you (their terms + login), but these deep links land you on relevant, recent postings. Open one → copy its JD → paste below to generate with your <b>master</b> résumé (saved with a generic filename).</div>
+        <div class="banner">Live, filtered searches into LinkedIn &amp; Indeed for your <b>target roles &amp; locations</b> (set them in ⓪ Master). I can't auto-scan job boards for you (their terms + login), but these deep links land you on recent, relevant postings. Open one → copy its JD → paste it on the left to tailor from your <b>master</b> (saved with a generic filename).</div>
         <div id="jobsGrid"></div>
         <div class="box" style="margin-top:12px"><h5>⚡ Quick-generate from a relevant posting (generic save)</h5>
-          <label class="fld">Company (optional)</label><input type="text" id="rjCompany" placeholder="e.g. Flipkart">
+          <label class="fld">Company (optional)</label><input type="text" id="rjCompany" placeholder="e.g. Acme">
           <label class="fld">Role (optional)</label><input type="text" id="rjRole" placeholder="e.g. Business Analyst">
           <label class="fld">Paste the relevant job's JD</label><textarea id="rjJD" class="short" placeholder="Paste JD…"></textarea>
           <div class="row" style="margin-top:8px"><button class="sm" onclick="runRelevant()">Generate (master / generic)</button></div>
@@ -165,119 +209,253 @@
   <div class="card" style="margin-top:14px"><details><summary style="cursor:pointer;color:var(--brand);font-weight:600;font-size:13px">Saving PDFs · how outreach works · honest limits</summary>
     <div class="hint" style="margin-top:10px;line-height:1.6;color:#33414f">
       <b>Download PDF</b> saves a real PDF straight to your machine (your browser may ask which folder the first time). This works when you open this file in Chrome. Inside the Cowork sidebar, the PDF engine can't load, so use <b>Print → Save as PDF</b> there.<br>
-      <b>Filenames:</b> JD-tailored docs save as <i>Prefix_Resume_Company.pdf</i>; master/relevant-job docs save as <i>Prefix_Master_Resume.pdf</i>.<br>
-      <b>Outreach:</b> known public recruiting inboxes are shown when available; for individuals you get direct LinkedIn links + a verified email-<i>pattern</i> guess to confirm. Sending stays in your hands — that's deliberate.
+      <b>Filenames:</b> JD-tailored docs save as <i>Prefix_Resume_Company.pdf</i>; master / relevant-job docs save as <i>Prefix_Master_Resume.pdf</i>.<br>
+      <b>Outreach:</b> you get direct LinkedIn people-search links + a verified email-<i>pattern</i> guess to confirm. Sending stays in your hands — that's deliberate. Use these for <b>manual, personalized</b> outreach, not mass automation.
     </div></details></div>
 </div>
 <div id="printArea"></div>
 
 <script>
-/* ===== default master ===== */
-const DEFAULT={
-  name:"RAHUL VERMA",title:"Data & Decision Analyst",phone:"+91-9508254994",email:"mrrahulverma18@gmail.com",
-  loc:"India · Open to Remote (India / US / EU)",links:"linkedin.com/in/rahul-verma-554a4620a · github.com/prometheus-18",
-  fileName:"RahulVerma",
-  summary:"Data and decision analyst with ~2 years across analytics consulting at ZS Associates and full-stack engineering. Specialist in A/B testing, Marketing Mix Modeling, and customer segmentation on 1M+ record Snowflake datasets using Python and SQL.",
-  extra:"",
+/* ===== empty + sample masters ===== */
+const EMPTY={
+  name:"",title:"",phone:"",email:"",loc:"",links:"",fileName:"",
+  summary:"",extra:"",
+  skills:[], exp:[], projects:[], eduList:[], certs:[],
+  targetRoles:"", targetLocs:"Remote"
+};
+const SAMPLE={
+  name:"Alex Morgan",title:"Data Analyst",phone:"+1 555 010 1234",email:"alex.morgan@example.com",
+  loc:"Remote · Open to relocation",links:"linkedin.com/in/alex-morgan · github.com/alexmorgan",
+  fileName:"AlexMorgan",
+  summary:"Data analyst with ~2 years turning messy data into decisions. Strong in SQL, Python, A/B testing, and dashboarding; I partner closely with product and marketing to ship measurable wins.",
+  extra:"Tableau, Power BI, dbt",
   skills:[
-    {g:"Languages & Querying",items:["Python (Pandas, NumPy)","SQL (MySQL, Snowflake)","JavaScript"]},
-    {g:"Analytics & Modeling",items:["A/B & Control Testing","Hypothesis Testing","Regression Analysis","Marketing Mix Modeling (MMx)","RFM & Customer Segmentation","Cohort Analysis","Experimental Design"]},
-    {g:"Data & Reporting",items:["Snowflake","AWS S3","ETL Pipeline Design","Data Warehouse Architecture","Dimensional Modeling","Dashboard Development","KPI Tracking","Data Quality Validation","Git"]},
-    {g:"Foundations",items:["Statistical Analysis","Business Intelligence","DBMS","Data Structures & Algorithms","Machine Learning"]}
+    {g:"Languages & Querying",items:["SQL","Python (Pandas, NumPy)","JavaScript"]},
+    {g:"Analytics",items:["A/B testing","Hypothesis testing","Regression","Customer segmentation","Cohort analysis"]},
+    {g:"Data & BI",items:["Snowflake","ETL pipelines","Dashboarding","KPI tracking","Git"]}
   ],
-  exp:[{role:"Decision Analytics Associate",org:"ZS Associates",loc:"Gurgaon, India",date:"May 2025 – May 2026"},
-       {role:"Software Developer",org:"Elite Mindz",loc:"Delhi, India",date:"Jun 2024 – Jan 2025"}],
-  eduLine:"B.Tech, Computer Science and Business Systems — SRM University of Science and Technology · Chennai · 2020–2024 · CGPA 8.31/10",
-  certs:["IBM Machine Learning with Python — Coursera","Cisco Data Analysis Essentials","Supervised Learning: Regression & Classification — IBM","Exploratory Data Analysis for ML — IBM"]
+  exp:[
+    {role:"Data Analyst",org:"Northwind Retail",loc:"Remote",date:"2023 – Present",bullets:[
+      "Ran 15+ A/B tests on checkout and pricing, lifting conversion 6% and adding ~$1.2M annual revenue.",
+      "Built KPI dashboards used daily by product and leadership, replacing manual weekly reports.",
+      "Wrote performant SQL on 10M+ row Snowflake tables to power segmentation and cohort analysis.",
+      "Partnered with marketing to design experiments and translate results into budget decisions."
+    ]},
+    {role:"Analytics Intern",org:"BrightLabs",loc:"Boston, MA",date:"2022 – 2023",bullets:[
+      "Automated a Python ETL that cut a 4-hour manual report to 5 minutes.",
+      "Delivered churn analysis that informed a retention campaign reducing churn 3%."
+    ]}
+  ],
+  eduList:["B.S. Statistics — State University · 2019–2023 · GPA 3.7/4.0"],
+  certs:["Google Data Analytics Certificate","IBM Machine Learning with Python — Coursera"],
+  projects:[
+    {name:"RFM Customer Segmentation",desc:"Python, Pandas — end-to-end RFM segmentation with K-Means; Champions / At-Risk / Churned cohorts and targeting insights."},
+    {name:"Cold Email Generator",desc:"JavaScript, OpenAI API — personalized, role-specific outreach drafts via a prompt-engineered workflow."}
+  ],
+  targetRoles:"Data Analyst, Business Analyst, Analytics Engineer",
+  targetLocs:"Remote, New York, London"
 };
-const BULLETS=[
- {id:"ab",text:"Designed and executed A/B test-and-control experiments across 5+ marketing campaigns, measuring incremental sales uplift and ROI on Snowflake datasets exceeding 1M records (Python, SQL).",tags:["a/b","experiment","test","snowflake","python","sql","uplift","roi","marketing","statistics"]},
- {id:"uplift",text:"Built regression-based uplift models to quantify customer response and revenue impact, improving targeting precision over baseline cohort-matching.",tags:["regression","model","statistics","machine learning","targeting","predictive"]},
- {id:"mmx",text:"Contributed to Marketing Mix Modeling (MMx) across 10+ channels, surfacing cross-channel responsiveness insights that informed budget allocation.",tags:["marketing mix","mmx","regression","marketing","attribution","budget"]},
- {id:"dash",text:"Developed KPI dashboards tracking 10+ business metrics across segmentation health, campaign effectiveness, and growth for marketing and leadership stakeholders.",tags:["dashboard","kpi","reporting","bi","visualization","stakeholder","tableau","power bi"]},
- {id:"partner",text:"Partnered with cross-functional teams to translate analytical findings into actionable recommendations and data-driven targeting strategies.",tags:["stakeholder","communication","business","cross-functional","recommendation"]},
- {id:"rfm",text:"Built end-to-end RFM customer segmentation validated with K-Means clustering (Python), producing retention and acquisition targeting insights.",tags:["segmentation","rfm","clustering","k-means","python","machine learning","customer","retention"]},
- {id:"etl",text:"Designed ETL pipelines and dimensional data models on Snowflake and AWS S3 with automated data-quality validation.",tags:["etl","pipeline","data warehouse","dimensional","snowflake","aws","data quality","engineer"]},
- {id:"sql",text:"Wrote performant SQL across MySQL and Snowflake to extract, transform, and validate analytical datasets at scale.",tags:["sql","mysql","snowflake","query","data"]},
- {id:"fullstack",text:"Built and maintained full-stack ERP features (Angular, React, Node.js, Express, MySQL) for live business users.",tags:["javascript","react","node","full-stack","engineer","api"]}
-];
+
+/* broad, multi-domain keyword bank used only to surface "missing" JD keywords */
 const BANK=[
- ["SQL",["sql","mysql","postgres"],1],["Python",["python","pandas","numpy"],1],["A/B testing",["a/b","ab test","split test","experimentation","experiment"],1],
- ["Statistics",["statistics","statistical","hypothesis","significance"],1],["Regression",["regression","logistic"],1],["Marketing Mix Modeling",["marketing mix","mmx","mmm","media mix"],1],
- ["Segmentation",["segmentation","rfm","clustering","k-means"],1],["Cohort analysis",["cohort"],1],["Dashboards / BI",["dashboard","kpi","reporting","business intelligence","visualization","visualisation"],1],
- ["Excel",["excel","spreadsheet"],1],["Snowflake",["snowflake"],1],["AWS",["aws","s3","redshift"],1],["ETL",["etl","pipeline","ingestion","elt"],1],["Data warehouse",["warehouse","dimensional","star schema"],1],
- ["Data quality",["data quality","validation","governance"],1],["Machine learning",["machine learning","predictive"],1],["Experimental design",["experimental design","doe","causal"],1],["Git",["git","version control"],1],
- ["Stakeholder comms",["stakeholder","communication","presentation","storytelling"],1],["Customer / retention",["retention","churn","ltv","funnel","engagement"],1],
- ["Tableau",["tableau"],0],["Power BI",["power bi","powerbi"],0],["Looker",["looker","lookml"],0],["R",["rstudio","r programming"],0],["Spark",["spark","pyspark"],0],["dbt",["dbt"],0],["Airflow",["airflow"],0],["BigQuery / GCP",["bigquery","gcp","google cloud"],0],["Azure",["azure"],0],["SAS",["sas"],0],["Google Analytics",["google analytics","ga4"],0]
+ ["SQL",["sql","mysql","postgres","postgresql","t-sql","pl/sql"]],
+ ["Python",["python","pandas","numpy"]],
+ ["R",["rstudio","r programming"]],
+ ["Excel",["excel","spreadsheet","vlookup","pivot table"]],
+ ["A/B testing",["a/b","ab test","split test","experimentation","experiment"]],
+ ["Statistics",["statistics","statistical","hypothesis","significance","p-value"]],
+ ["Machine learning",["machine learning","ml model","predictive model","scikit","tensorflow","pytorch"]],
+ ["Data visualization",["data visualization","data visualisation","dashboard","tableau","power bi","looker","qlik"]],
+ ["ETL / pipelines",["etl","elt","pipeline","ingestion","airflow","dbt"]],
+ ["Cloud (AWS/GCP/Azure)",["aws","gcp","google cloud","azure","redshift","bigquery"]],
+ ["Snowflake",["snowflake"]],
+ ["Git / version control",["git","github","gitlab","version control"]],
+ ["JavaScript / frontend",["javascript","typescript","react","angular","vue"]],
+ ["Node / backend",["node.js","node ","express","django","flask","spring boot"]],
+ ["APIs",["rest api","graphql","api integration","endpoints"]],
+ ["Docker / Kubernetes",["docker","kubernetes","k8s","container"]],
+ ["CI/CD",["ci/cd","jenkins","github actions"]],
+ ["Java",["java ","jvm"]],
+ ["C++ / C# / .NET",["c++","c#",".net"]],
+ ["Agile / Scrum",["agile","scrum","kanban","sprint","jira"]],
+ ["Product management",["product manager","product management","roadmap","backlog","prd"]],
+ ["Stakeholder management",["stakeholder","cross-functional","executive"]],
+ ["Communication",["communication","presentation","storytelling","documentation"]],
+ ["Project management",["project management","pmp","timelines","deliverables"]],
+ ["Marketing analytics",["campaign","seo","sem","google analytics","ga4","attribution","funnel"]],
+ ["CRM",["crm","salesforce","hubspot"]],
+ ["Finance / modeling",["financial model","forecasting","budgeting","valuation"]],
+ ["UX / design",["figma","ux ","ui design","wireframe","prototyping","user research"]],
+ ["Customer / retention",["retention","churn","ltv","engagement","nps"]],
+ ["NLP / LLM",["nlp","llm","gpt","openai","prompt engineering"]],
+ ["Data warehouse / modeling",["data warehouse","dimensional","star schema","data modeling"]],
+ ["Spark / big data",["spark","pyspark","hadoop","kafka"]]
 ];
-/* public recruiting contacts (researched) */
-const CONTACTS={
- "tiger analytics":{email:"careers@tigeranalytics.com",note:"Public careers inbox — you can send your profile; also apply via the portal.",apply:"https://www.tigeranalytics.com/about-us/current-openings/",li:"https://www.linkedin.com/company/tiger-analytics/"},
- "fractal":{email:"HiringsupportIndia@fractal.ai",alt:"hiring@fractal.ai",note:"India hiring support — queries only (these inboxes don't process resumes; apply via the portal).",apply:"https://fractal.wd1.myworkdayjobs.com/Careers",li:"https://www.linkedin.com/company/fractal-analytics/"},
- "zs associates":{email:"",note:"No public email — apply via the ZS portal (off-campus accepted for open requisitions).",apply:"https://jobs.zs.com/jobs",contacts:"https://www.zs.com/careers/india/recruiting/recruiting-contacts",li:"https://www.linkedin.com/company/zs-associates/"},
- "zs ":{email:"",note:"Apply via the ZS portal (off-campus accepted for open requisitions).",apply:"https://jobs.zs.com/jobs",contacts:"https://www.zs.com/careers/india/recruiting/recruiting-contacts",li:"https://www.linkedin.com/company/zs-associates/"}
-};
+const CONTACTS={}; /* public build ships with no preloaded contacts — outreach uses search links + pattern guess */
 
 /* ===== master persistence ===== */
-const MKEY="apply_master_v1"; let M=null;
-function loadMaster(){ try{const r=localStorage.getItem(MKEY); M=r?Object.assign(JSON.parse(JSON.stringify(DEFAULT)),JSON.parse(r)):JSON.parse(JSON.stringify(DEFAULT));}catch(e){M=JSON.parse(JSON.stringify(DEFAULT));} }
-function saveMaster(){ M.fileName=(val("mName")||"RahulVerma").replace(/[^A-Za-z0-9_]/g,"")||"RahulVerma"; M.summary=val("mSummary")||DEFAULT.summary; M.extra=val("mExtra")||"";
-  try{localStorage.setItem(MKEY,JSON.stringify({fileName:M.fileName,summary:M.summary,extra:M.extra}));}catch(e){}
-  document.getElementById("mMsg").textContent="Saved ✓"; setTimeout(()=>document.getElementById("mMsg").textContent="",1500); renderMaster(); if(CUR)renderAll(); }
-function resetMaster(){ localStorage.removeItem(MKEY); loadMaster(); fillMasterForm(); renderMaster(); document.getElementById("mMsg").textContent="Reset ✓"; setTimeout(()=>document.getElementById("mMsg").textContent="",1500); }
-function fillMasterForm(){ set("mName",M.fileName); set("mSummary",M.summary); set("mExtra",M.extra); }
+const MKEY="apply_master_v2"; let M=null;
+function loadMaster(){ try{const r=localStorage.getItem(MKEY); M=r?Object.assign(JSON.parse(JSON.stringify(EMPTY)),JSON.parse(r)):JSON.parse(JSON.stringify(EMPTY));}catch(e){M=JSON.parse(JSON.stringify(EMPTY));} }
+function persist(){ try{localStorage.setItem(MKEY,JSON.stringify(M));}catch(e){} }
+function masterReady(){ return !!(M.name && ((M.exp&&M.exp.length) || (M.skills&&M.skills.length))); }
+
+/* serialize <-> textareas */
+function skillsToText(sk){ return (sk||[]).map(g=>g.g+": "+(g.items||[]).join(", ")).join("\n"); }
+function parseSkills(txt){ return (txt||"").split(/\n/).map(l=>l.trim()).filter(Boolean).map(l=>{ const i=l.indexOf(":"); if(i<0)return{g:"Skills",items:l.split(",").map(s=>s.trim()).filter(Boolean)}; return {g:l.slice(0,i).trim()||"Skills",items:l.slice(i+1).split(",").map(s=>s.trim()).filter(Boolean)}; }).filter(g=>g.items.length); }
+function expToText(exp){ return (exp||[]).map(e=>[e.role,e.org,e.loc,e.date].filter(x=>x!=null&&x!=="").join(" | ")+"\n"+(e.bullets||[]).map(b=>"- "+b).join("\n")).join("\n\n"); }
+function parseExp(txt){ return (txt||"").split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean).map(blk=>{ const lines=blk.split(/\n/).map(l=>l.replace(/\r/,"")); const head=(lines.shift()||"").split("|").map(s=>s.trim()); const bullets=lines.map(l=>l.replace(/^\s*[-•*]\s*/,"").trim()).filter(Boolean); return {role:head[0]||"",org:head[1]||"",loc:head[2]||"",date:head[3]||"",bullets}; }).filter(e=>e.role||e.org); }
+function projToText(p){ return (p||[]).map(x=>x.name+(x.desc?" — "+x.desc:"")).join("\n"); }
+function parseProj(txt){ return (txt||"").split(/\n/).map(l=>l.trim()).filter(Boolean).map(l=>{ const m=l.split(/\s+[—–-]\s+/); return {name:(m[0]||"").trim(),desc:(m.slice(1).join(" — ")||"").trim()}; }).filter(p=>p.name); }
+function linesToList(txt){ return (txt||"").split(/\n/).map(l=>l.trim()).filter(Boolean); }
+function listToText(a){ return (a||[]).join("\n"); }
 function extraList(){ return (M.extra||"").split(",").map(s=>s.trim()).filter(Boolean); }
 
-/* ===== engine ===== */
-function detect(jd){ const t=(" "+jd.toLowerCase()+" ").replace(/[\n\r]+/g," "); const found=[];
-  for(const [label,syns,have] of BANK){ if(syns.some(s=>t.includes(s))) found.push({label,have:!!have}); }
-  extraList().forEach(x=>{ if(t.includes(x.toLowerCase())&&!found.some(f=>f.label.toLowerCase()===x.toLowerCase())) found.push({label:x,have:true}); });
-  return found; }
-function roleFamily(s){s=s.toLowerCase();
-  if(/data scientist|data science|ml engineer/.test(s))return"scientist";
-  if(/data engineer|analytics engineer|etl|pipeline|warehouse/.test(s))return"engineer";
-  if(/consultant|decision|associate/.test(s))return"consultant"; return"analyst";}
-function analyzeDet(company,role,jd){
-  const found=detect(jd); const have=found.filter(f=>f.have).map(f=>f.label); const miss=found.filter(f=>!f.have).map(f=>f.label);
-  let score=Math.round(100*have.length/Math.max(found.length,1)); score=Math.max(52,Math.min(96,score+(have.length>=6?6:0)));
-  const fam=roleFamily(role+" "+jd);
-  return {company,role,have,miss,score,fam,summary:detSummary(company,role,have),bullets:detBullets(jd,fam),cover:detCover(company,role,have,fam)};
+function fillMasterForm(){
+  set("mName",M.name);set("mTitle",M.title);set("mPhone",M.phone);set("mEmail",M.email);
+  set("mLoc",M.loc);set("mLinks",M.links);set("mFile",M.fileName);set("mSummary",M.summary);
+  set("mSkills",skillsToText(M.skills));set("mExp",expToText(M.exp));set("mProj",projToText(M.projects));
+  set("mEdu",listToText(M.eduList));set("mCerts",listToText(M.certs));set("mExtra",M.extra);
+  set("mRoles",M.targetRoles);set("mLocs",M.targetLocs);
 }
-function detSummary(c,r,have){ const top=have.slice(0,3).join(", ")||"A/B testing, SQL, and Python";
-  return "Data & decision analyst (~2 yrs) targeting the "+(r||"Data Analyst")+" role at "+c+". Core strengths in "+top+" — built experiments, uplift models, and KPI dashboards on 1M+ record Snowflake data at ZS Associates, translating analysis into decisions for marketing and leadership."; }
-function detBullets(jd,fam){ const t=jd.toLowerCase();
-  const scored=BULLETS.map(b=>({b,s:b.tags.reduce((a,tg)=>a+(t.includes(tg)?2:0),0)}));
-  ({analyst:["ab","dash"],consultant:["mmx","partner"],scientist:["uplift","rfm"],engineer:["etl","sql"]}[fam]||[]).forEach(id=>{const x=scored.find(o=>o.b.id===id);if(x)x.s+=3;});
-  scored.sort((a,b)=>b.s-a.s); let ch=scored.slice(0,5).map(o=>o.b.text); if(ch.length<4)ch=BULLETS.slice(0,5).map(b=>b.text); return ch; }
-function detCover(c,r,have,fam){ const rt=r||"Data Analyst";
-  const reason=fam==="consultant"?"the chance to turn analysis into client and business decisions":fam==="scientist"?"building models that drive real action, not just accuracy":fam==="engineer"?"working close to the data layer and the products built on it":"owning measurement, experimentation, and reporting end to end";
-  const k=have.slice(0,2).join(" and ")||"analytics and reporting";
-  return "Dear Hiring Team,\n\nI'm applying for the "+rt+" role at "+c+". As a data and decision analyst with ~2 years across analytics consulting at ZS Associates and full-stack engineering, I build the analysis and the data products around it — and I'd bring that to your team.\n\nAt ZS I designed A/B test-and-control experiments across 5+ marketing campaigns on Snowflake datasets exceeding 1M records, built regression-based uplift models, and shipped KPI dashboards used directly by marketing and leadership. That maps closely to a "+rt+" role focused on "+k+".\n\nWhat draws me to "+c+" is "+reason+". I ramp fast — I've self-taught Snowflake, the OpenAI API, and MediaPipe on the job — and I work well remotely across time zones.\n\nI'd welcome the chance to discuss how I can contribute. Thank you for your consideration.\n\nBest regards,\nRahul Verma · "+M.phone+" · "+M.email; }
+function saveMaster(){
+  M.name=val("mName").trim(); M.title=val("mTitle").trim(); M.phone=val("mPhone").trim();
+  M.email=val("mEmail").trim(); M.loc=val("mLoc").trim(); M.links=val("mLinks").trim();
+  M.fileName=(val("mFile")||M.name).replace(/[^A-Za-z0-9_]/g,"")||"Resume";
+  M.summary=val("mSummary").trim(); M.extra=val("mExtra").trim();
+  M.skills=parseSkills(val("mSkills")); M.exp=parseExp(val("mExp"));
+  M.projects=parseProj(val("mProj")); M.eduList=linesToList(val("mEdu")); M.certs=linesToList(val("mCerts"));
+  M.targetRoles=val("mRoles").trim(); M.targetLocs=val("mLocs").trim();
+  persist(); flash("mMsg","Saved ✓"); renderMaster(); renderJobs(); updateState(); if(CUR)renderAll();
+}
+function resetMaster(){ if(!confirm("Clear your entire master profile from this browser?"))return; localStorage.removeItem(MKEY); loadMaster(); fillMasterForm(); set("mResumeText",""); renderMaster(); renderJobs(); updateState(); flash("mMsg","Cleared ✓"); }
+function loadSample(){ M=JSON.parse(JSON.stringify(SAMPLE)); persist(); fillMasterForm(); renderMaster(); renderJobs(); updateState(); flash("mMsg","Sample profile loaded ✓"); tab("mr"); }
 
-/* ===== AI ===== */
+/* ===== import: PDF / text ===== */
+async function onResumeFile(input){
+  const f=input.files&&input.files[0]; if(!f)return;
+  flash("imMsg","Reading "+f.name+"…",8000);
+  try{
+    let text="";
+    if(/\.pdf$/i.test(f.name)){ text=await extractPdfText(f); }
+    else { text=await f.text(); }
+    set("mResumeText",text);
+    flash("imMsg","Loaded "+f.name+" ("+text.length+" chars). Now hit “Auto-fill”.",5000);
+  }catch(e){ flash("imMsg","Couldn't read that file — paste the text below instead.",6000); }
+  input.value="";
+}
+async function extractPdfText(f){
+  if(!window.pdfjsLib||window.__noPdfJs) throw new Error("pdf.js unavailable");
+  try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }catch(e){}
+  const buf=await f.arrayBuffer();
+  const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
+  let out=[];
+  for(let i=1;i<=pdf.numPages;i++){ const p=await pdf.getPage(i); const tc=await p.getTextContent(); out.push(tc.items.map(it=>it.str).join(" ")); }
+  return out.join("\n");
+}
+function firstParagraph(t){ const ps=t.split(/\n\s*\n/).map(s=>s.replace(/\s+/g," ").trim()).filter(s=>s.length>60); return (ps[0]||"").slice(0,400); }
+async function fillFromText(){
+  const text=val("mResumeText").trim();
+  if(text.length<40){ flash("imMsg","Upload or paste your résumé text first.",4000); return; }
+  const em=text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+  const ph=text.match(/(\+?\d[\d\s().-]{7,}\d)/);
+  const lm=text.match(/((https?:\/\/)?(www\.)?(linkedin\.com|github\.com|gitlab\.com)\/[^\s|,]+)/gi);
+  if(em&&!val("mEmail"))set("mEmail",em[0]);
+  if(ph&&!val("mPhone"))set("mPhone",ph[0].trim());
+  if(lm&&lm.length&&!val("mLinks"))set("mLinks",[...new Set(lm)].slice(0,3).join(" · "));
+  const fl=text.split(/\n/).map(l=>l.trim()).filter(Boolean).slice(0,6);
+  const nameGuess=fl.find(l=>!/@|\d{3}/.test(l)&&l.split(/\s+/).length<=4&&/[A-Za-z]/.test(l)&&l.length<=40);
+  if(nameGuess&&!val("mName"))set("mName",nameGuess);
+  if(HAS_AI){
+    flash("imMsg","Structuring with AI…",120000);
+    const ok=await aiStructure(text);
+    flash("imMsg",ok?"AI filled your profile — review the fields, then Save.":"AI couldn't parse it; I filled your contacts — add skills/experience, then Save.",7000);
+  } else {
+    if(!val("mSummary"))set("mSummary",firstParagraph(text));
+    flash("imMsg","Filled contacts + summary. Fill skills & experience below, then Save. (Open in Cowork for full AI auto-structuring.)",9000);
+  }
+}
+async function aiStructure(text){
+  const prompt=["Extract a structured résumé profile from the text. Return ONLY minified JSON, no commentary, with exactly these keys:",
+   '{"name":"","title":"","phone":"","email":"","location":"","links":"","summary":"","skills":[{"group":"","items":[]}],"experience":[{"role":"","org":"","location":"","dates":"","bullets":[]}],"education":[],"certifications":[],"projects":[{"name":"","description":""}]}',
+   "Use empty string/array when unknown. Do NOT invent facts not present in the text.","RÉSUMÉ TEXT:",text.slice(0,12000)].join("\n");
+  let raw; try{raw=await window.cowork.askClaude(prompt);}catch(e){return false;}
+  const txt=typeof raw==="string"?raw:(raw&&raw.text)?raw.text:""; const a=txt.indexOf("{"),b=txt.lastIndexOf("}"); if(a<0||b<0)return false;
+  let j; try{j=JSON.parse(txt.slice(a,b+1));}catch(e){return false;}
+  if(j.name)set("mName",j.name); if(j.title)set("mTitle",j.title); if(j.phone)set("mPhone",j.phone);
+  if(j.email)set("mEmail",j.email); if(j.location)set("mLoc",j.location); if(j.links)set("mLinks",j.links);
+  if(j.summary)set("mSummary",j.summary);
+  if(j.skills&&j.skills.length)set("mSkills",j.skills.map(g=>(g.group||"Skills")+": "+(g.items||[]).join(", ")).join("\n"));
+  if(j.experience&&j.experience.length)set("mExp",j.experience.map(e=>[e.role,e.org,e.location,e.dates].filter(Boolean).join(" | ")+"\n"+(e.bullets||[]).map(b=>"- "+b).join("\n")).join("\n\n"));
+  if(j.education&&j.education.length)set("mEdu",j.education.join("\n"));
+  if(j.certifications&&j.certifications.length)set("mCerts",j.certifications.join("\n"));
+  if(j.projects&&j.projects.length)set("mProj",j.projects.map(p=>p.name+(p.description?" — "+p.description:"")).join("\n"));
+  if(!val("mFile")&&j.name)set("mFile",j.name.replace(/[^A-Za-z0-9_]/g,""));
+  return true;
+}
+
+/* ===== engine ===== */
+function skillItemsFlat(){ const a=[]; (M.skills||[]).forEach(g=>(g.items||[]).forEach(it=>a.push(it))); extraList().forEach(x=>a.push(x)); return a; }
+function uniq(a){ const s=new Set(),o=[]; (a||[]).forEach(x=>{const k=String(x).toLowerCase(); if(!s.has(k)){s.add(k);o.push(x);}}); return o; }
+function detect(jd){
+  const t=" "+jd.toLowerCase().replace(/[\n\r]+/g," ")+" ";
+  const have=[];
+  skillItemsFlat().forEach(it=>{ const base=it.toLowerCase().replace(/\(.*?\)/g,"").trim(); if(base.length>=2&&t.includes(base))have.push(it); });
+  const candAll=skillItemsFlat().map(s=>s.toLowerCase().replace(/\(.*?\)/g,"").trim()).filter(Boolean);
+  const haveLow=have.map(h=>h.toLowerCase());
+  const miss=[];
+  for(const [label,syns] of BANK){ if(syns.some(s=>t.includes(s))){ const lab=label.toLowerCase();
+    const covered=haveLow.some(h=>lab.includes(h)||h.includes(lab.split(/[ /]/)[0])) ||
+      syns.some(sy=>candAll.some(c=>c.includes(sy.trim())||sy.trim().includes(c)));
+    if(!covered)miss.push(label); } }
+  return {have:uniq(have).slice(0,24),miss:uniq(miss).slice(0,18)};
+}
+function scoreBullets(bullets,jd){ const t=jd.toLowerCase(); const jdTok=new Set(t.split(/[^a-z0-9+#.]+/).filter(w=>w.length>=3));
+  return (bullets||[]).map(b=>{ const seen=new Set(); let s=0; b.toLowerCase().split(/[^a-z0-9+#.]+/).forEach(w=>{ if(w.length>=3&&jdTok.has(w)&&!seen.has(w)){s++;seen.add(w);} }); return {text:b,s}; }); }
+function tailorExp(jd){ return (M.exp||[]).map(e=>{ const sc=scoreBullets(e.bullets||[],jd); const anyHit=sc.some(o=>o.s>0); if(anyHit)sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.slice(0,6).map(o=>o.text)}; }); }
+function detSummary(c,r,have){ const top=have.slice(0,3).join(", "); const lead=(M.summary||"").split(/(?<=[.!?])\s/)[0]; const named=(r||M.title||"the role")+(c&&c!=="the company"?" role at "+c:" position");
+  return (lead?lead+" ":"")+"Targeting the "+named+(top?" — core strengths in "+top+", matched to what this JD asks for.":"."); }
+function detCover(c,r,have){ const rt=r||M.title||"the role"; const k=have.slice(0,3).join(", ")||"the core requirements"; const where=(c&&c!=="the company")?c:"this role";
+  const sig="Best regards,\n"+(M.name||"")+([M.phone,M.email].filter(Boolean).length?"\n"+[M.phone,M.email].filter(Boolean).join(" · "):"");
+  const intro=(M.summary||"").trim();
+  return "Dear Hiring Team,\n\nI'm writing to apply for the "+rt+(c&&c!=="the company"?" role at "+c:" position")+"."+(intro?" "+intro:"")+
+   "\n\nMy background lines up closely with what you're looking for — particularly "+k+". I'd bring that to your team directly and ramp quickly."+
+   "\n\nWhat draws me to "+where+" is the chance to do work that matters with a strong team. I'd welcome the opportunity to discuss how I can contribute."+
+   "\n\nThank you for your consideration.\n\n"+sig; }
+function analyzeDet(company,role,jd){
+  const {have,miss}=detect(jd);
+  let score=Math.round(100*have.length/Math.max(have.length+miss.length,1)); score=Math.max(45,Math.min(97,score+(have.length>=6?5:0)));
+  return {company,role,have,miss,score,summary:detSummary(company,role,have),exp:tailorExp(jd),cover:detCover(company,role,have)};
+}
+
+/* ===== AI tailoring ===== */
 const HAS_AI=(typeof window!=="undefined"&&window.cowork&&typeof window.cowork.askClaude==="function");
 async function analyzeAI(company,role,jd){
-  const prompt=["You are an expert ATS resume writer. Use ONLY true facts from the candidate master profile below — never invent skills or experience. Tailor to the job; weave in the job's exact keywords the candidate genuinely has.",
-    "MASTER PROFILE JSON:",JSON.stringify({summary:M.summary,extra_skills:extraList(),skills:M.skills,experience:M.exp,bullets:BULLETS.map(b=>b.text),education:M.eduLine,certs:M.certs}),
+  const prompt=["You are an expert ATS résumé writer. Use ONLY true facts from the candidate's master profile below — never invent skills, employers, or experience. Tailor to the job by reordering and lightly rephrasing existing content and weaving in the job's exact keywords the candidate genuinely has.",
+    "MASTER PROFILE JSON:",JSON.stringify({name:M.name,title:M.title,summary:M.summary,extra_skills:extraList(),skills:M.skills,experience:M.exp,education:M.eduList,certifications:M.certs,projects:M.projects}),
     "JOB: company="+company+" | role="+role,"JOB DESCRIPTION:",jd.slice(0,6000),
-    "Return ONLY minified JSON: {\"ats_score\":int,\"keywords_matched\":[],\"keywords_missing\":[],\"summary\":\"2 sentences, names company+role\",\"bullets\":[5 quantified strings],\"cover_letter\":\"4 short paragraphs, 'Dear Hiring Team', signed 'Rahul Verma "+M.phone+" "+M.email+"'\"}. No commentary."].join("\n");
+    'Return ONLY minified JSON: {"ats_score":int 0-100,"keywords_matched":[],"keywords_missing":[],"summary":"2 sentences naming company+role, drawn only from the master","experience":[{"bullets":[tailored strings]}] (SAME order and length as the master experience array; reorder & lightly rephrase the existing bullets, never invent),"cover_letter":"4 short paragraphs, opens \'Dear Hiring Team\', signed with the candidate name + contact"}. No commentary.'].join("\n");
   let raw; try{raw=await window.cowork.askClaude(prompt,[{type:"jd",text:jd}]);}catch(e){return null;}
   const txt=typeof raw==="string"?raw:(raw&&raw.text)?raw.text:JSON.stringify(raw||""); const a=txt.indexOf("{"),b=txt.lastIndexOf("}"); if(a<0||b<0)return null;
   let j; try{j=JSON.parse(txt.slice(a,b+1));}catch(e){return null;}
-  const fam=roleFamily(role+" "+jd);
-  return {company,role,fam,have:j.keywords_matched||[],miss:j.keywords_missing||[],score:Math.max(40,Math.min(99,parseInt(j.ats_score)||70)),
-    summary:j.summary||detSummary(company,role,j.keywords_matched||[]),bullets:(j.bullets&&j.bullets.length?j.bullets:detBullets(jd,fam)),cover:j.cover_letter||detCover(company,role,j.keywords_matched||[],fam)};
+  const det=detect(jd);
+  let exp;
+  if(Array.isArray(j.experience)&&j.experience.length){ exp=(M.exp||[]).map((e,i)=>({...e,bullets:(j.experience[i]&&Array.isArray(j.experience[i].bullets)&&j.experience[i].bullets.length)?j.experience[i].bullets:(e.bullets||[])})); }
+  else { exp=tailorExp(jd); }
+  return {company,role,have:(j.keywords_matched&&j.keywords_matched.length)?j.keywords_matched:det.have,miss:(j.keywords_missing&&j.keywords_missing.length)?j.keywords_missing:det.miss,
+    score:Math.max(40,Math.min(99,parseInt(j.ats_score)||70)),summary:j.summary||detSummary(company,role,det.have),exp,cover:j.cover_letter||detCover(company,role,det.have)};
 }
 
 /* ===== run ===== */
 let CUR=null;
 async function run(generic){
-  const company=(val("inCompany")||"the company").trim(),role=(val("inRole")||"Data Analyst").trim(),jd=val("inJD").trim();
-  if(jd.length<60){msg("Paste the full job description first.");return;}
+  if(!masterReady()){ tab("mr"); flash("inMsg","Add your master résumé first (⓪ Master tab).",5000); return; }
+  const company=(val("inCompany")||"the company").trim(),role=(val("inRole")||M.title||"the role").trim(),jd=val("inJD").trim();
+  if(jd.length<60){flash("inMsg","Paste the full job description first.",4000);return;}
   await doGenerate(company,role,jd,val("inUrl").trim(),generic);
 }
 async function runRelevant(){
-  const company=(val("rjCompany")||"the company").trim(),role=(val("rjRole")||"Data Analyst").trim(),jd=val("rjJD").trim();
+  if(!masterReady()){ tab("mr"); flash("inMsg","Add your master résumé first (⓪ Master tab).",5000); return; }
+  const company=(val("rjCompany")||"the company").trim(),role=(val("rjRole")||M.title||"the role").trim(),jd=val("rjJD").trim();
   if(jd.length<60){alert("Paste the relevant job's JD first.");return;}
   await doGenerate(company,role,jd,"",true);
 }
@@ -286,7 +464,7 @@ async function doGenerate(company,role,jd,url,generic){
   let res=null; if(HAS_AI)res=await analyzeAI(company,role,jd); if(!res){res=analyzeDet(company,role,jd);res._fb=HAS_AI;}
   CUR={company,role,jd,url,generic:!!generic,...res};
   renderAll(); btn.disabled=false; btn.textContent="Analyze & generate";
-  msg(HAS_AI&&!res._fb?"Generated with AI. Review the tabs →":"Generated. Review the tabs →"); tab("kw");
+  flash("inMsg",HAS_AI&&!res._fb?"Generated with AI. Review the tabs →":"Generated. Review the tabs →",6000); tab("kw");
 }
 function renderAll(){ renderKW(); renderResume(); renderCover(); renderOutreach(); document.getElementById("cvFor").textContent=CUR.company+" · "+CUR.role+(CUR.generic?" (generic save)":""); }
 
@@ -296,66 +474,75 @@ function renderKW(){ document.getElementById("kwEmpty").style.display="none"; do
   document.getElementById("scoreNote").textContent=CUR.score>=75?"Strong match — apply with confidence.":CUR.score>=60?"Good match — add a few missing keywords if true.":"Stretch — only apply if you can honestly cover the gaps.";
   document.getElementById("kwHave").innerHTML=(CUR.have.length?CUR.have:["—"]).map(k=>'<span class="chip have">'+esc(k)+'</span>').join("");
   document.getElementById("kwMiss").innerHTML=(CUR.miss.length?CUR.miss:["None detected — nice."]).map(k=>'<span class="chip miss">'+esc(k)+'</span>').join(""); }
-function skillsHTML(have){ return M.skills.map(g=>{ const items=g.items.concat(g.g.indexOf("Foundations")>=0?extraList():[]).map(it=>{
-    const hit=(have||[]).some(h=>it.toLowerCase().includes(String(h).toLowerCase().split(" ")[0])||String(h).toLowerCase().includes(it.toLowerCase().split(" ")[0]));
-    return hit?"<b>"+esc(it)+"</b>":esc(it); }).join(", ");
-  return '<p class="sk"><b>'+esc(g.g)+':</b> '+items+'</p>'; }).join(""); }
-function resumeHTML(summary,have,role,bullets){
-  const exp=M.exp.map((e,i)=>{ const bl=(i===0?bullets:["Built and maintained full-stack ERP features (Angular, React, Node.js, Express, MySQL) for live business users.","Developed responsive component-based interfaces with REST API integrations across CRM and production modules."]).map(b=>"<li>"+esc(b)+"</li>").join("");
-    return '<div class="role"><b>'+esc(e.role)+' — '+esc(e.org)+'</b><span class="r">'+esc(e.loc)+' · '+esc(e.date)+'</span></div><ul>'+bl+'</ul>'; }).join("");
-  return '<h3 class="n">'+esc(M.name)+'</h3><div class="ti">'+esc(role||M.title)+'</div><div class="ct">'+esc(M.loc)+' · '+esc(M.phone)+' · '+esc(M.email)+'<br>'+esc(M.links)+'</div>'+
-    '<h4>Professional Summary</h4><p>'+esc(summary||M.summary)+'</p>'+
-    '<h4>Core Skills</h4>'+skillsHTML(have)+
-    '<h4>Professional Experience</h4>'+exp+
-    '<h4>Projects</h4><p><b>RFM Customer Segmentation &amp; Analysis</b> — Python, Pandas, NumPy. End-to-end RFM segmentation validated with K-Means; Champions / At-Risk / Churned cohorts and targeting insights.</p><p><b>Cold Email Generator</b> — JavaScript, OpenAI API. Personalized role-specific outreach drafts via a prompt-engineered workflow.</p>'+
-    '<h4>Education</h4><p>'+esc(M.eduLine)+'</p><h4>Certifications</h4><p>'+M.certs.map(esc).join(" · ")+'</p>'; }
-function renderResume(){ document.getElementById("resumeDoc").innerHTML=resumeHTML(CUR.summary,CUR.have,CUR.role,CUR.bullets); }
-function renderCover(){ const today=new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+function skillsHTML(have){ const hv=(have||[]).map(h=>String(h).toLowerCase());
+  return (M.skills||[]).map(g=>{ const items=(g.items||[]).map(it=>{ const low=it.toLowerCase(); const hit=hv.some(h=>low.includes(h.split(" ")[0])||h.includes(low.split(" ")[0])); return hit?"<b>"+esc(it)+"</b>":esc(it); }).join(", ");
+    return '<p class="sk"><b>'+esc(g.g)+':</b> '+items+'</p>'; }).join(""); }
+function expHTML(expArr){ return (expArr||[]).map(e=>{ const meta=[e.loc,e.date].filter(Boolean).join(" · "); const bl=(e.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join("");
+    return '<div class="role"><b>'+esc(e.role)+(e.org?" — "+esc(e.org):"")+'</b><span class="r">'+esc(meta)+'</span></div>'+(bl?"<ul>"+bl+"</ul>":""); }).join(""); }
+function resumeHTML(summary,have,role,expArr){
+  const contact=[M.loc,M.phone,M.email].filter(Boolean).join(" · ");
+  let h='<h3 class="n">'+esc(M.name||"Your Name")+'</h3>';
+  if(role||M.title)h+='<div class="ti">'+esc(role||M.title)+'</div>';
+  if(contact||M.links)h+='<div class="ct">'+esc(contact)+(M.links?(contact?"<br>":"")+esc(M.links):"")+'</div>';
+  if(summary||M.summary)h+='<h4>Professional Summary</h4><p>'+esc(summary||M.summary)+'</p>';
+  if(M.skills&&M.skills.length)h+='<h4>Core Skills</h4>'+skillsHTML(have);
+  if(expArr&&expArr.length)h+='<h4>Professional Experience</h4>'+expHTML(expArr);
+  if(M.projects&&M.projects.length)h+='<h4>Projects</h4>'+M.projects.map(p=>'<p><b>'+esc(p.name)+'</b>'+(p.desc?" — "+esc(p.desc):"")+'</p>').join("");
+  if(M.eduList&&M.eduList.length)h+='<h4>Education</h4>'+M.eduList.map(e=>'<p>'+esc(e)+'</p>').join("");
+  if(M.certs&&M.certs.length)h+='<h4>Certifications</h4><p>'+M.certs.map(esc).join(" · ")+'</p>';
+  return h;
+}
+function renderResume(){ document.getElementById("resumeDoc").innerHTML=resumeHTML(CUR.summary,CUR.have,CUR.role,CUR.exp); }
+function renderCover(){ const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   document.getElementById("coverDoc").innerHTML='<p>'+esc(today)+'</p><p>'+esc(CUR.cover).replace(/\n/g,"</p><p>")+'</p>'; }
-function renderMaster(){ document.getElementById("masterDoc").innerHTML=resumeHTML(M.summary,[],M.title,BULLETS.slice(0,5).map(b=>b.text)); }
+function renderMaster(){ const el=document.getElementById("masterDoc"); el.innerHTML=masterReady()?resumeHTML(M.summary,[],M.title,M.exp):'<div class="empty">Your résumé preview appears here once you add your name and some experience or skills above.</div>'; }
 
 /* ===== outreach ===== */
 function li(q){ return "https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent(q); }
 function liCo(c){ return "https://www.linkedin.com/search/results/companies/?keywords="+encodeURIComponent(c); }
-function domainGuess(c){ return c.toLowerCase().replace(/\b(pvt|private|ltd|limited|inc|llp|technologies|global|tech|india|the)\b/g,"").replace(/[^a-z0-9]/g,"")+".com"; }
-function knownContact(c){ const k=c.toLowerCase(); for(const key in CONTACTS){ if(k.includes(key.trim())) return CONTACTS[key]; } return null; }
+function domainGuess(c){ return c.toLowerCase().replace(/\b(pvt|private|ltd|limited|inc|llc|llp|technologies|global|tech|group|the)\b/g,"").replace(/[^a-z0-9]/g,"")+".com"; }
+function knownContact(c){ const k=c.toLowerCase(); for(const key in CONTACTS){ if(k.includes(key.trim()))return CONTACTS[key]; } return null; }
+function firstName(){ return ((M.name||"").trim().split(/\s+/)[0])||"me"; }
+function selfPitch(){ const sk=skillItemsFlat().slice(0,3).join(", "); return (M.title||"professional")+(sk?" ("+sk+")":""); }
 function renderOutreach(){
   document.getElementById("outEmpty").style.display="none"; const body=document.getElementById("outBody"); body.style.display="block";
-  const c=CUR.company,r=CUR.role,dom=domainGuess(c),kc=knownContact(c);
-  const note="Hi {First} — I just applied for the "+r+" role at "+c+" and would love to connect. I'm a data/decision analyst (A/B testing, SQL, Python) and really admire what your team is building. Open to a quick chat? — Rahul";
+  const c=CUR.company,r=CUR.role,dom=domainGuess(c),kc=knownContact(c),fn=firstName();
+  const note="Hi {First} — I just applied for the "+r+" role at "+c+" and would love to connect. I'm a "+selfPitch()+" and really admire what your team is building. Open to a quick chat? — "+fn;
   const subj="Referral request — "+r+" at "+c+" (just applied)";
-  const mail="Hi {First},\n\nI just submitted my application for the "+r+" role at "+c+" and wanted to reach out directly. I'm a data & decision analyst with ~2 years at ZS Associates — A/B testing, Marketing Mix Modeling, and KPI dashboards on 1M+ record Snowflake data.\n\nIf my background looks like a fit, I'd be grateful for a referral or even a pointer to the right person. Happy to share my résumé and the role link. Either way, thanks for your time!\n\nBest,\nRahul Verma\n"+M.phone+" · "+M.email;
-  const follow="Hi {First}, a gentle nudge on my note about the "+r+" role at "+c+" — I know inboxes get busy. Even a quick steer would mean a lot. Thanks! — Rahul";
+  const mail="Hi {First},\n\nI just submitted my application for the "+r+" role at "+c+" and wanted to reach out directly. I'm a "+selfPitch()+(M.summary?". "+M.summary.split(/(?<=[.!?])\s/)[0]:"")+
+   "\n\nIf my background looks like a fit, I'd be grateful for a referral or even a pointer to the right person. Happy to share my résumé and the role link. Either way, thanks for your time!\n\nBest,\n"+(M.name||"")+(([M.phone,M.email].filter(Boolean)).length?"\n"+[M.phone,M.email].filter(Boolean).join(" · "):"");
+  const follow="Hi {First}, a gentle nudge on my note about the "+r+" role at "+c+" — I know inboxes get busy. Even a quick steer would mean a lot. Thanks! — "+fn;
   let known="";
   if(kc){ known='<div class="box" style="border-color:#bfe3cf;background:#f3fbf6"><h5 class="ok5">✅ Verified public contact — '+esc(c)+'</h5>'+
     (kc.email?'<div><b>Email:</b> <a href="mailto:'+esc(kc.email)+'">'+esc(kc.email)+'</a>'+(kc.alt?' · <a href="mailto:'+esc(kc.alt)+'">'+esc(kc.alt)+'</a>':'')+'</div>':'')+
-    '<div class="hint" style="margin:4px 0">'+esc(kc.note)+'</div>'+
-    '<div class="row">'+(kc.apply?'<a target="_blank" href="'+esc(kc.apply)+'"><button class="sm ghost">Apply portal ↗</button></a>':'')+(kc.contacts?'<a target="_blank" href="'+esc(kc.contacts)+'"><button class="sm ghost">Recruiting contacts ↗</button></a>':'')+(kc.li?'<a target="_blank" href="'+esc(kc.li)+'"><button class="sm ghost">Company LinkedIn ↗</button></a>':'')+'</div></div>'; }
+    '<div class="hint" style="margin:4px 0">'+esc(kc.note||"")+'</div>'+
+    '<div class="row">'+(kc.apply?'<a target="_blank" href="'+esc(kc.apply)+'"><button class="sm ghost">Apply portal ↗</button></a>':'')+(kc.li?'<a target="_blank" href="'+esc(kc.li)+'"><button class="sm ghost">Company LinkedIn ↗</button></a>':'')+'</div></div>'; }
   body.innerHTML=known+
     '<div class="box"><h5>🔗 Find the right 2 people — open, pick, connect</h5><div class="row" style="gap:6px">'+
       '<a target="_blank" href="'+li(c+" "+r)+'"><button class="sm ghost">Team peers</button></a>'+
-      '<a target="_blank" href="'+li(c+" "+CUR.fam+" manager OR lead OR head")+'"><button class="sm ghost">Hiring manager</button></a>'+
+      '<a target="_blank" href="'+li(c+" "+r+" manager OR lead OR head")+'"><button class="sm ghost">Hiring manager</button></a>'+
       '<a target="_blank" href="'+li(c+" recruiter OR talent acquisition")+'"><button class="sm ghost">Recruiter</button></a>'+
       '<a target="_blank" href="'+(kc&&kc.li?esc(kc.li):liCo(c))+'"><button class="sm ghost">Company page</button></a>'+
       '</div><div class="hint" style="margin-top:6px">Pick <b>2 max</b> — ideally the hiring manager + one team peer.</div></div>'+
     '<div class="box"><h5>🤝 Connection note <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(note)+'</div><div class="hint">Replace {First}. Under LinkedIn\'s 300-char limit.</div></div>'+
     '<div class="box"><h5>✉️ Referral email — specific to '+esc(c)+' <button class="sm ghost" onclick="cpText(this)">Copy body</button></h5>'+
-      '<div class="hint">'+(kc&&kc.email?'Use the verified inbox above, or a named person at ':'Likely pattern at ')+'<span class="pill">first.last@'+esc(dom)+'</span><span class="pill">flast@'+esc(dom)+'</span><span class="pill">careers@'+esc(dom)+'</span> <i>(verify before sending)</i></div>'+
+      '<div class="hint">Likely pattern at <span class="pill">first.last@'+esc(dom)+'</span><span class="pill">flast@'+esc(dom)+'</span><span class="pill">careers@'+esc(dom)+'</span> <i>(verify before sending)</i></div>'+
       '<div style="margin:6px 0"><b>Subject:</b> '+esc(subj)+'</div><div class="mono">'+esc(mail)+'</div></div>'+
     '<div class="box"><h5>↩️ One follow-up (after ~3 days) <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(follow)+'</div></div>'+
     '<div class="row" style="margin-top:6px">'+(CUR.url?'<a target="_blank" href="'+esc(CUR.url)+'"><button class="sm ghost">Open job link ↗</button></a>':'')+'<button class="sm" onclick="logApp()">✓ I applied — log it</button></div>';
 }
 
 /* ===== find jobs ===== */
-const ROLES=["Data Analyst","Business Analyst","Data Scientist","Analytics Consultant","Data Engineer"];
-const CITIES=[["Bengaluru","bangalore"],["Gurgaon","gurgaon"],["Pune","pune"],["Remote","india"]];
-function liJobs(role,city){ return "https://www.linkedin.com/jobs/search/?keywords="+encodeURIComponent(role)+"&location="+encodeURIComponent(city)+"&f_TPR=r604800&f_E=2%2C3"; }
-function nkJobs(role,citySlug){ return "https://www.naukri.com/"+role.toLowerCase().replace(/\s+/g,"-")+"-jobs-in-"+citySlug+"?experience=1"; }
+function targetRoles(){ const a=(M.targetRoles||"").split(",").map(s=>s.trim()).filter(Boolean); return a.length?a:(M.title?[M.title]:["Data Analyst"]); }
+function targetLocs(){ const a=(M.targetLocs||"").split(",").map(s=>s.trim()).filter(Boolean); return a.length?a:["Remote"]; }
+function liJobs(role,city){ return "https://www.linkedin.com/jobs/search/?keywords="+encodeURIComponent(role)+"&location="+encodeURIComponent(city)+"&f_TPR=r604800"; }
+function indeedJobs(role,city){ return "https://www.indeed.com/jobs?q="+encodeURIComponent(role)+"&l="+encodeURIComponent(city)+"&fromage=7"; }
 function renderJobs(){
-  let h='<div class="jobsgrid"><div></div>'+CITIES.map(c=>'<div class="rl" style="text-align:center">'+c[0]+'</div>').join("");
-  ROLES.forEach(role=>{ h+='<div class="rl">'+role+'</div>'+CITIES.map(c=>'<a target="_blank" href="'+liJobs(role,c[0]==="Remote"?"India":c[0])+'"><button class="sm ghost">in</button></a>').join(""); });
-  h+='</div><div class="hint" style="margin:8px 0">LinkedIn = last 7 days, entry/associate. Naukri (0–1 yr):</div><div class="row">';
-  ROLES.forEach(role=>{ h+='<a target="_blank" href="'+nkJobs(role,"bangalore")+'"><button class="sm ghost">'+role+' · Naukri</button></a>'; });
+  const roles=targetRoles(),locs=targetLocs();
+  let h='<div class="jobsgrid" style="grid-template-columns:150px repeat('+locs.length+',1fr)"><div></div>'+locs.map(c=>'<div class="rl" style="text-align:center">'+esc(c)+'</div>').join("");
+  roles.forEach(role=>{ h+='<div class="rl">'+esc(role)+'</div>'+locs.map(c=>'<a target="_blank" href="'+liJobs(role,c)+'"><button class="sm ghost">in</button></a>').join(""); });
+  h+='</div><div class="hint" style="margin:8px 0">LinkedIn = posted in the last 7 days. Also try Indeed (first location):</div><div class="row">';
+  roles.forEach(role=>{ h+='<a target="_blank" href="'+indeedJobs(role,locs[0])+'"><button class="sm ghost">'+esc(role)+' · Indeed</button></a>'; });
   h+='</div>'; document.getElementById("jobsGrid").innerHTML=h;
 }
 
@@ -367,10 +554,9 @@ const STCOL={"Applied":"#3b6cb3","Connected":"#2c8a6b","Referral asked":"#7a5cc0
 function loadLog(){ try{LOG=JSON.parse(localStorage.getItem(TK)||"[]");}catch(e){LOG=[];} }
 function saveLog(){ try{localStorage.setItem(TK,JSON.stringify(LOG));}catch(e){} }
 function logApp(){ if(!CUR)return; LOG.unshift({date:new Date().toISOString().slice(0,10),company:CUR.company,role:CUR.role,stage:"Applied",next:"Send connection req",notes:"",url:CUR.url||"",
-  liPeer:li(CUR.company+" "+CUR.role),liMgr:li(CUR.company+" "+CUR.fam+" manager OR lead"),dom:domainGuess(CUR.company)}); saveLog(); renderTracker(); tab("trk"); }
+  liPeer:li(CUR.company+" "+CUR.role),liMgr:li(CUR.company+" "+CUR.role+" manager OR lead"),dom:domainGuess(CUR.company)}); saveLog(); renderTracker(); tab("trk"); }
 function renderTracker(){
-  const tb=document.getElementById("trkRows");
-  const st=document.getElementById("trkStats");
+  const tb=document.getElementById("trkRows"),st=document.getElementById("trkStats");
   const counts={}; STAGES.forEach(s=>counts[s]=0); LOG.forEach(a=>counts[a.stage]=(counts[a.stage]||0)+1);
   st.innerHTML='<span class="pill">Total '+LOG.length+'</span>'+STAGES.filter(s=>counts[s]).map(s=>'<span class="stmt" style="background:'+STCOL[s]+'">'+s+' '+counts[s]+'</span>').join(" ");
   if(!LOG.length){ tb.innerHTML='<tr><td colspan="7" class="empty">No applications yet. Generate a kit and hit “I applied”.</td></tr>'; return; }
@@ -390,8 +576,8 @@ function exportCSV(){ const cols=["date","company","role","stage","next","notes"
   const b=new Blob([lines.join("\n")],{type:"text/csv"}),u=URL.createObjectURL(b),x=document.createElement("a"); x.href=u; x.download="applications.csv"; x.click(); URL.revokeObjectURL(u); }
 
 /* ===== save PDF / util ===== */
-function fnameFor(which){ const who=M.fileName||"RahulVerma"; const what=which==="resumeDoc"?"Resume":"CoverLetter";
-  if(!CUR||CUR.generic||!CUR.company||CUR.company==="the company") return who+"_Master_"+what;
+function fnameFor(which){ const who=M.fileName||"Resume"; const what=which==="resumeDoc"?"Resume":"CoverLetter";
+  if(!CUR||CUR.generic||!CUR.company||CUR.company==="the company")return who+"_Master_"+what;
   return who+"_"+what+"_"+CUR.company.replace(/[^A-Za-z0-9]+/g,""); }
 function docElement(which){ const node=document.getElementById(which); const el=document.createElement("div"); el.className="doc"; el.style.padding="12mm"; el.style.background="#fff"; el.innerHTML=node.innerHTML; return el; }
 function downloadDoc(which){ const node=document.getElementById(which); if(!node||!node.innerText.trim()){alert("Generate first.");return;}
@@ -401,7 +587,7 @@ function downloadDoc(which){ const node=document.getElementById(which); if(!node
     const el=docElement(which);
     if(window.showSaveFilePicker){
       html2pdf().set(opt).from(el).outputPdf("blob").then(async blob=>{
-        try{ const h=await window.showSaveFilePicker({suggestedName:name+".pdf",types:[{description:"PDF",accept:{"application/pdf":[".pdf"]}}]}); const w=await h.createWritable(); await w.write(blob); await w.close(); msg("Saved "+name+".pdf"); }
+        try{ const h=await window.showSaveFilePicker({suggestedName:name+".pdf",types:[{description:"PDF",accept:{"application/pdf":[".pdf"]}}]}); const w=await h.createWritable(); await w.write(blob); await w.close(); flash("inMsg","Saved "+name+".pdf",4000); }
         catch(e){ if(e&&e.name==="AbortError")return; html2pdf().set(opt).from(el).save(); }
       }).catch(()=>html2pdf().set(opt).from(docElement(which)).save());
     } else { html2pdf().set(opt).from(el).save(); }
@@ -413,15 +599,20 @@ function copyDoc(id){ const n=document.getElementById(id); navigator.clipboard&&
 function cpText(btn){ const m=btn.closest(".box").querySelector(".mono"); navigator.clipboard&&navigator.clipboard.writeText(m.innerText); const o=btn.textContent; btn.textContent="Copied ✓"; setTimeout(()=>btn.textContent=o,1200); }
 function tab(t){ document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.t===t)); document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="pane-"+t)); }
 function val(id){ const e=document.getElementById(id); return e?(e.value||""):""; }
-function set(id,v){ const e=document.getElementById(id); if(e)e.value=v; }
-function msg(m){ document.getElementById("inMsg").textContent=m; }
+function set(id,v){ const e=document.getElementById(id); if(e)e.value=(v==null?"":v); }
+function flash(id,t,ms){ const e=document.getElementById(id); if(!e)return; e.textContent=t; clearTimeout(e._t); e._t=setTimeout(()=>{e.textContent="";},ms||1600); }
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-function loadSample(){ set("inCompany","Tiger Analytics"); set("inRole","Data Analyst");
-  set("inJD","We are looking for a Data Analyst for our marketing analytics team. Responsibilities: build dashboards and KPI reporting, run A/B tests and analyze campaign performance, write complex SQL on large datasets, partner with stakeholders to deliver insights. Requirements: 1-3 years experience, strong SQL and Python, A/B testing and experimentation, dashboarding (Tableau or Power BI), statistics, customer segmentation. Snowflake and ETL a plus."); msg("Sample loaded — hit Analyze & generate."); }
+function updateState(){ const ready=masterReady();
+  document.getElementById("mSetup").style.display=ready?"none":"block";
+  document.querySelector('.tab[data-t="mr"]').classList.toggle("todo",!ready); }
+function loadSampleJD(){ set("inCompany","Acme Analytics"); set("inRole","Data Analyst");
+  set("inJD","We are looking for a Data Analyst for our marketing analytics team. Responsibilities: build dashboards and KPI reporting, run A/B tests and analyze campaign performance, write complex SQL on large datasets, partner with stakeholders to deliver insights. Requirements: 1-3 years experience, strong SQL and Python, A/B testing and experimentation, dashboarding (Tableau or Power BI), statistics, customer segmentation. Snowflake and ETL a plus."); flash("inMsg","Sample JD loaded — hit Analyze & generate.",5000); }
 
 /* init */
 document.getElementById("modeBadge").className="mode "+(HAS_AI?"ai":"man"); document.getElementById("modeBadge").textContent=HAS_AI?"AI mode (Cowork)":"Manual mode";
-loadMaster(); fillMasterForm(); renderMaster(); renderJobs(); loadLog(); renderTracker();
+document.getElementById("imMode").textContent=HAS_AI?"AI auto-structuring is ON — Auto-fill will parse your whole résumé into the fields below.":"Manual mode: Auto-fill grabs your contacts + summary; add skills & experience yourself. Open in Cowork for full AI auto-structuring.";
+loadMaster(); fillMasterForm(); renderMaster(); renderJobs(); loadLog(); renderTracker(); updateState();
+if(!masterReady())tab("mr");
 </script>
 </body>
 </html>
