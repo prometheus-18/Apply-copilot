@@ -17,3 +17,6 @@ node_modules/
 *_PRIVATE.*
 my_*.html
 applications.csv
+
+# Local preview / scratch (not part of the product)
+PREVIEW_*.html
