@@ -1,68 +1,60 @@
 # Apply Co-Pilot 🧭
 
-**Your whole job hunt in one HTML file.** Add your résumé once, then paste any job description and get back an **ATS-tuned résumé** + a **tailored cover letter** (download as PDF), a **keyword-gap score**, a **company-specific outreach kit**, a **job finder**, and an **application tracker**.
+**Upload your résumé once. Paste any job. Get a custom, ATS-optimized résumé + cover letter — as a direct PDF with clickable links.**
 
-No sign-up. No server. No build step. Your data never leaves your browser.
+No sign-up. No servers. No AI keys. **100% in your browser** — your résumé never leaves your machine.
 
-👉 **[Open the app live](https://raw.githack.com/prometheus-18/apply-copilot/main/index.html)** · or download [`apply_copilot_app.html`](apply_copilot_app.html) and open it in Chrome.
-
-> Tip: maintainers can enable **GitHub Pages** (Settings → Pages → deploy from `main` / root) for a `https://prometheus-18.github.io/apply-copilot/` URL.
+👉 **[Open the app live](https://raw.githack.com/prometheus-18/apply-copilot/main/index.html)** · or download [`apply_copilot_app.html`](apply_copilot_app.html) and open it in Chrome/Edge.
 
 ---
 
 ## How it works (3 steps)
 
-1. **Add your master résumé — once.** Go to the **⓪ Master** tab and either:
-   - **Upload your master PDF** (your optimized, all-in-one résumé), or **paste its text**, then hit **Auto-fill** — and tweak anything that's off, or
-   - type your details straight into the fields.
-
-   This becomes your **single source of truth**. Every tailoring starts from it and only **reorders & emphasizes** what's already there — it never invents experience.
-
-2. **Paste a job description.** Add the company + role, paste the JD, hit **Analyze & generate**.
-
-3. **Review & send.** Flip through the tabs:
-   - **① Fit** — an estimated ATS match score, the keywords you already have, and the ones the JD wants that you're missing.
-   - **② Résumé** — auto-tailored to the role, fully editable, one-click **Download PDF**.
-   - **③ Cover** — a company- and role-specific cover letter, editable, **Download PDF**.
+1. **⓪ Upload your résumé — once.** Drop a **PDF** (or paste the text). That's it — no forms to fill. It becomes your **master**, and a built-in parser turns it into clean, structured sections.
+2. **Paste a job description.** Add the company + role, paste the JD, hit **Tailor my résumé**.
+3. **Download & send.** Flip through the tabs:
+   - **① Résumé** — your résumé **rebuilt for the role**: a tailored summary, bullets and skills **reordered toward the JD's keywords**, one-click **Download PDF** (real, selectable text + clickable hyperlinks → exactly what ATS parsers read). Fully editable.
+   - **② Cover** — a matching, role-specific cover letter. Editable, **Download PDF**.
+   - **③ Fit** — an estimated **ATS match score**, the keywords you already have, the ones the JD wants that you're missing, and concrete tips to raise it.
    - **④ Outreach** — LinkedIn people-search deep links (hiring manager / peer / recruiter), a connection note, and a referral email + follow-up, with an email-*pattern* guess to verify.
-   - **⑤ Find jobs** — filtered LinkedIn & Indeed deep links across *your* target roles and locations.
+   - **⑤ Find jobs** — quick LinkedIn / Indeed / Naukri searches for the role.
    - **⑥ Tracker** — log every application with stage / next-action dropdowns and notes; export to CSV.
 
 ---
 
 ## ✨ Why it's different
 
-- **Built around one master résumé.** Upload your optimized "master PDF" once; tailor from it forever. No re-typing per application.
-- **Honest tailoring.** It reorders and emphasizes your real bullets and weaves in the JD's exact keywords you *genuinely* have — it won't fabricate skills.
-- **Private by default.** Your profile and application log live in your browser's `localStorage`. Nothing is uploaded.
-- **Works anywhere.** A single, dependency-free HTML file. Open it locally, host it, or run it as a Claude Cowork artifact.
+- **The custom résumé is the product.** It doesn't just score you — it **rebuilds your résumé for the specific job**: rewrites the summary, leads each role with its most relevant quantified bullet, and surfaces the JD's exact keywords *you genuinely have*.
+- **Honest tailoring.** It reorders and re-emphasizes your **real** experience. It never invents skills, employers, or metrics.
+- **ATS-friendly by construction.** The PDF is real text (not an image), with standard section headers and **working hyperlinks** — the format ATS systems actually parse.
+- **Truly private & free.** No accounts, no API keys, no network calls. Your résumé, the tailored output, and your application log all live in your browser's `localStorage`. Nothing is uploaded, ever.
+- **One file.** A single dependency-light HTML file. Open it locally, host it, or fork it.
 
-## 🤖 AI mode vs Manual mode
-
-- Inside **Claude Cowork** (as an artifact) it uses an LLM to auto-structure your uploaded résumé and to tailor each application for higher-quality output.
-- Opened as a **standalone file**, it falls back to a built-in deterministic rules engine — no network, fully offline — plus the reliable Chrome **Download PDF**.
+---
 
 ## 🚀 Quick start
 
-1. Open **`apply_copilot_app.html`** in **Google Chrome** (direct PDF download works best there).
-2. **⓪ Master** tab → upload your master résumé PDF (or paste it) → **Auto-fill** → review → **Save master**. New here? Hit **Load sample** to see a complete example first.
-3. Paste a JD on the left → **Analyze & generate** → review the tabs → **Download PDF**.
+1. Open **`apply_copilot_app.html`** in **Google Chrome / Edge** (best print-to-PDF support).
+2. **⓪ Master** → upload your résumé PDF (or paste it). New here? Hit **Load a sample** to see a full example.
+3. Paste a JD on the left → **Tailor my résumé** → open **① Résumé** → **Download PDF** → in the dialog choose **“Save as PDF.”**
+
+---
 
 ## 🔒 Privacy
 
-All data — your profile and your application log — is stored in your browser's `localStorage`. Nothing is sent to any server. Uploaded résumé files are parsed in-browser and never leave your machine.
+Everything runs client-side. Uploaded résumés are parsed in-browser via [pdf.js](https://github.com/mozilla/pdf.js). Your data is stored only in your browser's `localStorage` and is never transmitted to any server.
 
 ## 🛠 Tech
 
-Single-file HTML + CSS + vanilla JS. PDF **export** via [html2pdf.js](https://github.com/eKoopmans/html2pdf.js); PDF **import** via [pdf.js](https://github.com/mozilla/pdf.js) (both from CDN). No build step, no install.
+Single-file HTML + CSS + vanilla JS. A deterministic résumé parser + JD keyword engine (no LLM, no network). PDF **import** via [pdf.js](https://github.com/mozilla/pdf.js); PDF **export** via the browser's native print-to-PDF (keeps text + links ATS-readable). No build step, no install, no dependencies to host.
 
 ## ⚖️ Responsible use
 
-The outreach features are built for **manual, personalized** sending — open a link, write to a real person, hit send yourself. Don't use them to mass-automate connection requests or emails; it violates platform terms and gets accounts flagged.
+The outreach features are for **manual, personalized** sending — open a link, write to a real person, send it yourself. Don't mass-automate connection requests or emails; it violates platform terms and gets accounts flagged.
 
 ## 🤝 Contributing
 
-Issues and PRs welcome — it's one file, so it's easy to hack on. Ideas: more job boards, better résumé parsing, more export formats.
+Issues and PRs welcome — it's one file, easy to hack on. Ideas: smarter résumé parsing for unusual layouts, more job boards, more locales, themes.
 
 ## 📄 License
 
