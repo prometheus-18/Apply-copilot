@@ -1,94 +1,121 @@
-# Apply Co-Pilot 🧭
+<div align="center">
 
-**Upload your résumé once → paste any job → get an honest ATS fit score, then a custom, ATS-optimized résumé + cover letter as a real one-page PDF with clickable links.**
-Runs **100% in your browser**. No sign-up, no servers, no AI keys — your résumé never leaves your device.
+# 🧭 Apply Co-Pilot
 
-![License: MIT](https://img.shields.io/badge/License-MIT-22d3ee) ![100% client-side](https://img.shields.io/badge/100%25-client--side-7c83ff) ![No sign-up](https://img.shields.io/badge/no-sign--up-34d399) ![Single file](https://img.shields.io/badge/single-HTML%20file-f59e0b)
+### Paste a job → get an honest ATS score → download a custom, one-page résumé + cover letter as a real PDF with clickable links.
 
-### 👉 [**Open the live app**](https://raw.githack.com/prometheus-18/Apply-copilot/main/index.html) &nbsp;·&nbsp; or download [`apply_copilot_app.html`](apply_copilot_app.html) and open it in **Chrome** or **Edge**.
+**100% in your browser. No sign-up. No servers. No AI keys. Your résumé never leaves your device.**
 
-> Live link: `https://raw.githack.com/prometheus-18/Apply-copilot/main/index.html`
+[![▶ Open the live app](https://img.shields.io/badge/▶_OPEN_THE_LIVE_APP-22d3ee?style=for-the-badge&logoColor=black)](https://raw.githack.com/prometheus-18/Apply-copilot/main/index.html)
 
----
+`https://raw.githack.com/prometheus-18/Apply-copilot/main/index.html`
 
-## ⚡ Try it in 60 seconds
+![License: MIT](https://img.shields.io/badge/License-MIT-22d3ee) ![100% client-side](https://img.shields.io/badge/100%25-client--side-7c83ff) ![No sign-up](https://img.shields.io/badge/no-sign--up-34d399) ![Single HTML file](https://img.shields.io/badge/single-HTML%20file-f59e0b) ![Free forever](https://img.shields.io/badge/free-forever-ff6ad5)
 
-1. **Open the app** (link above) — a vertical-scroll page with a live 3D hero.
-2. **⓪ Master Résumé** — upload your résumé (PDF or TXT), or **Load a sample**. You only do this once.
-3. **◆ Job Description** — type the **Company** + **Role**, paste the **full** job description, hit **▶ Run analysis & tailor**.
-4. **① ATS Score** — see your **honest current score first**, plus the projected score after tailoring, a breakdown, and matched/missing keywords.
-5. Tick **＋ Add** on any tip whose keywords you genuinely have, then hit **→ View tailored résumé**.
-6. **② Custom Résumé → ⬇ Download PDF** — a real, selectable-text, one-page PDF with working links. Done. ✅
+*Best in **Chrome** or **Edge**. Works offline after it loads.*
 
-> 💡 Your résumé is the **master** — uploaded once. Every new job is just paste + one click.
+</div>
 
 ---
 
-## 🎯 What makes it different
+## 🚀 How it works — step by step
 
-It doesn't just *score* your résumé — it **rebuilds it for the specific job**, honestly:
+> The app is one page you scroll down. Each step is a section. Here's the whole journey:
 
-- 🎯 **An ATS score you can trust.** It shows your **original** score first, computes your real years of experience (interval-merged so concurrent roles don't inflate), and applies **knockouts** — so a 1-year résumé against a VP role honestly scores ~7–15, not a fake 45. No score floor, no inflation.
-- ✍️ **Rebuilds the résumé** — a 3–4 line tailored summary, bullets & skills reordered toward the JD, your matched keywords surfaced into high-signal spots.
-- ✅ **Accept-to-apply tips.** Missing-keyword suggestions come with a **＋ Add** toggle; accepting weaves them in and updates the projected score live. **It never invents facts** — accepting means *you* assert it's true.
-- 📄 **Real vector PDF, one page, no watermark.** Built with pdfmake (not a screenshot): **selectable text + genuinely clickable links** (email · phone · LinkedIn · GitHub) — exactly what ATS parsers read. No print dialog, no URL/timestamp header.
-- 🧩 **Universal parser.** Handles many résumé templates (single-column, LaTeX/Overleaf tab-layouts, icon-font headers, multi-line entries) — merges wrapped bullets, strips PDF page-header/icon noise, and keeps Education, Projects, Certifications & **Achievements** intact.
+### 1️⃣ Upload your résumé — **once** &nbsp;·&nbsp; section *⓪ Master Résumé*
+Drag in your résumé (**PDF or TXT**), or click **Load a sample** to try it first.
+This becomes your **master** — you never upload it again. Every future job is just a paste + a click.
+🔒 *It's saved only in your own browser. Nothing is uploaded.*
+
+### 2️⃣ Paste the job &nbsp;·&nbsp; section *◆ Job Description*
+Type the **Company** and **Role**, then paste the **entire job description** (responsibilities *and* requirements — more text = a better match).
+Hit **▶ Run analysis & tailor.**
+
+### 3️⃣ See your honest score &nbsp;·&nbsp; section *① ATS Score*
+You get your **real current score first**, then a **projected score after tailoring** — plus:
+- a breakdown (keyword coverage, seniority/experience fit, structure),
+- **matched vs. missing** keywords (required & preferred),
+- honest **knockouts** (e.g. applying to a VP role with 1 year of experience scores low — on purpose).
+
+### 4️⃣ Accept the tips that are true &nbsp;·&nbsp; *① ATS Score → Tips*
+Each suggestion to add a missing keyword has a **➕ Add** button.
+Click it **only if you genuinely have that skill** — the app weaves it into your résumé and updates the projected score. *It never invents anything for you.*
+
+### 5️⃣ Get your tailored résumé &nbsp;·&nbsp; *→ View tailored résumé → section ② Custom Résumé*
+Your résumé, **rebuilt for this job**: a sharper summary, your most relevant bullets first, your matched keywords surfaced.
+Click **✎ Edit** to fix any wording, then **⬇ Download PDF** — a clean **one-page** PDF with **selectable text and clickable links** (exactly what ATS software reads).
+
+### 6️⃣ Cover letter, outreach & tracking &nbsp;·&nbsp; *③–⑤*
+- **③ Cover Letter** — a matching, role-specific letter. Editable. Download.
+- **④ LinkedIn Outreach** — find the hiring manager / a peer / a recruiter, plus a ready connection note, referral email & follow-up.
+- **⑤ Job Tracker** — log each application (stage + next step). **Export CSV** or **Copy for Sheets** to drop it into Google Sheets / Excel. *(Private to your browser.)*
+- **⑥ Find Jobs** — one-click LinkedIn / Indeed / Naukri searches for the role.
+
+<div align="center">
+
+**⓪ Master → ◆ Job → ① Score → ➕ Accept tips → ② Résumé → ⬇ PDF**
+
+</div>
 
 ---
 
-## 🗂 The sections (scroll down)
+## ✨ Why it's different
 
-| Section | What you get |
-|---|---|
-| **⓪ Master Résumé** | Upload once (PDF/TXT). Replace or clear anytime. Everything stays on your device. |
-| **◆ Job Description** | Company, role, optional job URL, and the full JD. One button runs everything. |
-| **① ATS Score** | Honest **original vs. projected** score, breakdown bars, seniority/years fit, knockout reasons, matched vs. missing (required & preferred) keywords, and **accept-to-apply tips**. |
-| **② Custom Résumé** | Your résumé rebuilt for the job — centered header, clean bullets, two-line entries. **Edit inline · Download 1-page PDF · Copy text.** |
-| **③ Cover Letter** | A matching, role-specific cover letter. Editable. Download PDF. |
-| **④ LinkedIn Outreach** | Deep links (hiring manager / peer / recruiter) + a connection note, referral email & follow-up. |
-| **⑤ Job Tracker** | Log applications with stage + next-action dropdowns. **Export CSV** or **Copy for Sheets** (paste straight into Google Sheets / Excel). |
-| **⑥ Find Jobs** | One-click LinkedIn / Indeed / Naukri searches for the role. |
-
----
-
-## ✅ Tips for the best result
-
-- **Use clear section headers** — `Summary`, `Skills`, `Experience`, `Projects`, `Education`, `Certifications`, `Achievements`. The parser keys off them.
-- **Paste the *entire* job description** (responsibilities *and* requirements) — more text = better keyword matching and a truer score.
-- The résumé and cover letter are **editable** — click **✎ Edit**, fix any wording, then download (your edits are in the PDF).
-- Only tick **＋ Add** on tips whose keywords you *actually* have — the tool keeps you honest, it won't lie for you.
+- 🎯 **An ATS score you can actually trust.** No inflated floor — it computes your real years of experience and applies knockouts, so the number is honest.
+- 📄 **A real one-page PDF, no watermark.** Built programmatically (not a screenshot) → **selectable text + working links**, the format ATS parsers can read. No print dialog.
+- 🧩 **Reads almost any résumé.** Single-column, LaTeX/Overleaf, icon-heavy templates — it merges wrapped bullets, strips PDF noise, and keeps Education, Projects, Certifications **and Achievements**.
+- 🚫 **Never lies.** It only reorders and re-emphasizes *your real* content, and surfaces keywords *you* confirm you have.
+- 🔒 **Truly private.** Everything runs in your browser; your data lives only in your `localStorage` and is never sent anywhere.
 
 ---
 
 ## ❓ FAQ
 
-**Is my data safe?** Yes — there is no server. Your résumé, the tailored output, and your tracker live only in your browser's `localStorage`. Nothing is uploaded.
+<details>
+<summary><b>Is my data private? Can other people see my tracker?</b></summary>
 
-**Is the PDF really one page?** It's designed to be: the layout auto-shrinks the font and trims only the lowest-JD-relevance bullets to fit, while keeping all your top content.
+Yes, it's private — and no, nobody else can see it. There's **no server**. Your résumé and tracker are saved only in **your own browser** (`localStorage`). Every visitor gets their own separate, private copy. The flip side: it's tied to that browser/device — use **Export CSV / Copy for Sheets** to back it up.
+</details>
 
-**My résumé parsed a bit wrong.** Some PDFs extract oddly. The output is **editable** — fix it inline — or paste your résumé as text in ⓪ Master for the cleanest parse.
+<details>
+<summary><b>Is the PDF really one page?</b></summary>
 
-**Does it scrape the job URL / use AI?** No. It's 100% offline and deterministic — a browser can't scrape arbitrary sites (CORS) and there's no LLM. You paste the JD; the smarts are in how it analyzes that text.
+It's built to be — the layout auto-shrinks the font and trims only the least job-relevant bullets to fit, while keeping all your strongest content.
+</details>
 
-**Does it need internet / an account / an API key?** Only a one-time CDN load for the libraries; then it works offline. No account, no key, free forever.
+<details>
+<summary><b>My résumé parsed a little wrong.</b></summary>
+
+Some PDFs extract oddly. The output is fully **editable** — click ✎ Edit and fix it inline — or paste your résumé as text in ⓪ Master for the cleanest parse.
+</details>
+
+<details>
+<summary><b>Does it use AI or scrape the job link?</b></summary>
+
+No. It's 100% offline and deterministic — a browser can't scrape arbitrary sites and there's no LLM. You paste the JD; the intelligence is in how it analyzes that text.
+</details>
+
+<details>
+<summary><b>Do I need an account, API key, or internet?</b></summary>
+
+No account, no key. Just a one-time CDN load for the libraries, then it works offline. Free forever.
+</details>
 
 ---
 
-## 🔒 Privacy
-
-100% client-side. Résumés are parsed in-browser via [pdf.js](https://github.com/mozilla/pdf.js). Data is stored only in your browser's `localStorage` and never transmitted.
-
 ## 🛠 Tech
 
-One HTML file, vanilla JS — a deterministic résumé parser + JD-keyword/seniority scoring engine (no LLM, no network analysis, no scraping). Libraries via CDN: **pdf.js** (résumé import), **pdfmake** (real vector PDF export with clickable links + selectable text), **three.js** (the 3D hero), **Lenis** (smooth scroll), and Google Fonts. No build step, nothing to host.
+One HTML file, vanilla JS — a deterministic résumé parser + JD-keyword/seniority scoring engine (no LLM, no scraping). Libraries via CDN: **pdf.js** (résumé import), **pdfmake** (real vector PDF with clickable links), **three.js** (the 3D hero), **Lenis** (smooth scroll), Google Fonts. No build step, nothing to host.
+
+To run locally: download [`apply_copilot_app.html`](apply_copilot_app.html) and open it in Chrome/Edge.
 
 ## 🤝 Contributing
 
-It's a single file — easy to hack on. Issues & PRs welcome. Good first ideas: parsing for more unusual layouts, more job boards/locales, résumé themes.
+It's a single file — easy to hack on. Issues & PRs welcome. Good first ideas: parsing for more layouts, more job boards/locales, résumé themes.
 
 ## ⚖️ Responsible use
 
-Outreach is for **manual, personalized** sending — open a link, write to a real person, send it yourself. Don't mass-automate; it violates platform terms.
+Outreach is for **manual, personalized** sending — open a link, write to a real person, send it yourself. Don't mass-automate.
 
 ## 📄 License
 
