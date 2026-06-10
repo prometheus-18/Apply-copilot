@@ -1,0 +1,36 @@
+Aarav Mehta
++91 98201 44321 | aarav.mehta@gmail.com | linkedin.com/in/aaravmehta | github.com/aaravm-dev
+Education
+Indian Institute of Technology Bombay | B.Tech in Computer Science and Engineering | CGPA: 8.71/10
+Mumbai, India | Aug 2018 - May 2022
+Key courses taken: Data Structures, Operating Systems, Distributed Computing, Machine Learning, Convex Optimization, Computer Networks
+Delhi Public School R.K. Puram | Senior Secondary (CBSE) | Percentage: 94.6%
+New Delhi, India | 2016 - 2018
+Experience
+Software Engineer II | Razorpay | Bengaluru, India
+Jul 2022 - Present
+- Re-architected the settlement reconciliation pipeline in Go and Kafka, cutting end-of-day variance from 0.42% to 0.03% across 11 million daily transactions.
+- Led the migration of 14 payment microservices from EC2 virtual machines to Kubernetes on EKS, reducing infrastructure spend by 18,000 USD per month.
+- Designed an idempotency-key service handling 9K requests per second with p99 latency under 12ms.
+- Mentored 3 interns; two converted to full-time offers.
+Machine Learning Intern | Sprinklr | Gurugram, India
+May 2021 - Jul 2021
+- Fine-tuned a DistilBERT intent classifier on 2.3 million support tickets, lifting macro-F1 from 0.71 to 0.84.
+- Shipped a Redis-backed feature cache that cut p95 inference latency from 310ms to 95ms.
+Projects
+RouteZero | Python, FastAPI, PostGIS, React | github.com/aaravm-dev/routezero
+- Built a carbon-aware delivery routing engine serving 4K requests per day; reduced average route emissions 12% in a pilot with two logistics partners.
+- Won second place among 240 teams at HackMIT 2021.
+ChessVision | PyTorch, OpenCV, Flask | github.com/aaravm-dev/chessvision
+- Trained a convolutional network that reconstructs board state from phone photos with 97.1% square-level accuracy; repository has 800+ stars.
+Technical Skills
+Languages: Python, Go, C++, SQL, TypeScript
+Tools and Frameworks: Kubernetes, Docker, Kafka, Airflow, FastAPI, React, PyTorch, Terraform
+Databases: PostgreSQL, Redis, DynamoDB
+Positions of Responsibility
+Placement Coordinator, IIT Bombay Training and Placement Cell (2021 - 2022): coordinated internship drives for 120+ students across 40 recruiting companies.
+Teaching Assistant, CS 228 Logic for Computer Science (Spring 2021): conducted weekly tutorials for 60 undergraduates and graded course assignments.
+Miscellaneous
+2018: Secured All India Rank 142 in JEE Advanced among 160,000 candidates.
+2021: Winner, Smart India Hackathon, fintech track, in a team of six.
+2020: Kishore Vaigyanik Protsahan Yojana (KVPY) research fellowship awardee.
