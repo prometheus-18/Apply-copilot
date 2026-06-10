@@ -117,6 +117,8 @@ It's a single file — easy to hack on. Issues & PRs welcome. Good first ideas: 
 
 Outreach is for **manual, personalized** sending — open a link, write to a real person, send it yourself. Don't mass-automate.
 
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=prometheus-18.Apply-copilot)
+
 ## 📄 License
 
 MIT — see [LICENSE](LICENSE). Built by [@prometheus-18](https://github.com/prometheus-18).
