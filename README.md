@@ -65,7 +65,7 @@ Your résumé **rebuilt for this job** — sharper summary, most relevant bullet
 
 - 🎯 **An ATS score you can actually trust.** Deterministic and explainable — real years-of-experience math, honest knockouts, no inflated floor, no AI dice-roll.
 - ✦ **AI that can't lie about you.** The AI layer only rephrases what you wrote; a code-level guard rejects any rewrite whose numbers don't match yours exactly, and you approve every change.
-- 🧩 **Reads almost any résumé.** Single/two-column, LaTeX, academic CVs (publications included), tables, icon fonts, multi-page — stress-tested against the popular template families with a content-retention test suite ([`tests/`](tests/)).
+- 🧩 **Reads almost any résumé.** Single/two-column, LaTeX, academic CVs (publications included), tables, icon fonts, multi-page — stress-tested against the popular template families with a content-retention regression suite.
 - 📄 **A real one-page PDF, no watermark.** Built programmatically → selectable text + working links, auto-fitted to one page by trimming only the least job-relevant content.
 - ☁️ **Yours, everywhere.** Sign in once — master résumé + tracker on every device.
 
@@ -107,13 +107,13 @@ Yes — the layout auto-shrinks the font and trims only the least job-relevant b
 
 ## 🛠 Tech
 
-One HTML file, vanilla JS. The core is a **deterministic** résumé parser + JD-keyword/seniority scoring engine (same input → same score, fully explainable). On top: **✦ AI Review** via a Supabase Edge Function proxy → Groq (Llama 3.3 70B) — the API key lives server-side only, callers must be signed-in users, per-user daily caps. Auth & cross-device sync: **Supabase** (email/password + Postgres with row-level security). Libraries via CDN: pdf.js, pdfmake, Lenis, supabase-js, Google Fonts. Hosted free on **GitHub Pages**. No build step. Parser regression suite in [`tests/`](tests/).
+One HTML file, vanilla JS. The core is a **deterministic** résumé parser + JD-keyword/seniority scoring engine (same input → same score, fully explainable). On top: **✦ AI Review** via a Supabase Edge Function proxy → Groq (Llama 3.3 70B) — the API key lives server-side only, callers must be signed-in users, per-user daily caps. Auth & cross-device sync: **Supabase** (email/password + Postgres with row-level security). Libraries via CDN: pdf.js, pdfmake, Lenis, supabase-js, Google Fonts. Hosted free on **GitHub Pages**. No build step. The parser is backed by a content-retention regression suite covering the popular résumé template families.
 
-To run your own copy: fork, create a free Supabase project (auth + `profiles`/`ai_usage` tables + the [`ai` Edge Function](supabase/functions/ai/index.ts) with your own `GROQ_API_KEY` secret), drop your project URL + publishable key into the account `<script>` block, enable GitHub Pages.
+To run your own copy: fork, create a free Supabase project (auth + `profiles`/`ai_usage` tables + an `ai` Edge Function that proxies to Groq, with your own `GROQ_API_KEY` kept as a server-side secret), drop your project URL + publishable key into the account `<script>` block, enable GitHub Pages. Open an issue if you want the Edge Function source.
 
 ## 🤝 Contributing
 
-Single file — easy to hack on. Issues & PRs welcome. Great first contributions: a résumé layout that parses badly (add a fixture to `tests/fixtures/`), more job boards/locales, résumé themes.
+Single file — easy to hack on. Issues & PRs welcome. Great first contributions: a résumé layout that parses badly (describe the layout in an issue — never post your personal data), more job boards/locales, résumé themes.
 
 ## 💗 Support
 
