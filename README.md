@@ -2,17 +2,17 @@
 
 # 🧭 Apply Co-Pilot
 
-### Paste a job → get an honest ATS score → download a custom, one-page résumé + cover letter as a real PDF with clickable links.
+### Create a free account → upload your résumé once → paste any job → get an honest ATS score → download a custom, one-page résumé + cover letter as a real PDF with clickable links.
 
-**100% in your browser. No sign-up. No servers. No AI keys. Your résumé never leaves your device.**
+**Your résumé and job tracker sync across all your devices. Private to your account. Free.**
 
-[![▶ Open the live app](https://img.shields.io/badge/▶_OPEN_THE_LIVE_APP-22d3ee?style=for-the-badge&logoColor=black)](https://raw.githack.com/prometheus-18/Apply-copilot/main/index.html)
+[![▶ Open the live app](https://img.shields.io/badge/▶_OPEN_THE_LIVE_APP-ff4c24?style=for-the-badge&logoColor=white)](https://prometheus-18.github.io/Apply-copilot/)
 
-`https://raw.githack.com/prometheus-18/Apply-copilot/main/index.html`
+`https://prometheus-18.github.io/Apply-copilot/`
 
-![License: MIT](https://img.shields.io/badge/License-MIT-22d3ee) ![100% client-side](https://img.shields.io/badge/100%25-client--side-7c83ff) ![No sign-up](https://img.shields.io/badge/no-sign--up-34d399) ![Single HTML file](https://img.shields.io/badge/single-HTML%20file-f59e0b) ![Free forever](https://img.shields.io/badge/free-forever-ff6ad5)
+![License: MIT](https://img.shields.io/badge/License-MIT-3c3a3e) ![Free account](https://img.shields.io/badge/free-account-ff6436) ![Cross-device sync](https://img.shields.io/badge/cross--device-sync-7b7a7c) ![Single HTML file](https://img.shields.io/badge/single-HTML%20file-a2a2a2) ![Real vector PDF](https://img.shields.io/badge/real-vector%20PDF-c9c7cc)
 
-*Best in **Chrome** or **Edge**. Works offline after it loads.*
+*Best in **Chrome** or **Edge**.*
 
 </div>
 
@@ -22,10 +22,13 @@
 
 > The app is one page you scroll down. Each step is a section. Here's the whole journey:
 
+### 0️⃣ Create your free account &nbsp;·&nbsp; *the landing page*
+Sign up with an email + password (or sign in if you're back). That's it — no card, no setup.
+Why an account? So your master résumé and tracker **follow you to every device** — start on your laptop, finish on your phone. Your data is **private to your account** and only you can read it.
+
 ### 1️⃣ Upload your résumé — **once** &nbsp;·&nbsp; section *⓪ Master Résumé*
 Drag in your résumé (**PDF or TXT**), or click **Load a sample** to try it first.
 This becomes your **master** — you never upload it again. Every future job is just a paste + a click.
-🔒 *It's saved only in your own browser. Nothing is uploaded.*
 
 ### 2️⃣ Paste the job &nbsp;·&nbsp; section *◆ Job Description*
 Type the **Company** and **Role**, then paste the **entire job description** (responsibilities *and* requirements — more text = a better match).
@@ -45,15 +48,15 @@ Click it **only if you genuinely have that skill** — the app weaves it into yo
 Your résumé, **rebuilt for this job**: a sharper summary, your most relevant bullets first, your matched keywords surfaced.
 Click **✎ Edit** to fix any wording, then **⬇ Download PDF** — a clean **one-page** PDF with **selectable text and clickable links** (exactly what ATS software reads).
 
-### 6️⃣ Cover letter, outreach & tracking &nbsp;·&nbsp; *③–⑤*
+### 6️⃣ Cover letter, outreach & tracking &nbsp;·&nbsp; *③–⑥*
 - **③ Cover Letter** — a matching, role-specific letter. Editable. Download.
 - **④ LinkedIn Outreach** — find the hiring manager / a peer / a recruiter, plus a ready connection note, referral email & follow-up.
-- **⑤ Job Tracker** — log each application (stage + next step). **Export CSV** or **Copy for Sheets** to drop it into Google Sheets / Excel. *(Private to your browser.)*
+- **⑤ Job Tracker** — log each application (stage + next step), synced to your account. **Export CSV** or **Copy for Sheets** to drop it into Google Sheets / Excel.
 - **⑥ Find Jobs** — one-click LinkedIn / Indeed / Naukri searches for the role.
 
 <div align="center">
 
-**⓪ Master → ◆ Job → ① Score → ➕ Accept tips → ② Résumé → ⬇ PDF**
+**Sign in → ⓪ Master → ◆ Job → ① Score → ➕ Accept tips → ② Résumé → ⬇ PDF**
 
 </div>
 
@@ -65,16 +68,22 @@ Click **✎ Edit** to fix any wording, then **⬇ Download PDF** — a clean **o
 - 📄 **A real one-page PDF, no watermark.** Built programmatically (not a screenshot) → **selectable text + working links**, the format ATS parsers can read. No print dialog.
 - 🧩 **Reads almost any résumé.** Single-column, LaTeX/Overleaf, icon-heavy templates — it merges wrapped bullets, strips PDF noise, and keeps Education, Projects, Certifications **and Achievements**.
 - 🚫 **Never lies.** It only reorders and re-emphasizes *your real* content, and surfaces keywords *you* confirm you have.
-- 🔒 **Truly private.** Everything runs in your browser; your data lives only in your `localStorage` and is never sent anywhere.
+- ☁️ **Yours, everywhere.** Sign in once and your master résumé + tracker are there on every device — laptop, phone, anywhere.
 
 ---
 
 ## ❓ FAQ
 
 <details>
-<summary><b>Is my data private? Can other people see my tracker?</b></summary>
+<summary><b>Is my data private? Can other people see my résumé or tracker?</b></summary>
 
-Yes, it's private — and no, nobody else can see it. There's **no server**. Your résumé and tracker are saved only in **your own browser** (`localStorage`). Every visitor gets their own separate, private copy. The flip side: it's tied to that browser/device — use **Export CSV / Copy for Sheets** to back it up.
+It's private to your account, and no, nobody else can see it. Your master résumé and tracker are stored in your own row in a secured database, protected by **row-level security** — the database itself refuses to return your data to anyone but you. It is never sold or shared.
+</details>
+
+<details>
+<summary><b>Why do I need an account now?</b></summary>
+
+So your work follows you across devices instead of being trapped in one browser. Signing up takes ten seconds (email + password) and is free.
 </details>
 
 <details>
@@ -90,24 +99,18 @@ Some PDFs extract oddly. The output is fully **editable** — click ✎ Edit and
 </details>
 
 <details>
-<summary><b>Does it use AI or scrape the job link?</b></summary>
+<summary><b>Does it scrape the job link?</b></summary>
 
-No. It's 100% offline and deterministic — a browser can't scrape arbitrary sites and there's no LLM. You paste the JD; the intelligence is in how it analyzes that text.
-</details>
-
-<details>
-<summary><b>Do I need an account, API key, or internet?</b></summary>
-
-No account, no key. Just a one-time CDN load for the libraries, then it works offline. Free forever.
+No. You paste the job description; the intelligence is in how it analyzes that text — a deterministic, explainable scoring engine, not a black box.
 </details>
 
 ---
 
 ## 🛠 Tech
 
-One HTML file, vanilla JS — a deterministic résumé parser + JD-keyword/seniority scoring engine (no LLM, no scraping). Libraries via CDN: **pdf.js** (résumé import), **pdfmake** (real vector PDF with clickable links), **Lenis** (smooth scroll), Google Fonts. No build step, nothing to host.
+One HTML file, vanilla JS — a deterministic résumé parser + JD-keyword/seniority scoring engine. Auth & cross-device sync via **Supabase** (email/password + Postgres with row-level security). PDF/UI libraries via CDN: **pdf.js** (résumé import), **pdfmake** (real vector PDF with clickable links), **Lenis** (smooth scroll), **supabase-js**, Google Fonts. Hosted free on **GitHub Pages**. No build step.
 
-To run locally: download [`apply_copilot_app.html`](apply_copilot_app.html) and open it in Chrome/Edge.
+To run your own copy: fork the repo, create a free Supabase project, drop your project URL + publishable key into the account `<script>` block in [`apply_copilot_app.html`](apply_copilot_app.html), create a `profiles` table with row-level security, and enable GitHub Pages.
 
 ## 🤝 Contributing
 
