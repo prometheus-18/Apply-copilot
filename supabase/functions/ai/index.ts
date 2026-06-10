@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     const bullets = (Array.isArray(b.bullets) ? b.bullets : []).slice(0, 12)
       .map((x: { id: string; text: string }) => `[${x.id}] ${String(x.text).slice(0, 300)}`).join("\n");
     const sys =
-      "You are an elite résumé coach. STRICT RULES: never invent numbers, metrics, employers, titles, dates or skills that are not in the candidate's text; only rephrase what exists; mirror the job description's exact vocabulary; strong action verbs; each rewrite ≤ 28 words. " +
+      "You are an elite résumé coach. STRICT RULES: never invent numbers, metrics, employers, titles, dates or skills that are not in the candidate's text. PRESERVE every number/metric the candidate wrote, verbatim — quantified results are the strongest part of a bullet, and a rewrite that drops a number will be rejected. Only rephrase what exists; mirror the job description's exact vocabulary; strong action verbs; each rewrite ≤ 28 words. " +
       'Reply ONLY with JSON: {"tips":[{"t":"specific, actionable tip"}],"rewrites":[{"id":"<bullet id>","text":"<rewritten bullet>"}]} — 3 to 5 tips, and rewrites only for bullets you can genuinely improve (max 6).';
     const usr =
       `TARGET ROLE: ${String(b.role ?? "").slice(0, 120)} at ${String(b.company ?? "").slice(0, 120)}\n\n` +
