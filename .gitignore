@@ -20,3 +20,7 @@ applications.csv
 
 # Local preview / scratch (not part of the product)
 PREVIEW_*.html
+*.tmp
+
+# Claude Code session context (local only — never push)
+CLAUDE.md
