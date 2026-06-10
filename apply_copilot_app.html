@@ -12,49 +12,52 @@
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.12/build/vfs_fonts.js" onerror="window.__noPdfMake=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.23/dist/lenis.min.js" onerror="window.__noLenis=1"></script>
 <style>
-  :root{ color-scheme: light;
+  :root{ color-scheme: dark;
     --obsidian:#161616;--graphite:#3c3a3e;--slate:#7b7a7c;--ash:#a2a2a2;--mist:#c9c7cc;--fog:#f1f1f1;--paper:#f8f8f8;--bone:#ffffff;--ember:#ff4c24;--tangerine:#ff6436;
     --r:14.4px;--mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;--disp:'Anton',Impact,'Arial Narrow',sans-serif;--sans:'Inter',system-ui,'Segoe UI',Arial,sans-serif;
-    --srf:var(--bone);--card:var(--paper);--card2:var(--bone);--tx:var(--graphite);--hd:var(--obsidian);--mut:#6b696e;--fnt:var(--ash);
-    --ln:#e3e1e6;--pln:#c9c7cc;--btn-ln:#3c3a3e;--ghost:#e9e7ec;--acc:#d8400f;--acc-soft:rgba(255,76,36,.07);
+    --srf:var(--obsidian);--card:#1d1d1f;--card2:#232325;--tx:var(--mist);--hd:var(--bone);--mut:var(--ash);--fnt:#6f6d72;
+    --ln:#2e2c30;--pln:var(--graphite);--btn-ln:#504e54;--ghost:#2e2c30;--acc:#ff7a52;--acc-soft:rgba(255,100,54,.09);
     --chrome:linear-gradient(180deg,#ffffff 0%,#e9e7eb 26%,#b9b7bb 52%,#6e6c70 78%,#2e2c30 100%);}
-  .dk{--srf:var(--obsidian);--card:#1d1d1f;--card2:#232325;--tx:var(--mist);--hd:var(--bone);--mut:var(--ash);--fnt:#6f6d72;
-    --ln:#2e2c30;--pln:var(--graphite);--btn-ln:#504e54;--ghost:#2e2c30;--acc:#ff7a52;--acc-soft:rgba(255,100,54,.09);}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   html,body{margin:0;min-height:100%}
-  body{color:var(--tx);font:500 14px/1.55 var(--sans);letter-spacing:-.01em;background:var(--bone)}
+  body{color:var(--tx);font:500 14px/1.55 var(--sans);letter-spacing:-.01em;background:#0d0d0f}
+  /* space backdrop — static CSS starfield behind everything */
+  #space{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:
+    radial-gradient(1px 1px at 12% 22%,rgba(255,255,255,.5),transparent 100%),
+    radial-gradient(1px 1px at 68% 9%,rgba(255,255,255,.38),transparent 100%),
+    radial-gradient(1.4px 1.4px at 42% 64%,rgba(255,255,255,.32),transparent 100%),
+    radial-gradient(1px 1px at 86% 46%,rgba(255,255,255,.42),transparent 100%),
+    radial-gradient(1px 1px at 28% 86%,rgba(255,255,255,.28),transparent 100%),
+    radial-gradient(1.4px 1.4px at 94% 74%,rgba(255,255,255,.25),transparent 100%);
+    background-size:520px 520px,640px 640px,760px 760px,880px 880px,700px 700px,980px 980px}
   a{color:var(--hd);text-decoration:none}a:hover{color:var(--acc)}
   #progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;background:var(--ember)}
-  /* sticky nav — transparent over the dark hero, Fog after */
+  /* sticky nav — obsidian glass, always dark */
   .nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    padding:11px clamp(18px,4vw,48px);background:rgba(241,241,241,.9);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--mist);transition:background .3s,border-color .3s}
-  .nav.ondark{background:#161616;border-bottom-color:transparent}
-  .nbrand{font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--obsidian);cursor:pointer;display:flex;align-items:center;gap:9px}
-  .nav.ondark .nbrand{color:var(--bone)}
-  .nbrand .v{font:600 10px var(--mono);letter-spacing:.02em;color:#fff;background:var(--tangerine);border-radius:var(--r);padding:3px 9px}
+    padding:11px clamp(18px,4vw,48px);background:rgba(13,13,15,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #2e2c30}
+  .nbrand{font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--bone);cursor:pointer;display:flex;align-items:center;gap:9px}
   .nlinks{display:flex;gap:2px;flex-wrap:wrap}
-  .nlinks a{position:relative;cursor:pointer;font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--slate);padding:7px 10px;border-radius:var(--r);transition:color .15s,background .15s}
-  .nlinks a:hover{color:var(--obsidian);text-decoration:none}
-  .nlinks a.on{color:var(--obsidian);background:rgba(22,22,22,.07)}
-  .nav.ondark .nlinks a{color:var(--ash)} .nav.ondark .nlinks a:hover{color:var(--bone)} .nav.ondark .nlinks a.on{color:var(--bone);background:rgba(255,255,255,.1)}
+  .nlinks a{position:relative;cursor:pointer;font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--ash);padding:7px 10px;border-radius:var(--r);transition:color .15s,background .15s}
+  .nlinks a:hover{color:var(--bone);text-decoration:none}
+  .nlinks a.on{color:var(--bone);background:rgba(255,255,255,.1)}
   .nlinks a.todo::after{content:"●";color:var(--ember);font-size:8px;position:absolute;top:2px;right:2px;animation:pulse 1.4s infinite}
   /* layout — full-bleed sections, constrained content */
   main.flow{position:relative;z-index:1}
-  .step{padding:84px clamp(18px,4vw,48px);background:var(--srf)}
+  .step{padding:84px clamp(18px,4vw,48px)}
   .step>*{max-width:1140px;margin-left:auto;margin-right:auto}
   .wm{font:400 clamp(54px,9vw,118px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.01em;color:var(--ghost);margin:0 auto 16px;user-select:none}
   /* hero — chrome display type emerging from black-to-fog void */
-  .hero{position:relative;min-height:100svh;background:var(--obsidian);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:110px clamp(18px,4vw,48px) 150px;overflow:hidden}
+  .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(72px,11vh,110px) clamp(18px,4vw,48px) clamp(96px,16vh,150px);overflow:hidden}
   .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(58% 46% at 50% 36%,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
-  .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:36vh;background:linear-gradient(180deg,rgba(22,22,22,0) 0%,#2c2a2e 38%,#6e6c70 66%,#c5c3c7 86%,#ffffff 100%);pointer-events:none}
+  .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:38vh;background:linear-gradient(180deg,rgba(22,22,22,0) 0%,rgba(110,108,112,.32) 50%,rgba(170,168,172,.38) 76%,rgba(13,13,15,0) 100%);pointer-events:none}
   .hero>*{position:relative;z-index:1}
   .kicker{font:600 11px var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--ash);margin-bottom:26px}
-  .hero h1{font:400 clamp(64px,21vw,320px)/.82 var(--disp);letter-spacing:-.015em;text-transform:uppercase;margin:0;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero h1{font:400 64px/.82 var(--disp);font-size:min(clamp(64px,21vw,320px),28vh);letter-spacing:-.015em;text-transform:uppercase;margin:0;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
   .hero h1 span{display:block}
-  .hmeta{position:absolute;left:clamp(18px,4vw,48px);bottom:34px;text-align:left;font:500 12px/1.7 var(--mono);letter-spacing:-.01em;color:var(--graphite)}
-  .hdesc{position:absolute;right:clamp(18px,4vw,48px);bottom:34px;max-width:280px;text-align:right;font:500 14px/1.55 var(--sans);color:var(--graphite)}
-  .scrollcue{position:absolute;left:0;right:0;bottom:26px;font:600 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--graphite);animation:bob 2.2s ease-in-out infinite}
+  .hmeta{position:absolute;left:clamp(18px,4vw,48px);bottom:34px;text-align:left;font:500 12px/1.7 var(--mono);letter-spacing:-.01em;color:var(--fog)}
+  .hdesc{position:absolute;right:clamp(18px,4vw,48px);bottom:34px;max-width:280px;text-align:right;font:500 14px/1.55 var(--sans);color:var(--fog)}
+  .scrollcue{position:absolute;left:0;right:0;bottom:26px;font:600 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ash);animation:bob 2.2s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(6px);opacity:1}}
   @media(max-width:880px){ .hmeta{position:static;margin-top:34px;text-align:center;color:var(--ash)} .hdesc{position:static;margin:18px auto 0;text-align:center;color:var(--ash)} .hero{padding-bottom:120px} }
   .seclabel{font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.2em;color:var(--mut);margin:0 0 14px;display:flex;align-items:center;gap:8px}
@@ -126,10 +129,10 @@
   .stmt{display:inline-block;padding:3px 10px;border-radius:var(--r);font:600 10.5px var(--mono);color:#fff}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
   ::selection{background:var(--ember);color:#fff}
-  ::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:var(--fog)}
-  ::-webkit-scrollbar-thumb{background:var(--mist);border:2px solid var(--fog);border-radius:6px}
-  footer{background:var(--fog);border-top:1px solid var(--graphite);padding:42px clamp(18px,4vw,48px) 54px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:-.01em;color:var(--graphite)}
-  footer a{color:var(--obsidian)}footer a:hover{color:var(--ember)}
+  ::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:#0d0d0f}
+  ::-webkit-scrollbar-thumb{background:#3c3a3e;border:2px solid #0d0d0f;border-radius:6px}
+  footer{border-top:1px solid #2e2c30;padding:42px clamp(18px,4vw,48px) 54px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:-.01em;color:var(--ash)}
+  footer a{color:var(--bone)}footer a:hover{color:var(--ember)}
   /* ===== résumé paper — light, clean, ATS-friendly (must stay white & print clean) ===== */
   .doc{position:relative;z-index:2;background:#fff;border:1px solid #d6dde8;border-radius:8px;padding:30px 34px;color:#16181d;font-family:"Calibri","Carlito","Segoe UI",Arial,sans-serif;font-size:10.3pt;line-height:1.34}
   .doc a{color:#1b59b3}
@@ -146,15 +149,16 @@
   .doc ul{margin:3px 0 4px 16px;padding:0}.doc li{margin:2.5px 0}.doc p{margin:3px 0}
   .doc.edit{outline:2px dashed #b9c6dd;outline-offset:3px}
   #printArea{display:none}
-  @media print{ body{background:#fff} #progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#1b59b3;text-decoration:none} }
+  @media print{ body{background:#fff} #space,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#1b59b3;text-decoration:none} }
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} .reveal{opacity:1;transform:none} .chip .dot{animation:none} }
 </style>
 </head>
 <body>
+<div id="space" aria-hidden="true"></div>
 <div id="progress"></div>
 
-<nav class="nav ondark">
-  <div class="nbrand" onclick="tab('top')">Apply Co·Pilot <span class="v">V3</span></div>
+<nav class="nav">
+  <div class="nbrand" onclick="tab('top')">Apply Co·Pilot</div>
   <div class="nlinks">
     <a data-t="mr" onclick="tab('mr')">⓪ Master Résumé</a>
     <a data-t="job" onclick="tab('job')">◆ Job Description</a>
@@ -169,7 +173,7 @@
 
 <main class="flow">
   <!-- HERO — chrome wordmark in cinematic fog -->
-  <section class="hero dk" id="pane-top">
+  <section class="hero" id="pane-top">
     <div class="kicker">100% Local · No AI · Private</div>
     <h1><span>Apply</span><span>Co·Pilot</span></h1>
     <div class="row" style="justify-content:center;gap:10px;margin-top:42px"><button class="primary" onclick="tab('mr')">Get started ↓</button><button onclick="tab('job')">Paste a job</button></div>
@@ -217,7 +221,7 @@
   </div></section>
 
   <!-- FIT -->
-  <section class="step dk" id="pane-kw"><div class="wm reveal" aria-hidden="true">Verdict</div><div class="panel reveal">
+  <section class="step" id="pane-kw"><div class="wm reveal" aria-hidden="true">Verdict</div><div class="panel reveal">
     <div class="seclabel">① · ATS Score</div>
     <div id="kwEmpty" class="empty">Set your master (⓪), paste a JD (◆), hit <b>Run analysis</b>. Your <b>honest current score</b> shows here first.</div>
     <div id="kwRun" style="display:none">
@@ -810,7 +814,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
 <!-- ===== scroll effects (Lenis smooth-scroll · reveal · progress · nav spy) ===== -->
 <script>
 (function(){
-  var bar=document.getElementById("progress"),nav=document.querySelector(".nav"),darks=[].slice.call(document.querySelectorAll("main.flow > section.dk"));
+  var bar=document.getElementById("progress");
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* Lenis buttery smooth-scroll (skip on reduced-motion) */
   if(!reduce && !window.__noLenis && window.Lenis){ try{ var lenis=new Lenis({lerp:0.085,smoothWheel:true,wheelMultiplier:1}); function _raf(t){lenis.raf(t);requestAnimationFrame(_raf);} requestAnimationFrame(_raf); window.__lenis=lenis; }catch(e){} }
@@ -821,7 +825,6 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   var ticking=false,sy=0,sections=[].slice.call(document.querySelectorAll("main.flow > section"));
   function onScroll(){ sy=window.pageYOffset; if(!ticking){ticking=true; requestAnimationFrame(function(){
     var max=document.body.scrollHeight-innerHeight||1, p=sy/max; if(bar)bar.style.width=(p*100)+"%";
-    if(nav){var onDk=false;for(var di=0;di<darks.length;di++){var d=darks[di];if(sy+44>=d.offsetTop&&sy+44<d.offsetTop+d.offsetHeight){onDk=true;break}}nav.classList.toggle("ondark",onDk);}
     var mid=sy+innerHeight*0.35, cur=null; sections.forEach(function(s){ if(s.offsetTop<=mid)cur=s.id; });
     if(cur){ var t=cur.replace("pane-",""); document.querySelectorAll(".nlinks a").forEach(function(a){a.classList.toggle("on",a.dataset.t===t);}); }
     ticking=false; });} }
