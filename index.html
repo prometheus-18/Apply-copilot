@@ -3,7 +3,7 @@
 {
   "name": "Apply Copilot",
   "schemaVersion": 1,
-  "description": "Single-file résumé tailoring tool: paste a JD → honest ATS fit score → custom ATS-optimized résumé and cover letter as a real 1-page PDF with clickable links. Works fully offline; optional free account (Supabase) syncs your master résumé and tracker across devices. Dark space UI."
+  "description": "Sign in, upload your résumé once, paste any job description → honest ATS fit score, then a custom ATS-optimized résumé and cover letter as a real 1-page PDF with clickable links. Your résumé and tracker sync across all your devices. Dark space UI."
 }
 </script>
 <html lang="en">
@@ -29,9 +29,9 @@
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   html,body{margin:0;min-height:100%}
-  body{color:var(--tx);font:500 14px/1.55 var(--sans);letter-spacing:-.01em;background:#0d0d0f}
+  body{color:var(--tx);font:500 14px/1.55 var(--sans);letter-spacing:-.01em;background:#0d0d0f;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   /* space backdrop — static CSS starfield behind everything */
-  #space{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:
+  #space{position:fixed;inset:-10% 0;z-index:0;pointer-events:none;will-change:background-position;background-image:
     radial-gradient(1px 1px at 12% 22%,rgba(255,255,255,.5),transparent 100%),
     radial-gradient(1px 1px at 68% 9%,rgba(255,255,255,.38),transparent 100%),
     radial-gradient(1.4px 1.4px at 42% 64%,rgba(255,255,255,.32),transparent 100%),
@@ -54,7 +54,7 @@
   main.flow{position:relative;z-index:1}
   .step{padding:84px clamp(18px,4vw,48px)}
   .step>*{max-width:1140px;margin-left:auto;margin-right:auto}
-  .wm{font:400 clamp(54px,9vw,118px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.01em;color:var(--ghost);margin:0 auto 16px;user-select:none}
+  .wm{font:400 clamp(54px,9vw,118px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.01em;color:#42404a;margin:0 auto 16px;user-select:none}
   /* hero — chrome display type emerging from black-to-fog void */
   .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(72px,11vh,110px) clamp(18px,4vw,48px) clamp(96px,16vh,150px);overflow:hidden}
   .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(58% 46% at 50% 36%,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
@@ -63,13 +63,20 @@
   .kicker{font:600 11px var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--ash);margin-bottom:26px}
   .hero h1{font:400 64px/.82 var(--disp);font-size:min(clamp(64px,21vw,320px),28vh);letter-spacing:-.015em;text-transform:uppercase;margin:0;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
   .hero h1 span{display:block}
-  .hmeta{position:absolute;left:clamp(18px,4vw,48px);bottom:34px;text-align:left;font:500 12px/1.7 var(--mono);letter-spacing:-.01em;color:var(--fog)}
   .hdesc{position:absolute;right:clamp(18px,4vw,48px);bottom:34px;max-width:280px;text-align:right;font:500 14px/1.55 var(--sans);color:var(--fog)}
   .scrollcue{position:absolute;left:0;right:0;bottom:26px;font:600 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ash);animation:bob 2.2s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(6px);opacity:1}}
-  @media(max-width:880px){ .hmeta{position:static;margin-top:34px;text-align:center;color:var(--ash)} .hdesc{position:static;margin:18px auto 0;text-align:center;color:var(--ash)} .hero{padding-bottom:120px} }
-  .seclabel{font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.2em;color:var(--mut);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  @media(max-width:880px){ .hdesc{position:static;margin:22px auto 0;text-align:center;color:var(--ash)} .hero{padding-bottom:110px} }
+  .seclabel{font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.2em;color:var(--fog);margin:0 0 14px;display:flex;align-items:center;gap:8px}
   .seclabel::after{content:"";flex:1;height:1px;background:var(--ln)}
+  /* ===== auth gate — app is hidden until signed in ===== */
+  .heroAuth{margin-top:38px;width:min(400px,100%)}
+  .heroAuth .authcard{text-align:left}
+  body.guest .heroCTA,body.guest .scrollcue{display:none}
+  body.authed .heroAuth{display:none}
+  body.guest main.flow>section.step{display:none}
+  body.guest footer,body.guest .nlinks{display:none}
+  body.booting .hero{visibility:hidden}   /* avoid a flash of the wrong state before auth resolves */
   /* panel — ghost border, no shadow; border darkens on hover */
   .panel{position:relative;background:var(--card);border:1px solid var(--pln);border-radius:var(--r);padding:26px;transition:border-color .25s}
   .panel:hover{border-color:var(--hd)}
@@ -141,16 +148,24 @@
   ::-webkit-scrollbar-thumb{background:#3c3a3e;border:2px solid #0d0d0f;border-radius:6px}
   footer{border-top:1px solid #2e2c30;padding:42px clamp(18px,4vw,48px) 54px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:-.01em;color:var(--ash)}
   footer a{color:var(--bone)}footer a:hover{color:var(--ember)}
-  /* account control + auth modal */
+  /* account control + auth card */
   .nright{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .nacct{display:flex;align-items:center;gap:8px}
   .acctmail{font:500 11px var(--mono);color:var(--ash);max-width:148px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .authwrap{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,5,7,.74);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
-  .authwrap.on{display:flex}
-  .authcard{width:min(420px,100%)}
   .authmsg{font:600 11px var(--mono);letter-spacing:.02em;margin-top:11px;min-height:15px;color:var(--acc)}
   .authmsg.ok{color:var(--mist)}
   .authcard a{cursor:pointer;color:var(--ember)}
+  /* mobile */
+  @media(max-width:760px){
+    .step{padding:54px clamp(16px,5vw,26px)}
+    .nav{padding:10px clamp(14px,4vw,20px)}
+    .nright{width:100%;justify-content:space-between;gap:8px}
+    .nlinks{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none}
+    .nlinks::-webkit-scrollbar{display:none}
+    .nlinks a{white-space:nowrap;padding:7px 8px}
+    .wm{font-size:clamp(38px,13vw,64px)}
+    .hero h1{font-size:min(17vw,20vh)}
+  }
   /* ===== résumé paper — light, clean, ATS-friendly (must stay white & print clean) ===== */
   .doc{position:relative;z-index:2;background:#fff;border:1px solid #d6dde8;border-radius:8px;padding:30px 34px;color:#16181d;font-family:"Calibri","Carlito","Segoe UI",Arial,sans-serif;font-size:10.3pt;line-height:1.34}
   .doc a{color:#1b59b3}
@@ -171,7 +186,7 @@
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} .reveal{opacity:1;transform:none} .chip .dot{animation:none} }
 </style>
 </head>
-<body>
+<body class="booting guest">
 <div id="space" aria-hidden="true"></div>
 <div id="progress"></div>
 
@@ -188,18 +203,33 @@
       <a data-t="trk" onclick="tab('trk')">⑤ Job Tracker</a>
       <a data-t="find" onclick="tab('find')">⑥ Find Jobs</a>
     </div>
-    <div class="nacct" id="nacct"><button class="sm ghost" onclick="authOpen()">Sign in</button></div>
+    <div class="nacct" id="nacct"></div>
   </div>
 </nav>
 
 <main class="flow">
-  <!-- HERO — chrome wordmark in cinematic fog -->
+  <!-- HERO — chrome wordmark + sign-in gate -->
   <section class="hero" id="pane-top">
-    <div class="kicker">100% Local · No AI · Private</div>
+    <div class="kicker">Résumé tailoring · ATS score · cover letters</div>
     <h1><span>Apply</span><span>Co·Pilot</span></h1>
-    <div class="row" style="justify-content:center;gap:10px;margin-top:42px"><button class="primary" onclick="tab('mr')">Get started ↓</button><button onclick="tab('job')">Paste a job</button></div>
-    <div class="hmeta">RÉSUMÉ ENGINE — V3.0<br>NO API · NO SERVER · NO SIGN-UP<br>DATA NEVER LEAVES THIS DEVICE</div>
-    <div class="hdesc">Your résumé, tailored to any job. Upload once, paste a job description — get an honest ATS fit score, then a custom résumé &amp; cover letter as a real PDF with clickable links. Everything runs in your browser.</div>
+
+    <!-- guest: inline account card (the app is gated behind this) -->
+    <div class="heroAuth" id="heroAuth">
+      <div class="authcard panel">
+        <div class="seclabel" id="authTitle">Create your free account</div>
+        <label class="fld">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
+        <label class="fld">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSubmit()">
+        <div class="authmsg" id="authMsg"></div>
+        <button class="primary" id="authGo" onclick="authSubmit()" style="width:100%;margin-top:13px">Create account</button>
+        <div class="hint" style="margin-top:13px;text-align:center">Already have an account? <a id="authToggle" onclick="authToggleMode()">Sign in →</a></div>
+        <div class="hint" id="authIntro" style="margin-top:9px;text-align:center">Free · your résumé &amp; tracker sync across all your devices.</div>
+      </div>
+    </div>
+
+    <!-- signed in: CTA into the app -->
+    <div class="heroCTA row" style="justify-content:center;gap:10px;margin-top:42px"><button class="primary" onclick="tab('mr')">Get started ↓</button><button onclick="tab('job')">Paste a job</button></div>
+
+    <div class="hdesc">Your résumé, tailored to any job. Upload once, paste a job description — get an honest ATS fit score, then a custom résumé &amp; cover letter as a real PDF with clickable links.</div>
     <div class="scrollcue">scroll to begin ↓</div>
   </section>
 
@@ -318,19 +348,6 @@
 
   <footer><span>APPLY CO·PILOT — V3.0</span><span>FREE &amp; OPEN SOURCE · 100% IN-BROWSER · MIT</span><a href="https://github.com/prometheus-18/Apply-copilot" target="_blank">GITHUB ↗</a></footer>
 </main>
-
-<!-- Account modal (Supabase auth) -->
-<div id="authWrap" class="authwrap" onclick="authBackdrop(event)">
-  <div class="authcard panel">
-    <div class="seclabel">⊹ · Account · sync across devices</div>
-    <div class="hint" id="authIntro">Sign in to sync your master résumé and tracker across every device. Totally optional — the app works fully without an account, and your data stays in this browser until you do.</div>
-    <label class="fld">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
-    <label class="fld">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="current-password">
-    <div class="authmsg" id="authMsg"></div>
-    <div class="row" style="margin-top:13px"><button class="primary" id="authGo" onclick="authSubmit()">Sign in</button><button class="ghost" onclick="authClose()">Keep working offline</button></div>
-    <div class="hint" style="margin-top:12px">New here? <a id="authToggle" onclick="authToggleMode()">Create an account →</a></div>
-  </div>
-</div>
 <div id="printArea"></div>
 
 <script>
@@ -855,10 +872,12 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   /* scroll-reveal */
   try{ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{threshold:.12,rootMargin:"0px 0px -8% 0px"});
     document.querySelectorAll(".reveal").forEach(function(el){io.observe(el);}); }catch(e){ document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in");}); }
-  /* progress + nav dark-over-hero + nav spy */
+  /* progress + starfield parallax + nav spy */
+  var space=document.getElementById("space");
   var ticking=false,sy=0,sections=[].slice.call(document.querySelectorAll("main.flow > section"));
   function onScroll(){ sy=window.pageYOffset; if(!ticking){ticking=true; requestAnimationFrame(function(){
     var max=document.body.scrollHeight-innerHeight||1, p=sy/max; if(bar)bar.style.width=(p*100)+"%";
+    if(space)space.style.backgroundPositionY=(sy*0.32)+"px";   /* slow drift = depth */
     var mid=sy+innerHeight*0.35, cur=null; sections.forEach(function(s){ if(s.offsetTop<=mid)cur=s.id; });
     if(cur){ var t=cur.replace("pane-",""); document.querySelectorAll(".nlinks a").forEach(function(a){a.classList.toggle("on",a.dataset.t===t);}); }
     ticking=false; });} }
@@ -866,39 +885,36 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
 })();
 </script>
 
-<!-- ===== Account: Supabase auth + cloud sync (optional; app is fully usable offline) ===== -->
+<!-- ===== Account gate: Supabase auth + cross-device sync (sign-in required) ===== -->
 <script>
 (function(){
-  /* The two values below are the PUBLISHABLE (public) keys — safe to ship in client code.
-     RLS policies on the 'profiles' table are what actually protect each user's data.
-     NEVER put the service_role / secret key here. */
+  /* PUBLISHABLE (public) key — safe to ship in client code; the RLS policies on the
+     'profiles' table are what protect each user's data. NEVER put the service_role secret here. */
   var SUPABASE_URL="https://afrnacnurjuhfrzodeam.supabase.co";
   var SUPABASE_KEY="sb_publishable_5szXjay4r20_jbfBmsu8uw_G1LMeINQ";
 
   var SB=null;
   try{ if(!window.__noSupabase && window.supabase && window.supabase.createClient) SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }catch(e){}
 
-  var AUTH_USER=null, MODE="in", PULLING=false, pushT=null;
+  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null;
 
   function $(id){ return document.getElementById(id); }
   function authMsg(t,ok){ var e=$("authMsg"); if(!e)return; e.textContent=t||""; e.className="authmsg"+(ok?" ok":""); }
 
-  window.authOpen=function(){ if(!SB){authMsg("Account sync is offline right now — you can keep using the app normally.",0);} var w=$("authWrap"); if(w)w.classList.add("on"); var em=$("authEmail"); if(em)em.focus(); };
-  window.authClose=function(){ var w=$("authWrap"); if(w)w.classList.remove("on"); authMsg("",0); };
-  window.authBackdrop=function(e){ if(e&&e.target&&e.target.id==="authWrap")window.authClose(); };
-  window.authToggleMode=function(){ MODE=(MODE==="in"?"up":"in"); renderForm(); authMsg("",0); };
+  window.authToggleMode=function(){ MODE=(MODE==="up"?"in":"up"); renderForm(); authMsg("",0); };
   function renderForm(){
     var up=(MODE==="up");
+    if($("authTitle"))$("authTitle").textContent=up?"Create your free account":"Welcome back";
     if($("authGo"))$("authGo").textContent=up?"Create account":"Sign in";
-    if($("authToggle"))$("authToggle").textContent=up?"← Back to sign in":"Create an account →";
+    if($("authToggle"))$("authToggle").textContent=up?"Sign in →":"← Create an account";
     if($("authPass"))$("authPass").setAttribute("autocomplete",up?"new-password":"current-password");
     if($("authIntro"))$("authIntro").textContent=up
-      ? "Create a free account to sync your master résumé and tracker across every device. Totally optional — the app works fully without one."
-      : "Sign in to sync your master résumé and tracker across every device. Totally optional — the app works fully without an account.";
+      ? "Free · your résumé & tracker sync across all your devices."
+      : "Welcome back — your saved résumé & tracker load automatically.";
   }
 
   window.authSubmit=async function(){
-    if(!SB){ authMsg("Account sync is offline right now — try again later.",0); return; }
+    if(!SB){ authMsg("Can't reach the sign-in service. Check your connection and refresh.",0); return; }
     var email=(($("authEmail")||{}).value||"").trim(), pass=(($("authPass")||{}).value||"");
     if(!email||!pass){ authMsg("Enter your email and a password.",0); return; }
     if(pass.length<6){ authMsg("Password must be at least 6 characters.",0); return; }
@@ -912,19 +928,24 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       if(MODE==="up" && res.data && res.data.user && !res.data.session){
         authMsg("Account created — check your inbox to confirm, then sign in.",1); MODE="in"; renderForm(); if(btn)btn.disabled=false; return;
       }
-      if(btn)btn.disabled=false; window.authClose();   /* onAuthStateChange handles the rest */
+      if(btn)btn.disabled=false;   /* session present → onAuthStateChange reveals the app */
     }catch(e){ authMsg("Network error — please try again.",0); if(btn)btn.disabled=false; }
   };
-  window.authSignOut=async function(){ try{ if(SB)await SB.auth.signOut(); }catch(e){} };
+  window.authSignOut=async function(){ try{ if(SB)await SB.auth.signOut(); }catch(e){ location.reload(); } };
 
   function setAuthUI(){
     var box=$("nacct"); if(!box)return;
     if(AUTH_USER){
       var em=AUTH_USER.email||"account";
       box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" onclick="authSignOut()">Sign out</button>';
-    } else {
-      box.innerHTML='<button class="sm ghost" onclick="authOpen()">Sign in</button>';
-    }
+    } else { box.innerHTML=""; }
+  }
+  function setAuthed(on){
+    document.body.classList.remove("booting");
+    document.body.classList.toggle("authed",on);
+    document.body.classList.toggle("guest",!on);
+    if(on){ try{ document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in");}); }catch(e){} }
+    setAuthUI();
   }
 
   async function cloudPull(){
@@ -934,12 +955,12 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       if(r.error){ console.warn("[sync] pull:",r.error.message); return; }
       if(r.data){
         PULLING=true;
-        try{ if(r.data.master_raw) localStorage.setItem(MKEY,JSON.stringify({raw:r.data.master_raw,name:r.data.master_name||"Resume"})); }catch(e){}
-        try{ if(Array.isArray(r.data.tracker)) localStorage.setItem(TK,JSON.stringify(r.data.tracker)); }catch(e){}
+        try{ localStorage.setItem(MKEY,JSON.stringify({raw:r.data.master_raw||"",name:r.data.master_name||"Resume"})); }catch(e){}
+        try{ localStorage.setItem(TK,JSON.stringify(Array.isArray(r.data.tracker)?r.data.tracker:[])); }catch(e){}
         PULLING=false;
         try{ loadMaster(); loadLog(); renderMasterUI(); renderTracker(); updateState(); }catch(e){}
       } else {
-        cloudPush();   /* first sign-in: no cloud row yet → save whatever is local */
+        cloudPush();   /* brand-new account: create the row */
       }
     }catch(e){ console.warn("[sync] pull:",e); }
   }
@@ -961,15 +982,23 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(); };
   }catch(e){}
 
-  renderForm(); setAuthUI();
+  renderForm();
+  setTimeout(function(){ document.body.classList.remove("booting"); },2500);   /* never get stuck on a blank hero */
+
   if(SB){
     SB.auth.onAuthStateChange(function(event,session){
       AUTH_USER = session ? session.user : null;
-      setAuthUI();
-      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION")) cloudPull();
+      /* sign-out wipes this device's local copy so the next account starts clean, then reloads to a fresh gate */
+      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); }catch(e){} location.reload(); return; }
+      setAuthed(!!AUTH_USER);
+      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION")){
+        cloudPull().then(function(){ if(event==="SIGNED_IN") setTimeout(function(){ try{ tab("mr"); }catch(e){} },360); });
+      }
     });
   } else {
-    var box=$("nacct"); if(box)box.style.display="none";   /* lib failed to load → hide account UI, stay offline */
+    setAuthed(false);
+    authMsg("Can't reach the sign-in service. Check your connection and refresh.",0);
+    var g=$("authGo"); if(g)g.disabled=true;
   }
 })();
 </script>
