@@ -1,11 +1,4 @@
 <!DOCTYPE html>
-<script type="application/json" id="cowork-artifact-meta">
-{
-  "name": "Apply Copilot",
-  "schemaVersion": 1,
-  "description": "Sign in, upload your résumé once, paste any job description → honest ATS fit score, then a custom ATS-optimized résumé and cover letter as a real 1-page PDF with clickable links. Your résumé and tracker sync across all your devices. Dark space UI."
-}
-</script>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -896,7 +889,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   var SB=null;
   try{ if(!window.__noSupabase && window.supabase && window.supabase.createClient) SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }catch(e){}
 
-  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null;
+  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null, BOOTED=false;
 
   function $(id){ return document.getElementById(id); }
   function authMsg(t,ok){ var e=$("authMsg"); if(!e)return; e.textContent=t||""; e.className="authmsg"+(ok?" ok":""); }
@@ -991,8 +984,11 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       /* sign-out wipes this device's local copy so the next account starts clean, then reloads to a fresh gate */
       if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); }catch(e){} location.reload(); return; }
       setAuthed(!!AUTH_USER);
-      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION")){
-        cloudPull().then(function(){ if(event==="SIGNED_IN") setTimeout(function(){ try{ tab("mr"); }catch(e){} },360); });
+      /* Supabase re-fires SIGNED_IN on every tab refocus — pull + welcome-scroll only ONCE per page load,
+         so returning to the tab leaves the user exactly where they were */
+      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION") && !BOOTED){
+        BOOTED=true; var fresh=(event==="SIGNED_IN");
+        cloudPull().then(function(){ if(fresh) setTimeout(function(){ try{ tab("mr"); }catch(e){} },360); });
       }
     });
   } else {
