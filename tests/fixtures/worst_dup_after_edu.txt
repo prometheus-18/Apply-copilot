@@ -1,0 +1,48 @@
+PRIYA NAIR
+Lead Quality Assurance Engineer
+Kochi, India | +91 99467 22810 | priya.nair1995@gmail.com
+SUMMARY
+Result oriented testing professional with over eleven years of rich hands-on
+experience in manual and automation testing of web and mobile applications,
+seeking a senior QA leadership role in a growth oriented organisation.
+EXPERIENCE
+Lead QA Engineer – UST Global, Thiruvananthapuram 07.2020 – Present
+• Leading a team of 9 QA engineers across three scrum squads testing a US
+healthcare claims adjudication platform
+• Built a Selenium WebDriver and TestNG regression suite of 1,400 cases
+cutting release certification effort from ten days to three
+◦ INTRODUCED SHIFT-LEFT TESTING AND REDUCED PRODUCTION DEFECTS BY 38 PERCENT
+• Drove the Jira to Azure DevOps migration between 02.2021 – 09.2021 for all
+QA assets including test plans and pipelines
+Senior Test Engineer – QBurst Technologies, Kochi 05.2016 – 06.2020
+• Automated REST API checks with Postman and Newman saving 30 hours per
+release cycle for an ecommerce client
+• Performed load tests in JMeter simulating 50,000 concurrent users before
+the annual festival sale event
+– MENTORED FOUR FRESHERS WHO ALL CLEARED ISTQB IN FIRST ATTEMPT
+Test Engineer – Infosys, Mysuru 10.2013 – 04.2016
+• Executed regression packs for a European telecom billing system
+• Logged and triaged defects in HP Quality Center with detailed steps
+QA Analyst – Allianz Cornhill Information Services, Trivandrum 01.2012 – 09.2013
+· Tested motor insurance quote journeys against UK underwriting rules
+Junior Tester – Toonz Animation India, Trivandrum 06.2010 – 12.2011
+▪ Verified render farm output frames and raised colour mismatch defects
+TECHNICAL SKILLS
+Testing Tools: Selenium WebDriver, TestNG, Postman, JMeter, Appium, Cypress
+Languages: Java, Python, SQL
+Process: Agile Scrum, JIRA, Azure DevOps, Confluence, HP Quality Center
+EDUCATION
+Master of Computer Applications, Cochin University of Science and Technology 2007 – 2010 CGPA: 7.8/10
+Bachelor of Science in Physics, Mahatma Gandhi University, Kottayam 2004 – 2007
+EXPERIENCE
+Computer Faculty – NIIT Centre, Ernakulam 03.2009 – 05.2010
+• Conducted C programming and MS Office batches for 120 working students
+Data Analyst Trainee – Muthoot Fincorp, Kochi 08.2008 – 02.2009
+• Prepared daily gold loan disbursement reports in Excel for branch heads
+CERTIFICATIONS
+ISTQB Foundation Level – 2013
+Certified Scrum Master (CSM) – 2019
+PUBLICATIONS
+Co-authored a paper on model based regression selection in the International
+Journal of Software Testing Practice, 2018
+INTERESTS: travel photography, badminton, Carnatic music
