@@ -3,7 +3,7 @@
 {
   "name": "Apply Copilot",
   "schemaVersion": 1,
-  "description": "Single-file, 100% local résumé tailoring tool: paste a JD → honest ATS fit score with accept-to-apply tips → custom ATS-optimized résumé and cover letter as a real 1-page PDF with clickable links. Dark space UI: chrome wordmark hero, CSS starfield, single ember accent."
+  "description": "Single-file résumé tailoring tool: paste a JD → honest ATS fit score → custom ATS-optimized résumé and cover letter as a real 1-page PDF with clickable links. Works fully offline; optional free account (Supabase) syncs your master résumé and tracker across devices. Dark space UI."
 }
 </script>
 <html lang="en">
@@ -18,6 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.12/build/pdfmake.min.js" onerror="window.__noPdfMake=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.12/build/vfs_fonts.js" onerror="window.__noPdfMake=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.23/dist/lenis.min.js" onerror="window.__noLenis=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window.__noSupabase=1"></script>
 <style>
   :root{ color-scheme: dark;
     --obsidian:#161616;--graphite:#3c3a3e;--slate:#7b7a7c;--ash:#a2a2a2;--mist:#c9c7cc;--fog:#f1f1f1;--paper:#f8f8f8;--bone:#ffffff;--ember:#ff4c24;--tangerine:#ff6436;
@@ -77,8 +78,8 @@
   .reveal.in{opacity:1;transform:none}
   /* forms */
   label.fld{display:block;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--mut);margin:12px 0 5px}
-  input[type=text],input[type=file],textarea,select{width:100%;font:500 13px var(--sans);border:1px solid var(--pln);border-radius:var(--r);padding:10px 13px;background:var(--card2);color:var(--hd);transition:border-color .15s}
-  input[type=text]:focus,textarea:focus,select:focus{outline:none;border-color:var(--hd)}
+  input[type=text],input[type=file],input[type=password],input[type=email],textarea,select{width:100%;font:500 13px var(--sans);border:1px solid var(--pln);border-radius:var(--r);padding:10px 13px;background:var(--card2);color:var(--hd);transition:border-color .15s}
+  input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,textarea:focus,select:focus{outline:none;border-color:var(--hd)}
   input[type=file]{padding:9px;font-size:12px;font-family:var(--mono)}
   input::placeholder,textarea::placeholder{color:var(--fnt)}
   textarea{min-height:170px;resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.5;font-weight:400}
@@ -140,6 +141,16 @@
   ::-webkit-scrollbar-thumb{background:#3c3a3e;border:2px solid #0d0d0f;border-radius:6px}
   footer{border-top:1px solid #2e2c30;padding:42px clamp(18px,4vw,48px) 54px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:-.01em;color:var(--ash)}
   footer a{color:var(--bone)}footer a:hover{color:var(--ember)}
+  /* account control + auth modal */
+  .nright{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .nacct{display:flex;align-items:center;gap:8px}
+  .acctmail{font:500 11px var(--mono);color:var(--ash);max-width:148px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .authwrap{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,5,7,.74);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+  .authwrap.on{display:flex}
+  .authcard{width:min(420px,100%)}
+  .authmsg{font:600 11px var(--mono);letter-spacing:.02em;margin-top:11px;min-height:15px;color:var(--acc)}
+  .authmsg.ok{color:var(--mist)}
+  .authcard a{cursor:pointer;color:var(--ember)}
   /* ===== résumé paper — light, clean, ATS-friendly (must stay white & print clean) ===== */
   .doc{position:relative;z-index:2;background:#fff;border:1px solid #d6dde8;border-radius:8px;padding:30px 34px;color:#16181d;font-family:"Calibri","Carlito","Segoe UI",Arial,sans-serif;font-size:10.3pt;line-height:1.34}
   .doc a{color:#1b59b3}
@@ -166,15 +177,18 @@
 
 <nav class="nav">
   <div class="nbrand" onclick="tab('top')">Apply Co·Pilot</div>
-  <div class="nlinks">
-    <a data-t="mr" onclick="tab('mr')">⓪ Master Résumé</a>
-    <a data-t="job" onclick="tab('job')">◆ Job Description</a>
-    <a data-t="kw" onclick="tab('kw')">① ATS Score</a>
-    <a data-t="cv" onclick="tab('cv')">② Custom Résumé</a>
-    <a data-t="cl" onclick="tab('cl')">③ Cover Letter</a>
-    <a data-t="out" onclick="tab('out')">④ LinkedIn Outreach</a>
-    <a data-t="trk" onclick="tab('trk')">⑤ Job Tracker</a>
-    <a data-t="find" onclick="tab('find')">⑥ Find Jobs</a>
+  <div class="nright">
+    <div class="nlinks">
+      <a data-t="mr" onclick="tab('mr')">⓪ Master Résumé</a>
+      <a data-t="job" onclick="tab('job')">◆ Job Description</a>
+      <a data-t="kw" onclick="tab('kw')">① ATS Score</a>
+      <a data-t="cv" onclick="tab('cv')">② Custom Résumé</a>
+      <a data-t="cl" onclick="tab('cl')">③ Cover Letter</a>
+      <a data-t="out" onclick="tab('out')">④ LinkedIn Outreach</a>
+      <a data-t="trk" onclick="tab('trk')">⑤ Job Tracker</a>
+      <a data-t="find" onclick="tab('find')">⑥ Find Jobs</a>
+    </div>
+    <div class="nacct" id="nacct"><button class="sm ghost" onclick="authOpen()">Sign in</button></div>
   </div>
 </nav>
 
@@ -304,6 +318,19 @@
 
   <footer><span>APPLY CO·PILOT — V3.0</span><span>FREE &amp; OPEN SOURCE · 100% IN-BROWSER · MIT</span><a href="https://github.com/prometheus-18/Apply-copilot" target="_blank">GITHUB ↗</a></footer>
 </main>
+
+<!-- Account modal (Supabase auth) -->
+<div id="authWrap" class="authwrap" onclick="authBackdrop(event)">
+  <div class="authcard panel">
+    <div class="seclabel">⊹ · Account · sync across devices</div>
+    <div class="hint" id="authIntro">Sign in to sync your master résumé and tracker across every device. Totally optional — the app works fully without an account, and your data stays in this browser until you do.</div>
+    <label class="fld">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
+    <label class="fld">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="current-password">
+    <div class="authmsg" id="authMsg"></div>
+    <div class="row" style="margin-top:13px"><button class="primary" id="authGo" onclick="authSubmit()">Sign in</button><button class="ghost" onclick="authClose()">Keep working offline</button></div>
+    <div class="hint" style="margin-top:12px">New here? <a id="authToggle" onclick="authToggleMode()">Create an account →</a></div>
+  </div>
+</div>
 <div id="printArea"></div>
 
 <script>
@@ -836,6 +863,114 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     if(cur){ var t=cur.replace("pane-",""); document.querySelectorAll(".nlinks a").forEach(function(a){a.classList.toggle("on",a.dataset.t===t);}); }
     ticking=false; });} }
   addEventListener("scroll",onScroll,{passive:true}); onScroll();
+})();
+</script>
+
+<!-- ===== Account: Supabase auth + cloud sync (optional; app is fully usable offline) ===== -->
+<script>
+(function(){
+  /* The two values below are the PUBLISHABLE (public) keys — safe to ship in client code.
+     RLS policies on the 'profiles' table are what actually protect each user's data.
+     NEVER put the service_role / secret key here. */
+  var SUPABASE_URL="https://afrnacnurjuhfrzodeam.supabase.co";
+  var SUPABASE_KEY="sb_publishable_5szXjay4r20_jbfBmsu8uw_G1LMeINQ";
+
+  var SB=null;
+  try{ if(!window.__noSupabase && window.supabase && window.supabase.createClient) SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }catch(e){}
+
+  var AUTH_USER=null, MODE="in", PULLING=false, pushT=null;
+
+  function $(id){ return document.getElementById(id); }
+  function authMsg(t,ok){ var e=$("authMsg"); if(!e)return; e.textContent=t||""; e.className="authmsg"+(ok?" ok":""); }
+
+  window.authOpen=function(){ if(!SB){authMsg("Account sync is offline right now — you can keep using the app normally.",0);} var w=$("authWrap"); if(w)w.classList.add("on"); var em=$("authEmail"); if(em)em.focus(); };
+  window.authClose=function(){ var w=$("authWrap"); if(w)w.classList.remove("on"); authMsg("",0); };
+  window.authBackdrop=function(e){ if(e&&e.target&&e.target.id==="authWrap")window.authClose(); };
+  window.authToggleMode=function(){ MODE=(MODE==="in"?"up":"in"); renderForm(); authMsg("",0); };
+  function renderForm(){
+    var up=(MODE==="up");
+    if($("authGo"))$("authGo").textContent=up?"Create account":"Sign in";
+    if($("authToggle"))$("authToggle").textContent=up?"← Back to sign in":"Create an account →";
+    if($("authPass"))$("authPass").setAttribute("autocomplete",up?"new-password":"current-password");
+    if($("authIntro"))$("authIntro").textContent=up
+      ? "Create a free account to sync your master résumé and tracker across every device. Totally optional — the app works fully without one."
+      : "Sign in to sync your master résumé and tracker across every device. Totally optional — the app works fully without an account.";
+  }
+
+  window.authSubmit=async function(){
+    if(!SB){ authMsg("Account sync is offline right now — try again later.",0); return; }
+    var email=(($("authEmail")||{}).value||"").trim(), pass=(($("authPass")||{}).value||"");
+    if(!email||!pass){ authMsg("Enter your email and a password.",0); return; }
+    if(pass.length<6){ authMsg("Password must be at least 6 characters.",0); return; }
+    var btn=$("authGo"); if(btn)btn.disabled=true;
+    authMsg(MODE==="up"?"Creating your account…":"Signing in…",1);
+    try{
+      var res = MODE==="up"
+        ? await SB.auth.signUp({email:email,password:pass})
+        : await SB.auth.signInWithPassword({email:email,password:pass});
+      if(res.error){ authMsg(res.error.message||"Something went wrong.",0); if(btn)btn.disabled=false; return; }
+      if(MODE==="up" && res.data && res.data.user && !res.data.session){
+        authMsg("Account created — check your inbox to confirm, then sign in.",1); MODE="in"; renderForm(); if(btn)btn.disabled=false; return;
+      }
+      if(btn)btn.disabled=false; window.authClose();   /* onAuthStateChange handles the rest */
+    }catch(e){ authMsg("Network error — please try again.",0); if(btn)btn.disabled=false; }
+  };
+  window.authSignOut=async function(){ try{ if(SB)await SB.auth.signOut(); }catch(e){} };
+
+  function setAuthUI(){
+    var box=$("nacct"); if(!box)return;
+    if(AUTH_USER){
+      var em=AUTH_USER.email||"account";
+      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" onclick="authSignOut()">Sign out</button>';
+    } else {
+      box.innerHTML='<button class="sm ghost" onclick="authOpen()">Sign in</button>';
+    }
+  }
+
+  async function cloudPull(){
+    if(!SB||!AUTH_USER)return;
+    try{
+      var r=await SB.from("profiles").select("master_raw,master_name,tracker").eq("id",AUTH_USER.id).maybeSingle();
+      if(r.error){ console.warn("[sync] pull:",r.error.message); return; }
+      if(r.data){
+        PULLING=true;
+        try{ if(r.data.master_raw) localStorage.setItem(MKEY,JSON.stringify({raw:r.data.master_raw,name:r.data.master_name||"Resume"})); }catch(e){}
+        try{ if(Array.isArray(r.data.tracker)) localStorage.setItem(TK,JSON.stringify(r.data.tracker)); }catch(e){}
+        PULLING=false;
+        try{ loadMaster(); loadLog(); renderMasterUI(); renderTracker(); updateState(); }catch(e){}
+      } else {
+        cloudPush();   /* first sign-in: no cloud row yet → save whatever is local */
+      }
+    }catch(e){ console.warn("[sync] pull:",e); }
+  }
+  function schedulePush(){ if(!SB||!AUTH_USER||PULLING)return; clearTimeout(pushT); pushT=setTimeout(cloudPush,900); }
+  async function cloudPush(){
+    if(!SB||!AUTH_USER)return;
+    var m={raw:"",name:""}, log=[];
+    try{ m=JSON.parse(localStorage.getItem(MKEY)||"{}")||{}; }catch(e){}
+    try{ log=JSON.parse(localStorage.getItem(TK)||"[]")||[]; }catch(e){}
+    var row={ id:AUTH_USER.id, master_raw:m.raw||"", master_name:m.name||"", tracker:Array.isArray(log)?log:[], updated_at:new Date().toISOString() };
+    try{ var r=await SB.from("profiles").upsert(row); if(r.error)console.warn("[sync] push:",r.error.message); }catch(e){ console.warn("[sync] push:",e); }
+  }
+
+  /* detect local changes to the two app keys → push to cloud (no edits to the engine) */
+  try{
+    var _set=localStorage.setItem.bind(localStorage);
+    localStorage.setItem=function(k,v){ _set(k,v); if(k===MKEY||k===TK) schedulePush(); };
+    var _rm=localStorage.removeItem.bind(localStorage);
+    localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(); };
+  }catch(e){}
+
+  renderForm(); setAuthUI();
+  if(SB){
+    SB.auth.onAuthStateChange(function(event,session){
+      AUTH_USER = session ? session.user : null;
+      setAuthUI();
+      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION")) cloudPull();
+    });
+  } else {
+    var box=$("nacct"); if(box)box.style.display="none";   /* lib failed to load → hide account UI, stay offline */
+  }
 })();
 </script>
 </body>
