@@ -3,7 +3,7 @@
 {
   "name": "Apply Copilot (DEV v3-ai)",
   "schemaVersion": 1,
-  "description": "DEV BRANCH preview of Apply Copilot v3 — sign-in-gated résumé tailoring with per-keyword score tips and a UPI support section. The official public app lives on the main branch / GitHub Pages."
+  "description": "DEV BRANCH preview of Apply Copilot v3 — AI Review (tailored tips + truth-guarded bullet rewrites via Groq proxy), UPI support QR, per-keyword score tips. Official public app lives on main / GitHub Pages."
 }
 </script>
 <html lang="en">
@@ -129,6 +129,14 @@
   .box h5{margin:0 0 8px;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .box.ok{border-color:var(--ash)}
   #recBox{border-color:var(--tangerine)}
+  /* AI review cards */
+  #aiBox{border-color:#4a3f3a}
+  .aicard{border:1px solid var(--ln);border-radius:var(--r);padding:12px 14px;margin:9px 0;background:var(--card)}
+  .aicard .old{color:var(--fnt);font-size:12px;text-decoration:line-through;text-decoration-color:rgba(255,76,36,.5)}
+  .aicard .new{color:var(--tx);font-size:13px;margin:7px 0 9px}
+  .aicard.applied{border-color:var(--ash)}
+  .aitip{margin:6px 0;font-size:12.5px;color:var(--tx)}
+  .aitip::before{content:"✦ ";color:var(--acc)}
   .ko{border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc);border-radius:var(--r);padding:10px 13px;margin:10px 0;font-size:12px}
   .ko.bad{background:rgba(255,76,36,.14)}
   .ok5{color:var(--hd)}
@@ -303,6 +311,7 @@
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
       <div class="box" id="recBox" style="display:none"><h5>// Tips to raise your score</h5><ol id="kwRecs" style="margin:0;padding-left:18px"></ol></div>
       <div class="hint" id="recNote" style="display:none;color:var(--acc);margin:6px 0">✓ Accepted keywords will be woven into your résumé when you view it.</div>
+      <div class="box" id="aiBox" style="display:none"><h5><span>✦ AI Review — tailored tips &amp; bullet rewrites</span><span class="chip ok" id="aiSrc" style="display:none">CLOUD AI</span></h5><div id="aiBody"></div></div>
       <div class="row" style="margin-top:6px"><button class="sm primary" onclick="viewTailored()">→ View tailored résumé</button><button class="sm ghost" onclick="tab('cl')">→ Cover letter</button></div>
     </div>
   </div></section>
@@ -359,8 +368,9 @@
   <section class="step" id="pane-support"><div class="wm reveal" aria-hidden="true">Support</div><div class="panel reveal support">
     <div class="seclabel">♥ · Support the project</div>
     <div class="blurb">Apply Co·Pilot is free and always will be. If it helped you land an interview, you can support its development — any amount, straight from any UPI app.</div>
-    <div class="qrcard"><div class="qrph" id="upiQR">UPI QR<br>COMING SOON</div></div>
-    <div class="upiid" id="upiId">UPI ID — being set up</div>
+    <div class="qrcard" id="upiQR"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h41v41H0z"/><path stroke="#000000" d="M4 4.5h7m2 0h5m1 0h2m1 0h3m2 0h1m2 0h7M4 5.5h1m5 0h1m2 0h3m1 0h3m1 0h2m2 0h2m3 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m5 0h3m4 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h4m5 0h2m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h1m3 0h2m2 0h1m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h2m1 0h2m2 0h2m4 0h2m3 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h4m3 0h1m3 0h4M4 12.5h1m1 0h5m2 0h1m1 0h7m2 0h1m1 0h1m3 0h5M5 13.5h1m2 0h2m3 0h2m1 0h1m6 0h6m1 0h1m3 0h3M4 14.5h1m4 0h2m1 0h5m2 0h2m4 0h1m3 0h3m2 0h2M5 15.5h1m1 0h1m5 0h2m3 0h3m3 0h2m2 0h1m1 0h2m1 0h3M4 16.5h1m3 0h1m1 0h3m1 0h1m6 0h3m1 0h2m4 0h2M5 17.5h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m2 0h1m1 0h3m1 0h2m4 0h2M7 18.5h11m3 0h2m1 0h1m3 0h1m2 0h1m2 0h2M4 19.5h4m1 0h1m4 0h1m2 0h2m1 0h1m1 0h1m2 0h1m2 0h2m1 0h1m1 0h3M5 20.5h1m1 0h1m2 0h2m2 0h1m1 0h1m1 0h1m2 0h1m4 0h4m2 0h1m2 0h1M8 21.5h1m3 0h1m1 0h1m1 0h3m2 0h7m1 0h2m5 0h1M4 22.5h3m1 0h1m1 0h2m2 0h2m3 0h1m4 0h1m1 0h1m1 0h3m1 0h4M5 23.5h3m1 0h1m4 0h1m1 0h1m2 0h1m4 0h2m2 0h2m2 0h1m1 0h3M4 24.5h2m1 0h2m1 0h2m1 0h2m2 0h2m7 0h1m1 0h2m2 0h2m2 0h1M4 25.5h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h3m1 0h5m1 0h1m1 0h1m5 0h2M4 26.5h1m1 0h6m1 0h1m2 0h2m1 0h1m4 0h1m5 0h6M4 27.5h1m2 0h1m5 0h1m1 0h1m8 0h2m2 0h2m3 0h2m1 0h1M4 28.5h1m2 0h1m1 0h2m1 0h3m2 0h1m1 0h3m1 0h2m1 0h1m1 0h6m2 0h1M12 29.5h1m2 0h1m1 0h2m2 0h5m1 0h2m3 0h1m3 0h1M4 30.5h7m2 0h1m1 0h1m3 0h2m1 0h1m2 0h4m1 0h1m1 0h1m2 0h1M4 31.5h1m5 0h1m1 0h2m2 0h1m2 0h1m5 0h4m3 0h1m1 0h3M4 32.5h1m1 0h3m1 0h1m1 0h9m2 0h1m2 0h1m1 0h5m2 0h2M4 33.5h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h2m1 0h6m3 0h2m1 0h3M4 34.5h1m1 0h3m1 0h1m1 0h4m3 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1M4 35.5h1m5 0h1m2 0h3m2 0h1m1 0h1m2 0h1m1 0h2m5 0h1m1 0h1M4 36.5h7m1 0h2m2 0h1m1 0h1m1 0h3m3 0h3m1 0h1m1 0h1m2 0h1"/></svg>
+</div>
+    <div class="upiid" id="upiId">UPI · mrrahulverma18-2@okaxis</div>
     <div class="upiapps">SCAN WITH GPAY · PHONEPE · PAYTM · ANY UPI APP</div>
   </div></section>
 
@@ -706,7 +716,8 @@ function renderKW(){ const o=CUR.orig,t=CUR.tail,b=CUR.buckets;
   const recs=CUR.recs||[]; document.getElementById("recBox").style.display=recs.length?"block":"none"; CUR.added=CUR.added||[];
   document.getElementById("kwRecs").innerHTML=recs.map((x,i)=>{ const a=x.add&&x.add.length; const on=a&&x.add.every(k=>CUR.added.indexOf(k)>=0);
     return '<li style="margin:6px 0;'+(a?"list-style:none":"")+'">'+(a?'<button class="sm '+(on?"primary":"ghost")+'" style="margin-right:9px;padding:4px 10px" onclick="acceptTip('+i+')">'+(on?"✓ Added":"＋ Add")+'</button>':"")+esc(x.t)+'</li>'; }).join("");
-  const note=document.getElementById("recNote"); if(note)note.style.display=(CUR.added.length?"block":"none"); }
+  const note=document.getElementById("recNote"); if(note)note.style.display=(CUR.added.length?"block":"none");
+  if(window.__aiReset)window.__aiReset(); }
 
 /* ===== tip accept → apply to the tailored CV (deterministic; you assert the keyword is true) ===== */
 function acceptTip(i){ if(!CUR)return; const tip=(CUR.recs||[])[i]; if(!tip||!tip.add)return; CUR.added=CUR.added||[];
@@ -916,7 +927,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   var SB=null;
   try{ if(!window.__noSupabase && window.supabase && window.supabase.createClient) SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }catch(e){}
 
-  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null;
+  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null, BOOTED=false;
 
   function $(id){ return document.getElementById(id); }
   function authMsg(t,ok){ var e=$("authMsg"); if(!e)return; e.textContent=t||""; e.className="authmsg"+(ok?" ok":""); }
@@ -1002,6 +1013,60 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(); };
   }catch(e){}
 
+  /* ===== ✦ AI Review (v3) — Groq via the 'ai' Supabase Edge Function. The deterministic engine
+     is always the base and the fallback; AI only rephrases what already exists, and every
+     suggestion passes a truthfulness check (no numbers that weren't yours) + needs your approval. */
+  var AI_LAST=null;
+  function aiUI(html){ var b=$("aiBody"); if(b)b.innerHTML=html; }
+  window.__aiReset=function(){ var box=$("aiBox"); if(!box)return; box.style.display="block"; AI_LAST=null;
+    var s=$("aiSrc"); if(s)s.style.display="none";
+    aiUI('<div class="hint" style="margin-bottom:9px">Let AI read your résumé against this exact job — sharper tips plus rewrites of your own bullets (never new facts). You approve every change.</div><button class="sm primary" onclick="aiReview()">✦ Run AI review</button>'); };
+  function digitRuns(s){ return (String(s).match(/\d+(?:\.\d+)?/g)||[]); }
+  function validRewrite(orig,nw){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
+    if(nw.length<20||nw.length>240||nw===orig)return false;
+    var o=digitRuns(orig); return digitRuns(nw).every(function(x){return o.indexOf(x)>=0;}); }
+  function renderAI(d,bl){
+    var byId={}; bl.forEach(function(b){byId[b.id]=b.text;});
+    var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,6);
+    var rws=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(r){return r&&byId[r.id]&&validRewrite(byId[r.id],r.text);}).slice(0,6);
+    AI_LAST={rws:rws,byId:byId};
+    var s=$("aiSrc"); if(s)s.style.display="inline-flex";
+    var h="";
+    if(tips.length)h+=tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("");
+    if(rws.length)h+='<div class="label" style="margin:12px 0 2px">Bullet rewrites — approve only what reads true</div>'+rws.map(function(r,i){
+      return '<div class="aicard" id="aic'+i+'"><div class="old">'+esc(byId[r.id])+'</div><div class="new">'+esc(r.text)+'</div><div class="row"><button class="sm primary" onclick="aiApply('+i+')">✓ Use this</button><button class="sm ghost" onclick="aiCopy('+i+',this)">Copy</button></div></div>';}).join("");
+    if(!h)h='<div class="hint">AI didn\'t find anything to improve — your résumé already reads well for this JD.</div>';
+    h+='<div class="hint" style="margin-top:10px">AI never invents numbers, employers or skills; anything it suggests stays fully editable via ✎ Edit.</div>';
+    aiUI(h);
+  }
+  window.aiReview=async function(){
+    if(!CUR){ aiUI('<div class="hint">Run the analysis first.</div>'); return; }
+    var cv=CUR.cvBase||CUR.cv, bl=[];
+    (cv.experience||[]).forEach(function(e,i){(e.bullets||[]).forEach(function(t,j){bl.push({id:"e"+i+":"+j,text:t});});});
+    (cv.projects||[]).forEach(function(p,i){(p.bullets||[]).forEach(function(t,j){bl.push({id:"p"+i+":"+j,text:t});});});
+    bl=bl.slice(0,12);
+    if(window.__AI_FAKE){ renderAI(window.__AI_FAKE,bl); return; }   /* UI test hook (owner's browser only) */
+    if(!SB||!AUTH_USER){ aiUI('<div class="hint">Sign in to use AI review.</div>'); return; }
+    aiUI('<div class="hint"><span class="spin"></span>AI is reading your résumé against the JD… (~5s)</div>');
+    try{
+      var res=await SB.functions.invoke("ai",{body:{mode:"review",company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8)}});
+      if(res.error){ var st=res.error.context&&res.error.context.status;
+        if(st===429){ aiUI('<div class="hint">⏳ Daily AI limit reached — try again tomorrow. The deterministic analysis above keeps working.</div>'); }
+        else if(st===404){ aiUI('<div class="hint">AI backend isn\'t live yet — the deterministic analysis above still has you covered.</div>'); }
+        else { aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
+        return; }
+      renderAI(res.data||{},bl);
+    }catch(e){ aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
+  };
+  window.aiApply=function(i){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r||!CUR)return;
+    var m=r.id.match(/^([ep])(\d+):(\d+)$/); if(!m)return;
+    var list=(m[1]==="e"?(CUR.cvBase&&CUR.cvBase.experience):(CUR.cvBase&&CUR.cvBase.projects)); var it=list&&list[+m[2]]; if(!it||!it.bullets||it.bullets[+m[3]]==null)return;
+    it.bullets[+m[3]]=r.text;
+    try{ CUR.cv=buildDisplayCv(); renderResume(); }catch(e){}
+    var c=$("aic"+i); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} }
+  };
+  window.aiCopy=function(i,btn){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r)return; navigator.clipboard&&navigator.clipboard.writeText(r.text); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
+
   renderForm();
   setTimeout(function(){ document.body.classList.remove("booting"); },2500);   /* never get stuck on a blank hero */
 
@@ -1011,8 +1076,11 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       /* sign-out wipes this device's local copy so the next account starts clean, then reloads to a fresh gate */
       if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); }catch(e){} location.reload(); return; }
       setAuthed(!!AUTH_USER);
-      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION")){
-        cloudPull().then(function(){ if(event==="SIGNED_IN") setTimeout(function(){ try{ tab("mr"); }catch(e){} },360); });
+      /* Supabase re-fires SIGNED_IN on every tab refocus — pull + welcome-scroll only ONCE per page load,
+         so returning to the tab leaves the user exactly where they were */
+      if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION") && !BOOTED){
+        BOOTED=true; var fresh=(event==="SIGNED_IN");
+        cloudPull().then(function(){ if(fresh) setTimeout(function(){ try{ tab("mr"); }catch(e){} },360); });
       }
     });
   } else {
