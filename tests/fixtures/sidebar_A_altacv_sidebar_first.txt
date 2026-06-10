@@ -1,0 +1,47 @@
+LIFE PHILOSOPHY
+“If you cannot measure it, you cannot improve it.” I bring that discipline to every product decision I touch.
+MOST PROUD OF
+ Scaling the experimentation platform to 40M daily events without a single on-call page in 2024
+ Mentoring six junior analysts who all earned senior promotions
+ Winning the Flipkart Hackday with a returns-abuse detection model
+STRENGTHS
+Stakeholder management
+Statistical rigour
+Data storytelling
+SQL performance tuning
+LANGUAGES
+English ●●●●●
+Hindi ●●●●●
+Kannada ●●●○○
+Tamil ●●○○○
+CONTACT DETAILS
+ priya.raghunathan@gmail.com
+ +91 98452 17763
+ Bengaluru, India
+ linkedin.com/in/priyaraghunathan
+HOBBIES
+Trail running, carnatic violin, birdwatching at Hebbal lake
+Volunteer math tutor with the Akshara Foundation on weekends
+Priya Raghunathan
+Senior Data Analyst
+EXPERIENCE
+Senior Data Analyst — Flipkart | Bengaluru, India | Jun 2021 – Present
+• Built self-serve Tableau dashboards tracking GMV, conversion and returns for 11 category teams, cutting ad-hoc requests 38%
+• Designed A/B tests for the loyalty relaunch; uplift models in Python raised repeat-purchase rate 9.4%
+• Migrated nightly ETL from cron scripts to Airflow with dbt models on BigQuery, reducing pipeline failures 80%
+• Presented quarterly insight reviews to VP-level stakeholders across merchandising and pricing
+Data Analyst — Swiggy | Bengaluru, India | Jul 2018 – May 2021
+• Forecast rider supply with gradient-boosted models, trimming undelivered orders 12% across 60 cities
+• Automated weekly business reviews in SQL and Excel, saving the ops team 14 hours every week
+• Partnered with marketing on RFM segmentation that lifted coupon ROI 22%
+Business Analyst — Mu Sigma | Bengaluru, India | Aug 2016 – Jun 2018
+• Delivered churn regression models for a US telecom client, reducing voluntary churn 6%
+• Standardised the client reporting stack on Tableau Server, onboarding 35 analysts across three accounts
+• Ran SQL training workshops attended by more than a hundred consultants every quarter
+EDUCATION
+M.Sc Statistics — Indian Institute of Science, Bengaluru | 2014 – 2016 | CGPA 8.7/10
+B.Sc Mathematics — Christ University, Bengaluru | 2011 – 2014
+SKILLS
+Analytics: SQL, Python, R, pandas, scikit-learn
+Visualization: Tableau, Power BI, Excel
+Data Engineering: Airflow, dbt, BigQuery, Snowflake, Git

@@ -1,0 +1,34 @@
+Rohan Gupta
+rohan.gupta.cse@gmail.com | +91 99887 76655 | Dwarka, New Delhi | github.com/rohangupta-dev
+ACADEMIC QUALIFICATIONS
+Degree Institute/Board CGPA/Percentage Year
+B.Tech CSE Maharaja Agrasen Institute of Technology GGSIPU 8.7 2020-2024
+Class XII Delhi Public School R.K. Puram CBSE 92.4% 2020
+Class X Delhi Public School R.K. Puram CBSE 94.8% 2018
+INTERNSHIPS
+• Zomato
+Backend Engineering Intern Jun 2023 - Aug 2023
+– Rewrote the restaurant onboarding service in Go, trimming median API latency from 240ms to 90ms
+◦ Added idempotency keys to the payouts pipeline, eliminating 1,100 duplicate settlements a month
+• Paytm
+Software Development Intern Jun 2022 - Jul 2022
+– Built a Kafka consumer that reconciles 3 million wallet transactions nightly
+PROJECTS
+• FareSplit | Flutter, Firebase
+– Group expense tracker with UPI deep links; 4,000+ downloads on the Play Store
+• Pothole Mapper | Python, OpenCV, YOLOv5
+– Detects road damage from dashcam video at 22 FPS and plots severity heatmaps for municipal crews
+TECHNICAL SKILLS
+Programming: Go, Python, Dart, Java, SQL
+Frameworks: Spring Boot, Flutter, FastAPI, Kafka
+KEY COURSES TAKEN
+Data Structures, Computer Networks, Operating Systems, DBMS, Software Engineering, Compiler Design
+ACHIEVEMENTS
+Qualified for ACM ICPC Asia West regionals 2023, ranked 41st
+Google Kick Start 2022 global rank 612 out of 10,000+ participants
+POSITIONS OF RESPONSIBILITY
+Technical Head, CSI Student Chapter, MAIT Sep 2022 - Aug 2023
+Placement Coordinator, Training and Placement Cell Aug 2021 - Jul 2022
+EXTRA-CURRICULAR ACTIVITIES
+Represented Delhi state in under-19 table tennis nationals 2019
+Run a YouTube channel on competitive programming with 8,000 subscribers

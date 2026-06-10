@@ -1,0 +1,32 @@
+Priya Raghunathan
+Senior Data Engineer
+priya.raghunathan@outlook.com | +44 7911 284530 | linkedin.com/in/priya-raghunathan | London, UK
+Profile
+Data engineer with seven years of experience designing batch and streaming platforms for retail banking and e-commerce analytics, currently leading a four-person platform squad.
+Experience
+2021 - Present Senior Data Engineer Monzo Bank, London
+- Own the transaction event lake on BigQuery (40 TB), powering 300+ analyst dashboards and FCA regulatory reports.
+- Rebuilt the dbt model layer into 220 tested models; data incidents fell from nine per quarter to two.
+- Introduced Kafka-based change data capture from Cassandra, cutting reporting lag from 24 hours to 20 minutes.
+- Interview loop lead for data hires; ran 60+ interviews and wrote the take-home exercise used by three teams.
+2018 - 2021 Data Engineer Ocado Technology, Hatfield
+- Built Airflow pipelines aggregating telemetry from 2,400 warehouse robots into a Snowflake warehouse.
+- Reduced nightly batch runtime from 6.5 hours to 2.1 hours by repartitioning Spark jobs and removing shuffle hotspots.
+- Cut Snowflake credit spend 22% by introducing clustering keys and auto-suspend policies.
+2017 - 2018 Graduate Software Developer — BAE Systems Applied Intelligence, Guildford
+- Wrote Scala ingestion services for a fraud detection platform processing 5 million events per day.
+Education
+2014 - 2018 B.Sc. Computer Science | University of Manchester | First Class Honours, GPA 3.8/4.0
+Key courses taken: Signal Processing, Embedded Systems, Stochastic Modelling, Database Theory, Compilers
+Technical Skills
+Languages: Python, Scala, SQL, Java
+Tools and Frameworks: Spark, Kafka, Airflow, dbt, Terraform, BigQuery, Snowflake
+Activities
+Co-organiser of the London Data Engineering Meetup (1,800 members); hosted 14 talks since 2022.
+Volunteer mentor with Code First Girls; taught introductory SQL to 35 career switchers.
+Publications
+P. Raghunathan and J. Whitfield, "Backfilling Strategies for Late-Arriving Retail Events", Proceedings of DEBS 2020, Montreal.
+Miscellaneous
+2019: AWS Certified Data Analytics - Specialty.
+2023: Speaker, Data Council London - "CDC at a Digital Bank".
+2017: Dean's List, School of Computer Science, University of Manchester.
