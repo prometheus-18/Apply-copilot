@@ -105,7 +105,7 @@ No account, no key. Just a one-time CDN load for the libraries, then it works of
 
 ## 🛠 Tech
 
-One HTML file, vanilla JS — a deterministic résumé parser + JD-keyword/seniority scoring engine (no LLM, no scraping). Libraries via CDN: **pdf.js** (résumé import), **pdfmake** (real vector PDF with clickable links), **three.js** (the 3D hero), **Lenis** (smooth scroll), Google Fonts. No build step, nothing to host.
+One HTML file, vanilla JS — a deterministic résumé parser + JD-keyword/seniority scoring engine (no LLM, no scraping). Libraries via CDN: **pdf.js** (résumé import), **pdfmake** (real vector PDF with clickable links), **Lenis** (smooth scroll), Google Fonts. No build step, nothing to host.
 
 To run locally: download [`apply_copilot_app.html`](apply_copilot_app.html) and open it in Chrome/Edge.
 
