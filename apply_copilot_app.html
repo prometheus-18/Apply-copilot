@@ -38,6 +38,7 @@
   .nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     padding:11px clamp(18px,4vw,48px);background:rgba(13,13,15,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #2e2c30}
   .nbrand{font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--bone);cursor:pointer;display:flex;align-items:center;gap:9px}
+  .devtag{font:600 9px var(--mono);letter-spacing:.08em;color:#fff;background:var(--ember);border-radius:var(--r);padding:3px 8px}
   .nlinks{display:flex;gap:2px;flex-wrap:wrap}
   .nlinks a{position:relative;cursor:pointer;font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--ash);padding:7px 10px;border-radius:var(--r);transition:color .15s,background .15s}
   .nlinks a:hover{color:var(--bone);text-decoration:none}
@@ -121,6 +122,14 @@
   .box h5{margin:0 0 8px;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .box.ok{border-color:var(--ash)}
   #recBox{border-color:var(--tangerine)}
+  /* AI review cards */
+  #aiBox{border-color:#4a3f3a}
+  .aicard{border:1px solid var(--ln);border-radius:var(--r);padding:12px 14px;margin:9px 0;background:var(--card)}
+  .aicard .old{color:var(--fnt);font-size:12px;text-decoration:line-through;text-decoration-color:rgba(255,76,36,.5)}
+  .aicard .new{color:var(--tx);font-size:13px;margin:7px 0 9px}
+  .aicard.applied{border-color:var(--ash)}
+  .aitip{margin:6px 0;font-size:12.5px;color:var(--tx)}
+  .aitip::before{content:"✦ ";color:var(--acc)}
   .ko{border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc);border-radius:var(--r);padding:10px 13px;margin:10px 0;font-size:12px}
   .ko.bad{background:rgba(255,76,36,.14)}
   .ok5{color:var(--hd)}
@@ -141,6 +150,14 @@
   ::-webkit-scrollbar-thumb{background:#3c3a3e;border:2px solid #0d0d0f;border-radius:6px}
   footer{border-top:1px solid #2e2c30;padding:42px clamp(18px,4vw,48px) 54px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:-.01em;color:var(--ash)}
   footer a{color:var(--bone)}footer a:hover{color:var(--ember)}
+  /* support / donate */
+  .support{text-align:center}
+  .support .blurb{font:500 15px/1.6 var(--sans);color:var(--tx);max-width:520px;margin:0 auto 26px}
+  .qrcard{background:#fff;border-radius:var(--r);padding:16px;display:inline-block;line-height:0}
+  .qrcard img,.qrcard svg{width:188px;height:188px;display:block}
+  .qrph{width:188px;height:188px;display:flex;align-items:center;justify-content:center;border:1.5px dashed var(--ash);border-radius:8px;color:#7b7a7c;font:600 11px var(--mono);letter-spacing:.1em;text-align:center;line-height:1.6}
+  .upiid{font:600 12px var(--mono);letter-spacing:.03em;color:var(--mist);margin-top:14px}
+  .upiapps{font:500 11px var(--mono);color:var(--mut);margin-top:6px}
   /* account control + auth card */
   .nright{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .nacct{display:flex;align-items:center;gap:8px}
@@ -287,6 +304,7 @@
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
       <div class="box" id="recBox" style="display:none"><h5>// Tips to raise your score</h5><ol id="kwRecs" style="margin:0;padding-left:18px"></ol></div>
       <div class="hint" id="recNote" style="display:none;color:var(--acc);margin:6px 0">✓ Accepted keywords will be woven into your résumé when you view it.</div>
+      <div class="box" id="aiBox" style="display:none"><h5><span>✦ AI Review — tailored tips &amp; bullet rewrites</span><span class="chip ok" id="aiSrc" style="display:none">CLOUD AI</span></h5><div id="aiBody"></div></div>
       <div class="row" style="margin-top:6px"><button class="sm primary" onclick="viewTailored()">→ View tailored résumé</button><button class="sm ghost" onclick="tab('cl')">→ Cover letter</button></div>
     </div>
   </div></section>
@@ -339,7 +357,17 @@
     <div class="row" style="margin-top:11px"><button class="sm" onclick="findJobs('li')">LinkedIn ↗</button><button class="sm ghost" onclick="findJobs('in')">Indeed ↗</button><button class="sm ghost" onclick="findJobs('na')">Naukri ↗</button></div>
   </div></section>
 
-  <footer><span>APPLY CO·PILOT — V3.0</span><span>FREE &amp; OPEN SOURCE · 100% IN-BROWSER · MIT</span><a href="https://github.com/prometheus-18/Apply-copilot" target="_blank">GITHUB ↗</a></footer>
+  <!-- SUPPORT -->
+  <section class="step" id="pane-support"><div class="wm reveal" aria-hidden="true">Support</div><div class="panel reveal support">
+    <div class="seclabel">♥ · Support the project</div>
+    <div class="blurb">Apply Co·Pilot is free and always will be. If it helped you land an interview, you can support its development — any amount, straight from any UPI app.</div>
+    <div class="qrcard" id="upiQR"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h41v41H0z"/><path stroke="#000000" d="M4 4.5h7m2 0h5m1 0h2m1 0h3m2 0h1m2 0h7M4 5.5h1m5 0h1m2 0h3m1 0h3m1 0h2m2 0h2m3 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m5 0h3m4 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h4m5 0h2m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h1m3 0h2m2 0h1m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h2m1 0h2m2 0h2m4 0h2m3 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h4m3 0h1m3 0h4M4 12.5h1m1 0h5m2 0h1m1 0h7m2 0h1m1 0h1m3 0h5M5 13.5h1m2 0h2m3 0h2m1 0h1m6 0h6m1 0h1m3 0h3M4 14.5h1m4 0h2m1 0h5m2 0h2m4 0h1m3 0h3m2 0h2M5 15.5h1m1 0h1m5 0h2m3 0h3m3 0h2m2 0h1m1 0h2m1 0h3M4 16.5h1m3 0h1m1 0h3m1 0h1m6 0h3m1 0h2m4 0h2M5 17.5h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m2 0h1m1 0h3m1 0h2m4 0h2M7 18.5h11m3 0h2m1 0h1m3 0h1m2 0h1m2 0h2M4 19.5h4m1 0h1m4 0h1m2 0h2m1 0h1m1 0h1m2 0h1m2 0h2m1 0h1m1 0h3M5 20.5h1m1 0h1m2 0h2m2 0h1m1 0h1m1 0h1m2 0h1m4 0h4m2 0h1m2 0h1M8 21.5h1m3 0h1m1 0h1m1 0h3m2 0h7m1 0h2m5 0h1M4 22.5h3m1 0h1m1 0h2m2 0h2m3 0h1m4 0h1m1 0h1m1 0h3m1 0h4M5 23.5h3m1 0h1m4 0h1m1 0h1m2 0h1m4 0h2m2 0h2m2 0h1m1 0h3M4 24.5h2m1 0h2m1 0h2m1 0h2m2 0h2m7 0h1m1 0h2m2 0h2m2 0h1M4 25.5h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h3m1 0h5m1 0h1m1 0h1m5 0h2M4 26.5h1m1 0h6m1 0h1m2 0h2m1 0h1m4 0h1m5 0h6M4 27.5h1m2 0h1m5 0h1m1 0h1m8 0h2m2 0h2m3 0h2m1 0h1M4 28.5h1m2 0h1m1 0h2m1 0h3m2 0h1m1 0h3m1 0h2m1 0h1m1 0h6m2 0h1M12 29.5h1m2 0h1m1 0h2m2 0h5m1 0h2m3 0h1m3 0h1M4 30.5h7m2 0h1m1 0h1m3 0h2m1 0h1m2 0h4m1 0h1m1 0h1m2 0h1M4 31.5h1m5 0h1m1 0h2m2 0h1m2 0h1m5 0h4m3 0h1m1 0h3M4 32.5h1m1 0h3m1 0h1m1 0h9m2 0h1m2 0h1m1 0h5m2 0h2M4 33.5h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h2m1 0h6m3 0h2m1 0h3M4 34.5h1m1 0h3m1 0h1m1 0h4m3 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1M4 35.5h1m5 0h1m2 0h3m2 0h1m1 0h1m2 0h1m1 0h2m5 0h1m1 0h1M4 36.5h7m1 0h2m2 0h1m1 0h1m1 0h3m3 0h3m1 0h1m1 0h1m2 0h1"/></svg>
+</div>
+    <div class="upiid" id="upiId">UPI · mrrahulverma18-2@okaxis</div>
+    <div class="upiapps">SCAN WITH GPAY · PHONEPE · PAYTM · ANY UPI APP</div>
+  </div></section>
+
+  <footer><span>APPLY CO·PILOT</span><span>MADE WITH <span style="color:var(--ember)">♥</span> BY PROMETHEUS · FREE &amp; OPEN SOURCE · MIT</span><a href="https://github.com/prometheus-18/Apply-copilot" target="_blank">GITHUB ↗</a></footer>
 </main>
 <div id="printArea"></div>
 
@@ -387,7 +415,13 @@ async function extractPdfText(f){ if(!window.pdfjsLib||window.__noPdfJs)throw ne
 const MONTHS="(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?";
 const MFULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
 function splitCsv(s){ s=String(s||"").trim(); const out=[]; let d=0,cur=""; for(const ch of s){ if(ch==="(")d++; else if(ch===")")d=Math.max(0,d-1); if((ch===","||ch===";")&&d===0){ if(cur.trim())out.push(cur.trim()); cur=""; } else cur+=ch; } if(cur.trim())out.push(cur.trim()); return out.filter(x=>x.length>1||/^[A-Za-z0-9#+]$/.test(x)).slice(0,40); }
-function cleanName(c){ c=String(c||"").replace(/\r/g,"").split("\n")[0].replace(/\s+/g," ").trim(); const out=[]; for(const w0 of c.split(/\s+/)){ const w=w0.replace(/[,;]+$/,""); if(!w)continue; if(/[@\d]/.test(w)||!/^[A-Za-z][A-Za-z.'\-]*$/.test(w))break; out.push(w); if(out.length>=4)break; } return out.join(" "); }
+const NOT_NAME=/\b(philosophy|summary|profile|objective|experience|education|skills?|contact|curriculum|vitae|resume|references|languages?|publications?|achievements?|awards?|proud|strengths?|projects?|certifications?|personal|details|information)\b/i;
+function cleanName(c){ const lines=String(c||"").replace(/\r/g,"").split("\n").slice(0,4); let single="";
+  for(const ln of lines){ const out=[]; for(const w0 of ln.replace(/\s+/g," ").trim().split(/\s+/)){ const w=w0.replace(/[,;|]+$/,""); if(!w)continue;
+      if(/[@\d]/.test(w)||!/^[A-ZÀ-Þ][A-Za-zÀ-ÿ.'’\-]*$/.test(w))break; out.push(w); if(out.length>=4)break; }
+    const cand=out.join(" "); if(!cand||NOT_NAME.test(cand))continue;
+    if(out.length>=2)return cand; if(!single)single=cand; }
+  return single; }
 function lastHeaderStart(region){ let last=-1,m,re=/[.!?)’"']\s+(?=[A-Z(])/g; while((m=re.exec(region)))last=m.index+m[0].length; return last<0?0:last; }
 function firstBulletIdx(s){ const m=s.match(/\s[–—•·▪]\s/); return m?m.index:-1; }
 function splitBullets(s){ s=String(s||"").trim(); if(!s)return[]; return s.split(/\s[–—•·▪]\s+/).map(x=>tidy(x.replace(/^[–—•·▪\s]+/,""))).filter(b=>b.length>8).slice(0,12); }
@@ -403,7 +437,7 @@ const TITLE_KW=/\b(engineer|developer|analyst|intern|manager|consultant|scientis
 const SKILL_LABELS=/^(?:programming(?: languages?)?|languages?|softwares?|software tools?|frameworks?|technolog(?:y|ies)|tools?|coursework|courses?|technical courses?|relevant coursework|cloud(?: platforms?)?|databases?|libraries|operating systems?|methodolog(?:y|ies)|design tools?|mobile app development|product management|technical skills?|core competenc(?:y|ies)|version control|web technolog(?:y|ies))\b/i;
 const SCHOOL_RE=/\b(University|College|Institute|Institut|School|Academy|Polytechnic|N\.?I\.?T|I\.?I\.?T|I\.?I\.?M|BITS|Vidyalaya|Vishwavidyalaya)\b/i;
 const DEGREE_RE=/\b(Bachelors?|Masters?|B\.?\s?Tech|M\.?\s?Tech|B\.?\s?E\b|M\.?\s?E\b|B\.?\s?Sc?\b|M\.?\s?Sc?\b|B\.?\s?A\b|M\.?\s?A\b|BBA|MBA|Ph\.?\s?D|Doctor|Diploma|Associate|High School|Higher Secondary|Senior Secondary|Intermediate)\b/i;
-const GPA_RE=/\b(?:C?GPA|SGPA|CPI|Percentage|Grade)\b\s*[:\-]?\s*(\d(?:\.\d{1,2})?(?:\s*\/\s*\d{1,2}(?:\.\d{1,2})?)?%?)/i;
+const GPA_RE=/\b(?:C?GPA|SGPA|CPI|Percentage|Grade)\b\s*[:\-]?\s*(\d{1,2}(?:\.\d{1,2})?(?:\s*\/\s*\d{1,2}(?:\.\d{1,2})?)?%?)/i;
 function splitSkillLine(l){ l=l.replace(/^[\s•◦▪·*\-–—]+/,"").trim();
   let m=l.match(/^([A-Z][A-Za-z][\w &\/+().-]{0,34}?)\s*:\s*(.+)$/); if(m)return{group:m[1].trim(),raw:m[2].trim()};
   m=l.match(/^([A-Z][A-Za-z]+(?:[ \/&][A-Z][A-Za-z]+){0,3})\s{2,}(.+)$/); if(m&&/[,;|]/.test(m[2]))return{group:m[1].trim(),raw:m[2].trim()};
@@ -426,14 +460,14 @@ function splitHeader(h){ h=h.replace(RANGE,"").replace(/\s{2,}/g," ").trim().rep
 function parseExpLines(lines){ const out=[]; let cur=null;
   for(const raw of lines){ const hadMarker=ENTRY_BULLET.test(raw); const l=raw.replace(ENTRY_BULLET,"").trim(); if(!l)continue;
     const dm=l.match(RANGE);
-    if(hadMarker&&!dm){ if(cur)cur.bullets.push(tidy(l)); continue; }
+    if(hadMarker&&!dm){ if(cur)cur.bullets.push(tidy(l)); else if(expHeaderStrong(l)){cur={header:l,dates:"",bullets:[]};out.push(cur);} continue; }
     if(cur&&dm&&l.replace(RANGE,"").replace(/[•·\-–—|,()]/g,"").trim().length<3){ if(!cur.dates)cur.dates=normRange(dm[0]); continue; }
     const strong=expHeaderStrong(l), startsNew=strong&&(!cur||cur.bullets.length>0||!!cur.dates);
     if(startsNew){ cur={header:l,dates:dm?normRange(dm[0]):"",bullets:[]}; out.push(cur); }
     else if(cur&&!cur.bullets.length){ if(dm&&!cur.dates)cur.dates=normRange(dm[0]); const c2=l.replace(RANGE,"").trim(); if(c2&&c2.length<=55&&!/[.!?]$/.test(c2))cur.header+=" | "+c2; else if(c2)cur.bullets.push(tidy(c2)); }
     else if(cur){ const lb=cur.bullets.length-1; if(lb>=0&&(/^[a-z(]/.test(l)||!/[.!?)]$/.test(cur.bullets[lb])))cur.bullets[lb]=(cur.bullets[lb]+" "+tidy(l)).trim(); else cur.bullets.push(tidy(l)); }
     else { cur={header:l,dates:dm?normRange(dm[0]):"",bullets:[]}; out.push(cur); } }
-  return out.map(e=>{ const hp=splitHeader(e.header); return {role:hp.role,org:hp.org,location:hp.location,dates:e.dates,bullets:e.bullets.filter(b=>b.length>2).slice(0,12)}; }).filter(e=>e.role||e.org||e.bullets.length).slice(0,8); }
+  return out.map(e=>{ const hp=splitHeader(e.header); return {role:hp.role,org:hp.org,location:hp.location,dates:e.dates,bullets:e.bullets.filter(b=>b.length>2).slice(0,12)}; }).filter(e=>e.role||e.org||e.bullets.length).slice(0,14); }
 function parseExp(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.trim()).filter(Boolean);
   if(_ls.length>=2){ const r=parseExpLines(_ls); if(r.length)return r; }
   s=s.replace(/\s+/g," ").trim(); if(!s)return[];
@@ -482,7 +516,10 @@ function parseEduEntry(x){ x=tidy(x).trim(); if(!x)return null;
   const cut=Math.min(gpaIdx,degIdx,dateIdx); let institution=(cut<Infinity?x.slice(0,cut):x).replace(/[,;:\-–—|\s]+$/,"").trim();
   let degree=""; if(degM){ let de=x.length; [gpaIdx,dateIdx,x.length].forEach(i=>{ if(i>degIdx&&i<de)de=i; }); degree=x.slice(degIdx,de).replace(/^[,;:\s]+|[,;:\s\-–—|]+$/g,"").trim(); }
   if(!institution&&!degree)return {raw:x.slice(0,170)};
-  return { institution:institution.slice(0,90), degree:degree.replace(/\s{2,}/g," ").slice(0,140), dates, gpa, location:"" }; }
+  /* academic CVs: keep the thesis/dissertation title with the degree */
+  const th=x.match(/\b(?:thesis|dissertation)\s*(?:title)?\s*[:\-]\s*([^;|]{5,120}?)(?:[.;|]|$)/i);
+  if(th)degree=(degree?degree+" · ":"")+"Thesis: "+th[1].trim();
+  return { institution:institution.slice(0,90), degree:degree.replace(/\s{2,}/g," ").slice(0,200), dates, gpa, location:"" }; }
 function parseEdu(s){ s=String(s||""); const lines=s.split(/\n+/).map(x=>x.replace(ENTRY_BULLET,"").trim()).filter(Boolean);
   if(lines.length>=2){ const entries=[]; let cur=null;
     for(const l of lines){ if(SCHOOL_RE.test(l)&&(!cur||cur._has)){ cur={raw:l,_has:false}; entries.push(cur); } else if(cur){ cur.raw+=" "+l; cur._has=true; } else { cur={raw:l,_has:false}; entries.push(cur); } }
@@ -490,30 +527,63 @@ function parseEdu(s){ s=String(s||""); const lines=s.split(/\n+/).map(x=>x.repla
   let f=s.replace(/\s+/g," ").trim(); if(!f)return[]; let a=f.split(/\s[•·]\s/).map(x=>x.trim()).filter(Boolean); if(a.length<=1)a=[f];
   return a.map(x=>parseEduEntry(x)).filter(Boolean).slice(0,5); }
 function parseCerts(s){ s=String(s||""); const lines=s.split(/\n+/).map(x=>x.trim()).filter(Boolean); let a;
-  if(lines.length>1){ a=[]; for(const l of lines){ const hadB=/^\s*[•·▪◦*]\s+|^\s*[-–—]\s+/.test(l); const t=tidy(l.replace(/^[•·▪◦*\-–—\s]+/,"")); if(!t)continue; if(hadB||!a.length||/[.)]$/.test(a[a.length-1]))a.push(t); else a[a.length-1]=(a[a.length-1]+" "+t).trim(); } }
+  if(lines.length>1){ a=[]; for(const l of lines){ const hadB=/^\s*[•·▪◦*]\s+|^\s*[-–—]\s+/.test(l); const t=tidy(l.replace(/^[•·▪◦*\-–—\s]+/,"")); if(!t)continue; if(hadB||!a.length||/[.)]$/.test(a[a.length-1])||/^(19|20)\d{2}\b/.test(t)||/^\[?\d{1,2}[\].]/.test(t))a.push(t); else a[a.length-1]=(a[a.length-1]+" "+t).trim(); } }
   else { let f=s.replace(/\s+/g," ").trim(); a=f.split(/\s*[•·▪]\s*/).map(x=>x.trim()).filter(Boolean); if(a.length<=1)a=f.split(/\s{2,}/).map(x=>x.trim()).filter(Boolean); if(a.length<=1)a=f?[f]:[]; }
-  return a.map(x=>tidy(x.replace(/^[•·▪◦\-–—\s]+/,"")).slice(0,150)).filter(x=>x&&!/^[&\s]*(certifications?|education|skills?|experience|projects?|achievements?|summary|awards?)\b\s*$/i.test(x)).slice(0,12); }
+  return a.map(x=>tidy(x.replace(/^[•·▪◦\-–—\s]+/,"")).slice(0,220)).filter(x=>x&&!/^[&\s]*(certifications?|education|skills?|experience|projects?|achievements?|summary|awards?|publications?)\b\s*$/i.test(x)).slice(0,12); }
 function parseResume(raw){ let t=String(raw||"").replace(/\r\n?/g,"\n").replace(/[^\S\n]+/g," ").replace(/ *\n */g,"\n").trim(); if(t.length<30)return null;
+  /* recompose OT1-decomposed accents from old pdflatex builds: 'P´erez' → 'Pérez' */
+  t=t.replace(/([´`¨ˆ˜])\s?([A-Za-z])/g,function(m,acc,ch){var M={"´":"́","`":"̀","¨":"̈","ˆ":"̂","˜":"̃"};return (ch+M[acc]).normalize("NFC");});
   const email=(t.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)||[""])[0];
   const phone=(t.match(/\+?\d[\d\s().-]{7,}\d/)||[""])[0].trim();
   const linkedin=(t.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/[^\s|,)]+/i)||[""])[0];
   const github=(t.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/[^\s|,)]+/i)||[""])[0];
-  const SECT=[["summary",/\b(professional summary|summary|profile|career objective|objective)\b/i],["skills",/\b(technical skills|core skills|key skills|skills|competencies)\b/i],["experience",/\b(work experience|professional experience|experience|employment history)\b/i],["projects",/\b(projects|personal projects|key projects|academic projects)\b/i],["education",/\b(education|academic background|academics)\b/i],["certs",/\b(certifications|certificates|licenses)\b/i],["achievements",/\b(achievements?|awards?|honou?rs?|accomplishments|coding profile)\b/i],["misc",/\b(publications?|extra[- ]?curricular|interests|references)\b/i]];
-  const anchored=[]; SECT.forEach(([key,re])=>{ const g=new RegExp(re.source,"gi"); let m; while((m=g.exec(t))){ if(m.index===0||t[m.index-1]==="\n"){ anchored.push({key,start:m.index,end:m.index+m[0].length}); break; } } });
-  let found; if(anchored.length>=2){ found=anchored; } else { found=[]; SECT.forEach(([key,re])=>{ const m=re.exec(t); if(m)found.push({key,start:m.index,end:m.index+m[0].length}); }); }
+  const SECT=[["summary",/\b(professional summary|summary|(?:personal |professional )?profile|about me|career objective|objective|perfil)\b/i],
+    ["skills",/\b(technical skills|core skills|key skills|personal skills|communication skills|computer skills|organisational(?: and managerial)? skills|language skills|skills|competencies|habilidades(?: personales)?|tech stack|areas of expertise)\b/i],
+    ["experience",/\b(work experience|professional experience|working experiences?|research experience|teaching experience|experiences?|employment history|work history|career history|internships?|(?:academic )?appointments|experiencia laboral)\b/i],
+    ["projects",/\b(projects|personal projects|key projects|academic projects|proyectos)\b/i],
+    ["education",/\b(education and training|education|academic background|academics|academic qualifications|qualifications|educaci[oó]n|formaci[oó]n(?: acad[eé]mica)?)\b/i],
+    ["certs",/\b(certifications?|certificates|licen[cs]es|certificaciones|courses (?:and|&) certifications?)\b/i],
+    ["achievements",/\b(achievements?|awards?|honou?rs?|accomplishments|coding profile|positions? of responsibility|activities|extra[- ]?curricular(?: activities)?|miscellaneous|volunteer(?:ing)?(?: experience| work)?|leadership|most proud of|scholarships?|grants(?: and awards)?|logros)\b/i],
+    ["publications",/\b((?:research |selected |refereed )?publications?|journal articles?|conference (?:proceedings|papers?)|books|patents?)\b/i],
+    ["languages",/\b(languages?|idiomas|mother tongue)\b/i],
+    ["misc",/\b(interests|references|referees|hobbies|personal information|datos personales)\b/i]];
+  /* anchored scan: every line-start occurrence counts (duplicate headers supported); a header line must be
+     SHORT (≤60 chars — wrapped sentences containing 'experience' don't trigger); short residue after the
+     keyword ("and Training", ":") is consumed to end-of-line; 'Languages' only counts as a SECTION when the
+     line is just the header — 'Languages: SQL, Python' stays a skills label */
+  const anchored=[]; SECT.forEach(([key,re])=>{ const g=new RegExp(re.source,"gi"); let m; while((m=g.exec(t))){ if(m.index!==0&&t[m.index-1]!=="\n")continue;
+    const nl=t.indexOf("\n",m.index); const lineEnd=nl<0?t.length:nl;
+    if(lineEnd-m.index>60)continue;
+    if(key==="languages"&&lineEnd-(m.index+m[0].length)>2)continue;
+    const end=(nl>=0&&lineEnd-(m.index+m[0].length)<=30)?lineEnd:m.index+m[0].length;
+    anchored.push({key,start:m.index,end}); } });
+  /* flattened-text fallback: 'languages' is skipped (it's almost always a 'Languages:' skills label mid-line) */
+  let found; if(anchored.length>=2){ found=anchored; } else { found=[]; SECT.forEach(([key,re])=>{ if(key==="languages")return; const m=re.exec(t); if(m)found.push({key,start:m.index,end:m.index+m[0].length}); }); }
   found.sort((a,b)=>a.start-b.start);
-  const sect={}; for(let i=0;i<found.length;i++){ const cur=found[i],nxt=found[i+1]; if(sect[cur.key]==null)sect[cur.key]=t.slice(cur.end,nxt?nxt.start:t.length).trim(); }
+  const sect={}; for(let i=0;i<found.length;i++){ const cur=found[i],nxt=found[i+1]; const piece=t.slice(cur.end,nxt?nxt.start:t.length).trim(); if(piece)sect[cur.key]=sect[cur.key]?sect[cur.key]+"\n"+piece:piece; }
   const contact=found.length?t.slice(0,found[0].start):t;
-  const name=cleanName(contact);
+  let name=cleanName(contact);
+  /* sidebar layouts can start with a section header (no contact block) or a quote — recover the name from
+     the lines around the email, wherever it sits in the document */
+  if((!name||name.indexOf(" ")<0)&&email){ const lines=t.split("\n"); const ei=lines.findIndex(l=>l.indexOf(email)>=0);
+    for(let k=Math.max(0,ei-3);k<=Math.min(lines.length-1,ei+1);k++){ if(k===ei)continue; const cand=cleanName(lines[k]); if(cand&&cand.indexOf(" ")>0){name=cand;break;} } }
   const nameRe=name?new RegExp("\\b"+name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","g"):null;
   const denoise=x=>{ x=String(x||""); if(nameRe)x=x.replace(nameRe," "); return x.replace(/\bpage\s+\d+\s+of\s+\d+\b/gi," ").replace(/\n\s*\d{1,2}\s*(?=\n)/g,"\n").replace(/[ \t]{2,}/g," ").trim(); };
   /* candidate location comes from the CONTACT block only — never a job's city */
-  let location=""; if(/\bremote\b/i.test(contact))location="Remote"; else { const lm=contact.match(/\b([A-Z][a-z]+(?:[ ][A-Z][a-z]+)?,[ ]*(?:India|USA|United States|UK|United Kingdom|Canada|Australia|Singapore|Germany|France|Netherlands|UAE|[A-Z][a-z]+(?:[ ][A-Z][a-z]+)?))\b/); if(lm)location=lm[1].replace(/\s+/g," ").trim(); }
+  let location=""; if(/\bremote\b/i.test(contact))location="Remote";
+  else { for(const lm of contact.matchAll(/\b([A-ZÀ-Þ][a-zà-ÿ]+(?:[ ][A-ZÀ-Þ][a-zà-ÿ]+)?,[ ]*(?:India|USA|United States|UK|United Kingdom|Canada|Australia|Singapore|Germany|France|Netherlands|UAE|España|[A-ZÀ-Þ][a-zà-ÿ]+(?:[ ][A-ZÀ-Þ][a-zà-ÿ]+)?))\b/g)){
+    const ctx=contact.slice(Math.max(0,lm.index-40),lm.index+lm[0].length+12);
+    if(/\b(universit|institut|college|department|school|technolog|academy|faculty)/i.test(ctx))continue;   /* campus address ≠ candidate city */
+    location=lm[1].replace(/\s+/g," ").trim(); break; } }
+  const skills=parseSkills(denoise(sect.skills||""));
+  if(sect.languages){ const items=denoise(sect.languages).split(/\n|,|·|\|/).map(x=>tidy(x.replace(/[●○◐◑•▪‣]/g,"")).replace(/\s*\(.*?\)\s*/g," ").trim()).filter(x=>x&&x.length>=2&&x.length<=40&&!/\d{3,}/.test(x)).slice(0,6);
+    if(items.length)skills.push({group:"Languages",items}); }
   return { name, email, phone, location, linkedin, github, website:"",
     summary:tidy(denoise(sect.summary||"")).slice(0,650),
-    skills:parseSkills(denoise(sect.skills||"")), experience:parseExp(denoise(sect.experience||"")),
+    skills, experience:parseExp(denoise(sect.experience||"")),
     projects:parseProjects(denoise(sect.projects||"")), education:parseEdu(denoise(sect.education||"")),
-    certifications:parseCerts(denoise(sect.certs||"")), achievements:parseCerts(denoise(sect.achievements||"")) }; }
+    certifications:parseCerts(denoise(sect.certs||"")), achievements:parseCerts(denoise(sect.achievements||"")),
+    publications:parseCerts(denoise(sect.publications||"")).slice(0,6) }; }
 
 /* ===== fit keyword bank ===== */
 const BANK=[["SQL",["sql","mysql","postgres","t-sql"]],["Python",["python","pandas","numpy"]],["R",["r programming","rstudio"]],["Excel",["excel","spreadsheet","powerpoint"]],["A/B testing",["a/b","ab test","experimentation","experiment","test & control","test and control"]],["Statistics",["statistics","statistical","hypothesis","regression"]],["Machine learning",["machine learning","ml ","scikit","tensorflow","pytorch","predictive model","uplift model"]],["Deep learning",["deep learning","neural network","cnn","transformer"]],["NLP / LLM",["nlp","llm","gpt","openai","prompt"]],["Data visualization",["dashboard","tableau","power bi","looker","visualization","reporting"]],["ETL / pipelines",["etl","pipeline","airflow","dbt","data pipeline"]],["Cloud",["aws","gcp","azure","s3","bigquery","redshift"]],["Snowflake",["snowflake"]],["Git",["git","github","version control"]],["JavaScript",["javascript","typescript","react","node","angular","vue"]],["APIs",["rest api","graphql","api"]],["Segmentation",["segmentation","rfm","clustering","k-means","cohort"]],["Marketing analytics",["campaign","marketing mix","mmx","seo","ga4","attribution","funnel","roi"]],["Stakeholders",["stakeholder","cross-functional","leadership","business recommendation"]],["Communication",["communication","presentation","storytelling","narrative"]],["Healthcare",["healthcare","clinical","patient","hipaa","revenue cycle","life sciences","pharma"]],["Product",["product manager","roadmap","backlog"]],["CRM",["crm","salesforce","hubspot"]],["Finance/modeling",["financial model","forecasting","valuation"]],["Data warehouse",["warehouse","dimensional","star schema","data quality"]],["Spark/big data",["spark","pyspark","hadoop","kafka"]],["MLOps",["mlops","deployment","sagemaker","vertex ai","mlflow"]],["Agile",["agile","scrum","jira"]]];
@@ -588,6 +658,7 @@ function analyze(company,role,jd){ const parsed=parseResume(M.raw); if(!parsed)r
   const struct=structureScore(parsed);
   const allHave=buckets.reqHave.concat(buckets.prefHave);
   const cv=JSON.parse(JSON.stringify(parsed)); cv.title=tidy((role||cv.title||"").replace(/^\[.*?\]\s*/,""));
+  if((cv.experience||[]).length>8)cv.experience=cv.experience.slice(0,8);   /* parse keeps ≤14 for honest scoring; render stays 1-page */
   cv.experience=(cv.experience||[]).map(e=>{ const sc=(e.bullets||[]).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.map(x=>x.b).slice(0,6)}; });
   cv.projects=(cv.projects||[]).slice(0,5).map(p=>({...p,bullets:(p.bullets||[]).slice(0,3)}));
   cv.skills=(cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHas(b,jt)-jdHas(a,jt))}));
@@ -597,12 +668,12 @@ function analyze(company,role,jd){ const parsed=parseResume(M.raw); if(!parsed)r
   if(tail.score<orig.score)tail.score=orig.score;
   return {company,role,cv,buckets,need,have,orig,tail,recs:detRecs(buckets),cover:detCover(company,role,cv)}; }
 function detRecs(b){ const r=[];
-  if(b.reqMiss.length)r.push({t:"Surface required JD keywords you genuinely have: "+b.reqMiss.slice(0,8).join(", ")+".",add:b.reqMiss.slice(0,8)});
-  if(b.prefMiss.length)r.push({t:"Add preferred extras if you have them: "+b.prefMiss.slice(0,6).join(", ")+".",add:b.prefMiss.slice(0,6)});
+  b.reqMiss.slice(0,10).forEach(k=>r.push({t:"Required in the JD: “"+k+"” — add it only if you genuinely have it.",add:[k]}));
+  b.prefMiss.slice(0,8).forEach(k=>r.push({t:"Preferred / nice-to-have: “"+k+"” — add if true.",add:[k]}));
   r.push({t:"Lead each role with its most quantified, JD-relevant bullet (already reordered for you)."});
   r.push({t:"Add numbers (%, ₹/$, time, volume) to bullets that don't have them — fix inline with ✎ Edit."});
   r.push({t:"Mirror the JD's exact tool/skill names, and list each skill once in Skills and again inside a bullet."});
-  return r.slice(0,6); }
+  return r; }
 function detCover(c,r,cv){ const rt=(r||"the role").replace(/^\[.*?\]\s*/,""); const nm=(cv&&cv.name)||M.name||""; const rec=cv&&cv.experience&&cv.experience[0];
   const exp=rec?(" as "+rec.role+(rec.org?" at "+rec.org:"")):""; const sk=cv&&cv.skills?cv.skills.flatMap(g=>g.items||[]).slice(0,4).join(", "):"";
   const sig="Best regards,\n"+nm+([cv&&cv.phone,cv&&cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
@@ -656,6 +727,7 @@ function resumeDocHTML(cv){
     return '<div class="role"><span class="rh">'+esc(e.institution)+'</span><span class="r">'+esc(e.dates||"")+'</span></div>'+((deg||e.location)?'<div class="sub2"><span>'+esc(deg)+'</span><span class="r">'+esc(e.location||"")+'</span></div>':""); }).join("");
   if(cv.certifications&&cv.certifications.length)h+='<h4>Certifications</h4><ul>'+cv.certifications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   if(cv.achievements&&cv.achievements.length)h+='<h4>Achievements</h4><ul>'+cv.achievements.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
+  if(cv.publications&&cv.publications.length)h+='<h4>Publications</h4><ul>'+cv.publications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   return h; }
 function renderResume(){ document.getElementById("cvEmpty").style.display="none"; document.getElementById("cvBody").style.display="block";
   const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit"; }
@@ -681,7 +753,8 @@ function renderKW(){ const o=CUR.orig,t=CUR.tail,b=CUR.buckets;
   const recs=CUR.recs||[]; document.getElementById("recBox").style.display=recs.length?"block":"none"; CUR.added=CUR.added||[];
   document.getElementById("kwRecs").innerHTML=recs.map((x,i)=>{ const a=x.add&&x.add.length; const on=a&&x.add.every(k=>CUR.added.indexOf(k)>=0);
     return '<li style="margin:6px 0;'+(a?"list-style:none":"")+'">'+(a?'<button class="sm '+(on?"primary":"ghost")+'" style="margin-right:9px;padding:4px 10px" onclick="acceptTip('+i+')">'+(on?"✓ Added":"＋ Add")+'</button>':"")+esc(x.t)+'</li>'; }).join("");
-  const note=document.getElementById("recNote"); if(note)note.style.display=(CUR.added.length?"block":"none"); }
+  const note=document.getElementById("recNote"); if(note)note.style.display=(CUR.added.length?"block":"none");
+  if(window.__aiReset)window.__aiReset(); }
 
 /* ===== tip accept → apply to the tailored CV (deterministic; you assert the keyword is true) ===== */
 function acceptTip(i){ if(!CUR)return; const tip=(CUR.recs||[])[i]; if(!tip||!tip.add)return; CUR.added=CUR.added||[];
@@ -765,7 +838,7 @@ function jr(runs,sep){ runs=runs.filter(Boolean); const o=[]; runs.forEach((r,i)
 function lnk(text,url){ return url?{text:text,link:url,color:PDF_BLUE}:text; }
 function cvWeight(cv){ let n=(cv.summary||"").length; (cv.skills||[]).forEach(g=>n+=g.group.length+(g.items||[]).join(", ").length+4);
   (cv.experience||[]).forEach(e=>{n+=46;(e.bullets||[]).forEach(b=>n+=b.length+6);}); (cv.projects||[]).forEach(p=>{n+=24+(p.tech||"").length;(p.bullets||[]).forEach(b=>n+=b.length+6);});
-  (cv.education||[]).forEach(()=>n+=70); n+=(cv.certifications||[]).join(" ").length+(cv.achievements||[]).join(" ").length; return n; }
+  (cv.education||[]).forEach(()=>n+=70); n+=(cv.certifications||[]).join(" ").length+(cv.achievements||[]).join(" ").length+(cv.publications||[]).join(" ").length; return n; }
 function baseFont(w){ return w<1500?10.4:w<2200?9.6:w<2900?9:w<3500?8.5:w<4200?8:7.6; }
 /* trim the lowest-relevance bullets (already JD-sorted) until content fits ~1 page */
 function finalizeOnePage(cv0){ const cv=JSON.parse(JSON.stringify(cv0)); let g=0;
@@ -799,6 +872,7 @@ function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWe
     if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:"#333"}},{width:"auto",text:e.location||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}]}); }); }
   if(cv.certifications&&cv.certifications.length){ sec("Certifications"); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#888"}); }
   if(cv.achievements&&cv.achievements.length){ sec("Achievements"); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#888"}); }
+  if(cv.publications&&cv.publications.length){ sec("Publications"); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:"#888"}); }
   return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:PDF_INK,lineHeight:1.12}, content:c }; }
 function coverDocDef(cv,cover){ const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   const paras=String(cover||"").split(/\n+/).map(p=>({text:p,margin:[0,0,0,8]}));
@@ -860,6 +934,8 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
 (function(){
   var bar=document.getElementById("progress");
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* DEV badge on every non-official deployment (dev-branch previews, local files) — official Pages domain stays clean */
+  try{ if(location.hostname!=="prometheus-18.github.io"){ var nb=document.querySelector(".nbrand"); if(nb)nb.insertAdjacentHTML("beforeend",'<span class="devtag">DEV</span>'); } }catch(e){}
   /* Lenis buttery smooth-scroll (skip on reduced-motion) */
   if(!reduce && !window.__noLenis && window.Lenis){ try{ var lenis=new Lenis({lerp:0.085,smoothWheel:true,wheelMultiplier:1}); function _raf(t){lenis.raf(t);requestAnimationFrame(_raf);} requestAnimationFrame(_raf); window.__lenis=lenis; }catch(e){} }
   /* scroll-reveal */
@@ -974,6 +1050,63 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var _rm=localStorage.removeItem.bind(localStorage);
     localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(); };
   }catch(e){}
+
+  /* ===== ✦ AI Review (v3) — Groq via the 'ai' Supabase Edge Function. The deterministic engine
+     is always the base and the fallback; AI only rephrases what already exists, and every
+     suggestion passes a truthfulness check (no numbers that weren't yours) + needs your approval. */
+  var AI_LAST=null;
+  function aiUI(html){ var b=$("aiBody"); if(b)b.innerHTML=html; }
+  window.__aiReset=function(){ var box=$("aiBox"); if(!box)return; box.style.display="block"; AI_LAST=null;
+    var s=$("aiSrc"); if(s)s.style.display="none";
+    aiUI('<div class="hint" style="margin-bottom:9px">Let AI read your résumé against this exact job — sharper tips plus rewrites of your own bullets (never new facts). You approve every change.</div><button class="sm primary" onclick="aiReview()">✦ Run AI review</button>'); };
+  function digitRuns(s){ return (String(s).match(/\d+(?:\.\d+)?/g)||[]); }
+  /* a rewrite must carry EXACTLY the candidate's numbers — none invented, none dropped
+     (dropping metrics weakens the bullet; the live e2e test caught the model doing this) */
+  function validRewrite(orig,nw){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
+    if(nw.length<20||nw.length>240||nw===orig)return false;
+    var o=digitRuns(orig),n=digitRuns(nw);
+    return n.every(function(x){return o.indexOf(x)>=0;}) && o.every(function(x){return n.indexOf(x)>=0;}); }
+  function renderAI(d,bl){
+    var byId={}; bl.forEach(function(b){byId[b.id]=b.text;});
+    var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,6);
+    var rws=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(r){return r&&byId[r.id]&&validRewrite(byId[r.id],r.text);}).slice(0,6);
+    AI_LAST={rws:rws,byId:byId};
+    var s=$("aiSrc"); if(s)s.style.display="inline-flex";
+    var h="";
+    if(tips.length)h+=tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("");
+    if(rws.length)h+='<div class="label" style="margin:12px 0 2px">Bullet rewrites — approve only what reads true</div>'+rws.map(function(r,i){
+      return '<div class="aicard" id="aic'+i+'"><div class="old">'+esc(byId[r.id])+'</div><div class="new">'+esc(r.text)+'</div><div class="row"><button class="sm primary" onclick="aiApply('+i+')">✓ Use this</button><button class="sm ghost" onclick="aiCopy('+i+',this)">Copy</button></div></div>';}).join("");
+    if(!h)h='<div class="hint">AI didn\'t find anything to improve — your résumé already reads well for this JD.</div>';
+    h+='<div class="hint" style="margin-top:10px">AI never invents numbers, employers or skills; anything it suggests stays fully editable via ✎ Edit.</div>';
+    aiUI(h);
+  }
+  window.aiReview=async function(){
+    if(!CUR){ aiUI('<div class="hint">Run the analysis first.</div>'); return; }
+    var cv=CUR.cvBase||CUR.cv, bl=[];
+    (cv.experience||[]).forEach(function(e,i){(e.bullets||[]).forEach(function(t,j){bl.push({id:"e"+i+":"+j,text:t});});});
+    (cv.projects||[]).forEach(function(p,i){(p.bullets||[]).forEach(function(t,j){bl.push({id:"p"+i+":"+j,text:t});});});
+    bl=bl.slice(0,12);
+    if(window.__AI_FAKE){ renderAI(window.__AI_FAKE,bl); return; }   /* UI test hook (owner's browser only) */
+    if(!SB||!AUTH_USER){ aiUI('<div class="hint">Sign in to use AI review.</div>'); return; }
+    aiUI('<div class="hint"><span class="spin"></span>AI is reading your résumé against the JD… (~5s)</div>');
+    try{
+      var res=await SB.functions.invoke("ai",{body:{mode:"review",company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8)}});
+      if(res.error){ var st=res.error.context&&res.error.context.status;
+        if(st===429){ aiUI('<div class="hint">⏳ Daily AI limit reached — try again tomorrow. The deterministic analysis above keeps working.</div>'); }
+        else if(st===404){ aiUI('<div class="hint">AI backend isn\'t live yet — the deterministic analysis above still has you covered.</div>'); }
+        else { aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
+        return; }
+      renderAI(res.data||{},bl);
+    }catch(e){ aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
+  };
+  window.aiApply=function(i){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r||!CUR)return;
+    var m=r.id.match(/^([ep])(\d+):(\d+)$/); if(!m)return;
+    var list=(m[1]==="e"?(CUR.cvBase&&CUR.cvBase.experience):(CUR.cvBase&&CUR.cvBase.projects)); var it=list&&list[+m[2]]; if(!it||!it.bullets||it.bullets[+m[3]]==null)return;
+    it.bullets[+m[3]]=r.text;
+    try{ CUR.cv=buildDisplayCv(); renderResume(); }catch(e){}
+    var c=$("aic"+i); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} }
+  };
+  window.aiCopy=function(i,btn){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r)return; navigator.clipboard&&navigator.clipboard.writeText(r.text); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
 
   renderForm();
   setTimeout(function(){ document.body.classList.remove("booting"); },2500);   /* never get stuck on a blank hero */

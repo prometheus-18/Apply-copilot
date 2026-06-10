@@ -1,0 +1,41 @@
+CONTACT
+ guillaume.moreau@protonmail.com
+ +33 6 52 18 47 90
+ Lyon, France
+ github.com/gmoreau-data
+SKILLS
+SQL ██████████
+Python ████████░░
+Power BI ███████░░░
+Tableau ██████░░░░
+Airflow █████░░░░░
+EDUCATION
+MSc Data Science — Université Claude Bernard Lyon 1 | 2017 – 2019
+BSc Applied Mathematics — Université Grenoble Alpes | 2014 – 2017
+LANGUAGES
+French ●●●●●
+English ●●●●○
+Spanish ●●○○○
+INTERESTS
+Road cycling • Film photography • Tournament chess • Volunteer referee at the Lyon chess open
+GUILLAUME MOREAU
+Data Analyst — retail and supply chain
+PROFILE
+Data analyst with six years of experience turning messy retail data into decisions, specialised in demand forecasting, pricing analytics and self-serve business intelligence for non-technical teams.
+WORK EXPERIENCE
+Data Analyst — Decathlon Digital | Lyon, France | Sep 2021 – Present
+• Built Power BI dashboards for store replenishment covering 320 European stores, cutting stockouts 18%
+• Wrote dbt models on Snowflake powering the demand forecast used by 40 planners
+• Ran price-elasticity studies in Python that informed markdown strategy for end-of-season sales
+• Mentored two apprentices and introduced peer review for every analytics notebook
+Junior Data Analyst — Atos | Lyon, France | Oct 2019 – Aug 2021
+• Cleaned and reconciled CRM data for a banking client, deduplicating 2.3M customer records
+• Automated monthly regulatory reports with SQL Server stored procedures, saving 30 hours per cycle
+• Built anomaly alerts on transaction volumes that caught a double-billing incident within hours
+Data Analyst Intern — Ubisoft | Montreuil, France | Apr 2019 – Aug 2019
+• Analysed player retention funnels for two live mobile titles using BigQuery and Looker
+PROJECTS
+Churn prediction service | Python, scikit-learn, FastAPI | github.com/gmoreau-data/churn
+• Gradient-boosted churn model with SHAP explanations, deployed behind a FastAPI endpoint
+Velo'v bikeshare analytics | DuckDB, Streamlit
+• Public dashboard analysing 8M bikeshare trips in Lyon, featured by the city open-data portal
