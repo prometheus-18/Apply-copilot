@@ -1015,9 +1015,12 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var s=$("aiSrc"); if(s)s.style.display="none";
     aiUI('<div class="hint" style="margin-bottom:9px">Let AI read your résumé against this exact job — sharper tips plus rewrites of your own bullets (never new facts). You approve every change.</div><button class="sm primary" onclick="aiReview()">✦ Run AI review</button>'); };
   function digitRuns(s){ return (String(s).match(/\d+(?:\.\d+)?/g)||[]); }
+  /* a rewrite must carry EXACTLY the candidate's numbers — none invented, none dropped
+     (dropping metrics weakens the bullet; the live e2e test caught the model doing this) */
   function validRewrite(orig,nw){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
     if(nw.length<20||nw.length>240||nw===orig)return false;
-    var o=digitRuns(orig); return digitRuns(nw).every(function(x){return o.indexOf(x)>=0;}); }
+    var o=digitRuns(orig),n=digitRuns(nw);
+    return n.every(function(x){return o.indexOf(x)>=0;}) && o.every(function(x){return n.indexOf(x)>=0;}); }
   function renderAI(d,bl){
     var byId={}; bl.forEach(function(b){byId[b.id]=b.text;});
     var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,6);
