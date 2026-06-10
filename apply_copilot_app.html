@@ -38,6 +38,7 @@
   .nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     padding:11px clamp(18px,4vw,48px);background:rgba(13,13,15,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #2e2c30}
   .nbrand{font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--bone);cursor:pointer;display:flex;align-items:center;gap:9px}
+  .devtag{font:600 9px var(--mono);letter-spacing:.08em;color:#fff;background:var(--ember);border-radius:var(--r);padding:3px 8px}
   .nlinks{display:flex;gap:2px;flex-wrap:wrap}
   .nlinks a{position:relative;cursor:pointer;font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--ash);padding:7px 10px;border-radius:var(--r);transition:color .15s,background .15s}
   .nlinks a:hover{color:var(--bone);text-decoration:none}
@@ -141,6 +142,14 @@
   ::-webkit-scrollbar-thumb{background:#3c3a3e;border:2px solid #0d0d0f;border-radius:6px}
   footer{border-top:1px solid #2e2c30;padding:42px clamp(18px,4vw,48px) 54px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font:500 12px var(--mono);letter-spacing:-.01em;color:var(--ash)}
   footer a{color:var(--bone)}footer a:hover{color:var(--ember)}
+  /* support / donate */
+  .support{text-align:center}
+  .support .blurb{font:500 15px/1.6 var(--sans);color:var(--tx);max-width:520px;margin:0 auto 26px}
+  .qrcard{background:#fff;border-radius:var(--r);padding:16px;display:inline-block;line-height:0}
+  .qrcard img,.qrcard svg{width:188px;height:188px;display:block}
+  .qrph{width:188px;height:188px;display:flex;align-items:center;justify-content:center;border:1.5px dashed var(--ash);border-radius:8px;color:#7b7a7c;font:600 11px var(--mono);letter-spacing:.1em;text-align:center;line-height:1.6}
+  .upiid{font:600 12px var(--mono);letter-spacing:.03em;color:var(--mist);margin-top:14px}
+  .upiapps{font:500 11px var(--mono);color:var(--mut);margin-top:6px}
   /* account control + auth card */
   .nright{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .nacct{display:flex;align-items:center;gap:8px}
@@ -339,7 +348,16 @@
     <div class="row" style="margin-top:11px"><button class="sm" onclick="findJobs('li')">LinkedIn ↗</button><button class="sm ghost" onclick="findJobs('in')">Indeed ↗</button><button class="sm ghost" onclick="findJobs('na')">Naukri ↗</button></div>
   </div></section>
 
-  <footer><span>APPLY CO·PILOT — V3.0</span><span>FREE &amp; OPEN SOURCE · 100% IN-BROWSER · MIT</span><a href="https://github.com/prometheus-18/Apply-copilot" target="_blank">GITHUB ↗</a></footer>
+  <!-- SUPPORT -->
+  <section class="step" id="pane-support"><div class="wm reveal" aria-hidden="true">Support</div><div class="panel reveal support">
+    <div class="seclabel">♥ · Support the project</div>
+    <div class="blurb">Apply Co·Pilot is free and always will be. If it helped you land an interview, you can support its development — any amount, straight from any UPI app.</div>
+    <div class="qrcard"><div class="qrph" id="upiQR">UPI QR<br>COMING SOON</div></div>
+    <div class="upiid" id="upiId">UPI ID — being set up</div>
+    <div class="upiapps">SCAN WITH GPAY · PHONEPE · PAYTM · ANY UPI APP</div>
+  </div></section>
+
+  <footer><span>APPLY CO·PILOT</span><span>MADE WITH <span style="color:var(--ember)">♥</span> BY PROMETHEUS · FREE &amp; OPEN SOURCE · MIT</span><a href="https://github.com/prometheus-18/Apply-copilot" target="_blank">GITHUB ↗</a></footer>
 </main>
 <div id="printArea"></div>
 
@@ -597,12 +615,12 @@ function analyze(company,role,jd){ const parsed=parseResume(M.raw); if(!parsed)r
   if(tail.score<orig.score)tail.score=orig.score;
   return {company,role,cv,buckets,need,have,orig,tail,recs:detRecs(buckets),cover:detCover(company,role,cv)}; }
 function detRecs(b){ const r=[];
-  if(b.reqMiss.length)r.push({t:"Surface required JD keywords you genuinely have: "+b.reqMiss.slice(0,8).join(", ")+".",add:b.reqMiss.slice(0,8)});
-  if(b.prefMiss.length)r.push({t:"Add preferred extras if you have them: "+b.prefMiss.slice(0,6).join(", ")+".",add:b.prefMiss.slice(0,6)});
+  b.reqMiss.slice(0,10).forEach(k=>r.push({t:"Required in the JD: “"+k+"” — add it only if you genuinely have it.",add:[k]}));
+  b.prefMiss.slice(0,8).forEach(k=>r.push({t:"Preferred / nice-to-have: “"+k+"” — add if true.",add:[k]}));
   r.push({t:"Lead each role with its most quantified, JD-relevant bullet (already reordered for you)."});
   r.push({t:"Add numbers (%, ₹/$, time, volume) to bullets that don't have them — fix inline with ✎ Edit."});
   r.push({t:"Mirror the JD's exact tool/skill names, and list each skill once in Skills and again inside a bullet."});
-  return r.slice(0,6); }
+  return r; }
 function detCover(c,r,cv){ const rt=(r||"the role").replace(/^\[.*?\]\s*/,""); const nm=(cv&&cv.name)||M.name||""; const rec=cv&&cv.experience&&cv.experience[0];
   const exp=rec?(" as "+rec.role+(rec.org?" at "+rec.org:"")):""; const sk=cv&&cv.skills?cv.skills.flatMap(g=>g.items||[]).slice(0,4).join(", "):"";
   const sig="Best regards,\n"+nm+([cv&&cv.phone,cv&&cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
@@ -860,6 +878,8 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
 (function(){
   var bar=document.getElementById("progress");
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* DEV badge on every non-official deployment (dev-branch previews, local files) — official Pages domain stays clean */
+  try{ if(location.hostname!=="prometheus-18.github.io"){ var nb=document.querySelector(".nbrand"); if(nb)nb.insertAdjacentHTML("beforeend",'<span class="devtag">DEV</span>'); } }catch(e){}
   /* Lenis buttery smooth-scroll (skip on reduced-motion) */
   if(!reduce && !window.__noLenis && window.Lenis){ try{ var lenis=new Lenis({lerp:0.085,smoothWheel:true,wheelMultiplier:1}); function _raf(t){lenis.raf(t);requestAnimationFrame(_raf);} requestAnimationFrame(_raf); window.__lenis=lenis; }catch(e){} }
   /* scroll-reveal */
