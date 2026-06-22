@@ -1,11 +1,4 @@
 <!DOCTYPE html>
-<script type="application/json" id="cowork-artifact-meta">
-{
-  "name": "Apply Copilot (DEV v3-ai)",
-  "schemaVersion": 1,
-  "description": "DEV BRANCH preview of Apply Copilot — future features land here first. The official public app lives on main / GitHub Pages."
-}
-</script>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -542,8 +535,17 @@ function parseResume(raw){ let t=String(raw||"").replace(/\r\n?/g,"\n").replace(
   t=t.replace(/([´`¨ˆ˜])\s?([A-Za-z])/g,function(m,acc,ch){var M={"´":"́","`":"̀","¨":"̈","ˆ":"̂","˜":"̃"};return (ch+M[acc]).normalize("NFC");});
   const email=(t.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)||[""])[0];
   const phone=(t.match(/\+?\d[\d\s().-]{7,}\d/)||[""])[0].trim();
-  const linkedin=(t.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/[^\s|,)]+/i)||[""])[0];
-  const github=(t.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/[^\s|,)]+/i)||[""])[0];
+  /* contact links: prefer a real URL anywhere; else recover a labeled handle ('LinkedIn: rahul-verma',
+     'GitHub | rahulv') from the contact header only. A bare space-separated token must look like a handle
+     (has a hyphen/underscore/digit) so prose like 'active on LinkedIn and GitHub' can't fabricate a profile. */
+  const ctHead=t.slice(0,520);
+  const NOTHANDLE=/^(?:github|linkedin|email|e-?mail|phone|mobile|tel|portfolio|profile|website|url|id|www|com|in|me|handle|contact|and)$/i;
+  let linkedin=(t.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/[^\s|,)]+/i)||[""])[0];
+  if(!linkedin){ const m=ctHead.match(/linkedin(?:\s*profile)?\s*([:|·•\/\-–]|\s)\s*(?:@|in\/)?([A-Za-z0-9][A-Za-z0-9._-]{2,38})/i);
+    if(m&&!NOTHANDLE.test(m[2])&&(/[:|·•\/\-–]/.test(m[1])||/[-_0-9]/.test(m[2])))linkedin="linkedin.com/in/"+m[2]; }
+  let github=(t.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/[^\s|,)]+/i)||[""])[0];
+  if(!github){ const m=ctHead.match(/github(?:\s*profile)?\s*([:|·•\/\-–]|\s)\s*@?([A-Za-z0-9][A-Za-z0-9-]{0,38})/i);
+    if(m&&!NOTHANDLE.test(m[2])&&(/[:|·•\/\-–]/.test(m[1])||/[-_0-9]/.test(m[2])))github="github.com/"+m[2]; }
   const SECT=[["summary",/\b(professional summary|summary|(?:personal |professional )?profile|about me|career objective|objective|perfil)\b/i],
     ["skills",/\b(technical skills|core skills|key skills|personal skills|communication skills|computer skills|organisational(?: and managerial)? skills|language skills|skills|competencies|habilidades(?: personales)?|tech stack|areas of expertise)\b/i],
     ["experience",/\b(work experience|professional experience|working experiences?|research experience|teaching experience|experiences?|employment history|work history|career history|internships?|(?:academic )?appointments|experiencia laboral)\b/i],
@@ -650,8 +652,8 @@ function tailoredSummary(p,role,company,have,haveYrs){
   let s1=rt+" with "+yrs+"hands-on experience"+(expPart?" — most recently "+expPart:"")+".";
   let s2=top.length?("Brings proven strength in "+top.slice(0,4).join(", ")+(top.length>4?", and "+top[4]:"")+", with a record of turning data and effort into measurable business outcomes."):"Brings a record of turning data and effort into measurable business outcomes.";
   let s3="Comfortable owning work end-to-end, collaborating across functions, and ramping quickly on new tools and domains.";
-  let s4=(company&&company!=="the company")?(" Eager to deliver immediate, measurable impact at "+company+"."):"";
-  return tidy(s1+" "+s2+" "+s3+s4); }
+  /* company-neutral on purpose: the résumé stays reusable; the company name lives in the cover letter only */
+  return tidy(s1+" "+s2+" "+s3); }
 function structureScore(p){ return (p.skills.length?1:0)*0.4+(p.experience.length?1:0)*0.4+((p.education.length||p.summary)?1:0)*0.2; }
 function serialize(cv){ const sk=(cv.skills||[]).map(g=>g.group+" "+(g.items||[]).join(" ")).join(" ");
   const ex=(cv.experience||[]).map(e=>e.role+" "+e.org+" "+(e.bullets||[]).join(" ")).join(" ");
@@ -721,7 +723,7 @@ function contactHTML(cv){ const p=[];
 function projLink(p){ if(!p.link)return""; const u=p.link==="__profile__"?(CUR&&CUR.cv&&CUR.cv.github?urlify(CUR.cv.github):""):p.link; return u?' · <a href="'+esc(u)+'" target="_blank" rel="noopener">GitHub</a>':""; }
 function resumeDocHTML(cv){
   let h='<h3 class="n">'+esc(cv.name||"Your Name")+'</h3>';
-  if(cv.title)h+='<div class="ti">'+esc(cv.title)+'</div>';
+  /* header is name + contacts only ("just the name") — the target role still appears in the summary's first line */
   const ct=contactHTML(cv); if(ct)h+='<div class="ct">'+ct+'</div>';
   if(cv.summary)h+='<h4>Summary</h4><p>'+esc(cv.summary)+'</p>';
   if(cv.skills&&cv.skills.length)h+='<h4>Skills</h4>'+cv.skills.map(g=>'<p><span class="rh">'+esc(g.group)+':</span> '+(g.items||[]).map(esc).join(", ")+'</p>').join("");
@@ -839,7 +841,7 @@ function copyTrk(btn){ const cols=["Date","Company","Role","Stage","Next","Notes
   navigator.clipboard&&navigator.clipboard.writeText(tsv); if(btn){const o=btn.textContent;btn.textContent="Copied ✓ paste into Sheets";setTimeout(()=>btn.textContent=o,1800);} }
 
 /* ===== export: real vector PDF via pdfmake (clickable links + selectable text, no watermark) ===== */
-function fnameFor(which){ const who=((CUR&&CUR.cv&&CUR.cv.name)||M.name||"Resume").replace(/[^A-Za-z0-9]+/g,"")||"Resume"; const co=(CUR&&CUR.company&&CUR.company!=="the company")?"_"+CUR.company.replace(/[^A-Za-z0-9]+/g,""):""; return who+(which==="coverDoc"?"_CoverLetter":"_Resume")+co; }
+function fnameFor(which){ const who=String((CUR&&CUR.cv&&CUR.cv.name)||M.name||"Resume").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim()||"Resume"; return who+(which==="coverDoc"?" Cover Letter":" Resume"); }
 const PDF_BLUE="#1b59b3", PDF_INK="#16181d", PDF_GRAY="#555", PDF_HEAD="#0e1320", CW_PT=527;
 function jr(runs,sep){ runs=runs.filter(Boolean); const o=[]; runs.forEach((r,i)=>{ if(i)o.push(sep); o.push(r); }); return o; }
 function lnk(text,url){ return url?{text:text,link:url,color:PDF_BLUE}:text; }
@@ -859,7 +861,7 @@ function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWe
   const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
     c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.7,lineColor:"#c4cdda"}],margin:[0,0,0,4]}); };
   c.push({text:cv.name||"Your Name",bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"});
-  if(cv.title)c.push({text:cv.title,bold:true,fontSize:F+0.5,color:PDF_BLUE,margin:[0,1,0,0],alignment:"center"});
+  /* no role headline under the name ("just the name") — the role keyword stays in the summary's first sentence */
   const c1=[]; if(cv.location)c1.push(cv.location); if(cv.phone)c1.push(lnk(cv.phone,"tel:"+cv.phone.replace(/[^+0-9]/g,""))); if(cv.email)c1.push(lnk(cv.email,"mailto:"+cv.email));
   const c2=[]; if(cv.linkedin)c2.push(lnk("LinkedIn",urlify(cv.linkedin))); if(cv.github)c2.push(lnk("GitHub",urlify(cv.github))); if(cv.website)c2.push(lnk("Portfolio",urlify(cv.website)));
   let contact=jr(c1," · "); if(c2.length){ contact.push("\n"); contact=contact.concat(jr(c2," · ")); }

@@ -22,8 +22,9 @@ applications.csv
 PREVIEW_*.html
 *.tmp
 
-# Claude Code session context (local only — never push)
+# Local session context & notes (local only — never push)
 CLAUDE.md
+ROADMAP_PRIVATE.md
 
 # Local-only development assets (the public repo ships only the app itself).
 # apply_copilot_app.html is the local source of truth — index.html is generated from it.
