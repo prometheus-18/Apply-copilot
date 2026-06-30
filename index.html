@@ -412,10 +412,29 @@ function renderMasterUI(){ const ready=masterReady();
   document.getElementById("mSet").style.display=ready?"block":"none";
   if(ready){ const p=parseResume(M.raw); document.getElementById("mMeta").textContent="· "+(p?p.name:"")+" · "+M.raw.length+" chars"; document.getElementById("mPreview").textContent=M.raw.slice(0,800)+(M.raw.length>800?" …":""); }
 }
+/* pdf.js gives TEXT only — the URLs behind "LinkedIn"/"GitHub"/project links live in LINK ANNOTATIONS.
+   Without this they vanish on every upload (so a downloaded résumé re-uploaded loses all its links).
+   mergeLinkAnnots re-attaches each annotation's URL to the text item it overlaps, so the parser's
+   existing url regexes recover them. Pure + unit-tested (tests/stress_test.js). */
+function mergeLinkAnnots(items,annots){
+  annots=(annots||[]).filter(a=>a&&a.url&&/^https?:\/\//i.test(a.url)&&a.rect);
+  const used=new Array(annots.length).fill(false); let s="";
+  (items||[]).forEach(it=>{ let piece=it.str||"";
+    if(piece.trim()&&annots.length){ const tr=it.transform||[1,0,0,1,0,0]; const x=tr[4]||0,y=tr[5]||0,w=it.width||0;
+      for(let k=0;k<annots.length;k++){ if(used[k])continue; const r=annots[k].rect;
+        const x1=Math.min(r[0],r[2]),x2=Math.max(r[0],r[2]),y1=Math.min(r[1],r[3]),y2=Math.max(r[1],r[3]);
+        if(y>=y1-3&&y<=y2+3&&x<=x2+1&&(x+w)>=x1-1){ if(piece.indexOf(annots[k].url)<0)piece+=" ("+annots[k].url+")"; used[k]=true; break; } } }
+    s+=piece+(it.hasEOL?"\n":" "); });
+  const leftover=annots.filter((a,k)=>!used[k]).map(a=>a.url);   /* unmapped links still reach the whole-text contact regexes */
+  if(leftover.length)s+="\n"+leftover.join(" ")+"\n";
+  return s;
+}
 async function extractPdfText(f){ if(!window.pdfjsLib||window.__noPdfJs)throw new Error("pdf.js unavailable");
   try{window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}catch(e){}
   const pdf=await window.pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise; let out=[];
-  for(let i=1;i<=pdf.numPages;i++){ const p=await pdf.getPage(i); const tc=await p.getTextContent(); out.push(tc.items.map(it=>it.str+(it.hasEOL?"\n":" ")).join("")); }
+  for(let i=1;i<=pdf.numPages;i++){ const p=await pdf.getPage(i); const tc=await p.getTextContent();
+    let annots=[]; try{ annots=(await p.getAnnotations()).filter(a=>a&&a.subtype==="Link"&&(a.url||a.unsafeUrl)).map(a=>({url:a.url||a.unsafeUrl,rect:a.rect})); }catch(e){}
+    out.push(mergeLinkAnnots(tc.items,annots)); }
   return out.join("\n");
 }
 
@@ -498,7 +517,7 @@ function projHeadLine(s){ if(/\|/.test(s))return true; const letters=s.replace(/
 function parseProjHead(head){ let desc="",name=head,rest=""; const bar=head.indexOf("|");
   if(bar>=0){ name=head.slice(0,bar); rest=head.slice(bar+1); } else { const c=head.match(/^([^:]{2,70}?):\s+(.+)$/); if(c){ name=c[1]; desc=c[2]; } }
   name=name.replace(/\s*\(([^)]*(?:19|20)\d{2}[^)]*)\)\s*$/,"").replace(/[\s–—-]+$/,"").trim(); name=tidy(name.replace(/^[^A-Za-z0-9]+/,"")).slice(0,80);
-  let link="",tech=[]; rest.split("|").map(x=>x.trim()).filter(Boolean).forEach(x=>{ const gh=x.match(/github\.com\/[^\s|,)]+/i); if(gh)link=urlify(gh[0]); else if(/^github$/i.test(x))link="__profile__"; else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
+  let link="",tech=[]; rest.split("|").map(x=>x.trim()).filter(Boolean).forEach(x=>{ const gh=x.match(/github\.com\/[^\s|,)]+/i); if(gh){ link=urlify(gh[0]); const lo=x.replace(/\(?\s*https?:\/\/\S+\)?/ig,"").replace(/\bgithub\b/ig,"").replace(/^[(),·•|\s]+|[(),·•|\s]+$/g,"").trim(); if(lo&&!/^(link|demo|live|code|repo)$/i.test(lo))tech.push(lo); } else if(/^github$/i.test(x))link="__profile__"; else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
   return {name,tech:tidy(tech.join(", ")),link,desc:desc?tidy(desc):""}; }
 function parseProjects(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.trim()).filter(Boolean);
   if(_ls.length>=2){ const out=[]; let cur=null;
@@ -512,7 +531,7 @@ function parseProjects(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.tr
   parts.forEach(p=>{ const segs=p.split(/\s[–—•·]\s+/); let head=segs[0]||""; let bullets=segs.slice(1).map(tidy).filter(b=>b.length>6).slice(0,5);
     const bar=head.indexOf("|"); let name=bar>=0?head.slice(0,bar).trim():head.split(/\s[–—]\s/)[0].trim(); name=tidy(name.replace(/^[^A-Za-z]*/,"")).slice(0,80);
     let meta=bar>=0?head.slice(bar+1):""; const pieces=meta.split("|").map(x=>x.trim()).filter(Boolean);
-    let link="",tech=[]; pieces.forEach(x=>{ const gh=x.match(/github\.com\/[^\s|,)]+/i); if(gh)link=urlify(gh[0]); else if(/^github$/i.test(x))link="__profile__"; else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
+    let link="",tech=[]; pieces.forEach(x=>{ const gh=x.match(/github\.com\/[^\s|,)]+/i); if(gh){ link=urlify(gh[0]); const lo=x.replace(/\(?\s*https?:\/\/\S+\)?/ig,"").replace(/\bgithub\b/ig,"").replace(/^[(),·•|\s]+|[(),·•|\s]+$/g,"").trim(); if(lo&&!/^(link|demo|live|code|repo)$/i.test(lo))tech.push(lo); } else if(/^github$/i.test(x))link="__profile__"; else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
     if(!bullets.length && bar>=0){ const tail=tidy(head.slice(bar+1).replace(/\|/g," · ")); if(tail.length>20){tech=[];bullets=[tail];} }
     if(name&&name.length>1)out.push({name,tech:tidy(tech.join(", ")),link,bullets}); });
   return out.slice(0,6); }
