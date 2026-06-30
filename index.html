@@ -1099,7 +1099,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   /* a rewrite must carry EXACTLY the candidate's numbers — none invented, none dropped
      (dropping metrics weakens the bullet; the live e2e test caught the model doing this) */
   function validRewrite(orig,nw){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
-    if(nw.length<20||nw.length>240||nw===orig)return false;
+    if(nw.length<20||nw.length>320||nw===orig)return false;
     var o=digitRuns(orig),n=digitRuns(nw);
     return n.every(function(x){return o.indexOf(x)>=0;}) && o.every(function(x){return n.indexOf(x)>=0;}); }
   /* ---- eval harness (deterministic, client-side; no extra LLM call, no quota cost) ---- */
@@ -1169,7 +1169,11 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   };
   window.aiCopy=function(i,btn){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r)return; navigator.clipboard&&navigator.clipboard.writeText(r.text); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
   /* one-time setup: run __seedKB() in the browser console while signed in to populate the pgvector knowledge base */
-  window.__seedKB=function(){ if(!SB){console.log("no Supabase client");return;} console.log("seeding KB…"); return SB.functions.invoke("ai",{body:{mode:"seed"}}).then(function(r){console.log("KB seed result:",r.data||r.error);return r;}); };
+  window.__seedKB=async function(){ if(!SB){console.log("no Supabase client");return;} console.log("seeding KB (batched)…");
+    let off=0,total=0,seeded=0; for(let guard=0;guard<30;guard++){ const r=await SB.functions.invoke("ai",{body:{mode:"seed",offset:off}});
+      if(r.error){ console.log("KB seed error at offset "+off+":",r.error); return r; }
+      const d=r.data||{}; seeded+=(d.seeded||0); total=d.total||total; console.log("  seeded "+seeded+"/"+total+(d.failed?(" ("+d.failed+" failed in batch)"):"")); if(d.next==null)break; off=d.next; }
+    console.log("✅ KB seed done: "+seeded+"/"+total); return {seeded:seeded,total:total}; };
 
   renderForm();
   setTimeout(function(){ document.body.classList.remove("booting"); },2500);   /* never get stuck on a blank hero */
