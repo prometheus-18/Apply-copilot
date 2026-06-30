@@ -130,6 +130,12 @@
   .aicard .old{color:var(--fnt);font-size:12px;text-decoration:line-through;text-decoration-color:rgba(255,76,36,.5)}
   .aicard .new{color:var(--tx);font-size:13px;margin:7px 0 9px}
   .aicard.applied{border-color:var(--ash)}
+  .aieval{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0 0;font:600 10px/1 'IBM Plex Mono',ui-monospace,monospace}
+  .aieval .ev{padding:3px 7px;border:1px solid var(--ln);border-radius:999px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+  .aieval .ev.good{color:#fff;border-color:var(--ash)}
+  .aieval .ev.warn{color:var(--acc);border-color:#4a3f3a}
+  .aisum{margin:11px 0 2px;font:600 11px/1.35 'IBM Plex Mono',ui-monospace,monospace;color:var(--tx)}
+  .aiobs{margin-top:8px;font:500 10.5px/1.4 'IBM Plex Mono',ui-monospace,monospace;color:var(--mut)}
   .aitip{margin:6px 0;font-size:12.5px;color:var(--tx)}
   .aitip::before{content:"✦ ";color:var(--acc)}
   .ko{border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc);border-radius:var(--r);padding:10px 13px;margin:10px 0;font-size:12px}
@@ -1077,17 +1083,39 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     if(nw.length<20||nw.length>240||nw===orig)return false;
     var o=digitRuns(orig),n=digitRuns(nw);
     return n.every(function(x){return o.indexOf(x)>=0;}) && o.every(function(x){return n.indexOf(x)>=0;}); }
+  /* ---- eval harness (deterministic, client-side; no extra LLM call, no quota cost) ---- */
+  function aiPropers(s){ s=String(s); var out=[],re=/([A-Za-z][A-Za-z0-9.+#&-]*)/g,m,first=true;
+    while(m=re.exec(s)){ var w=m[1];
+      var allcaps=/^[A-Z0-9.+#&-]{2,}$/.test(w)&&/[A-Z]/.test(w), cap=/^[A-Z][a-z]/.test(w);
+      if(allcaps||(cap&&!first))out.push(w); first=false; }
+    return out; }
+  function aiEvalOne(orig,nw,targets){ var ol=String(orig).toLowerCase();
+    var inv=aiPropers(nw).filter(function(w){return ol.indexOf(w.toLowerCase())<0;});  /* terms not in your original = possible invented facts */
+    var faith=inv.length?Math.max(55,100-inv.length*15):100;                            /* numbers are already guaranteed by validRewrite */
+    var T=(targets||[]).slice(0,8),hits=0; T.forEach(function(k){ if(k&&nw.toLowerCase().indexOf(String(k).toLowerCase())>=0)hits++; });
+    return {faith:faith, rel:(T.length?Math.round(hits/T.length*100):null), inv:inv.slice(0,4)}; }
+  function aiCost(u){ if(!u)return null; return ((u.prompt_tokens||0)/1e6*0.59)+((u.completion_tokens||0)/1e6*0.79); } /* Groq llama-3.3-70b list price, est. */
   function renderAI(d,bl){
     var byId={}; bl.forEach(function(b){byId[b.id]=b.text;});
+    var targets=((CUR&&CUR.buckets&&CUR.buckets.reqMiss)||[]).concat((CUR&&CUR.buckets&&CUR.buckets.prefMiss)||[]);
     var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,6);
-    var rws=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(r){return r&&byId[r.id]&&validRewrite(byId[r.id],r.text);}).slice(0,6);
+    var cand=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(r){return r&&byId[r.id];});
+    var rws=cand.filter(function(r){return validRewrite(byId[r.id],r.text);}).slice(0,6);
+    var rejected=cand.length-rws.length;
     AI_LAST={rws:rws,byId:byId};
     var s=$("aiSrc"); if(s)s.style.display="inline-flex";
     var h="";
     if(tips.length)h+=tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("");
     if(rws.length)h+='<div class="label" style="margin:12px 0 2px">Bullet rewrites — approve only what reads true</div>'+rws.map(function(r,i){
-      return '<div class="aicard" id="aic'+i+'"><div class="old">'+esc(byId[r.id])+'</div><div class="new">'+esc(r.text)+'</div><div class="row"><button class="sm primary" onclick="aiApply('+i+')">✓ Use this</button><button class="sm ghost" onclick="aiCopy('+i+',this)">Copy</button></div></div>';}).join("");
+      var ev=aiEvalOne(byId[r.id],r.text,targets);
+      var chips='<span class="ev '+(ev.faith>=90?'good':'warn')+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+(ev.rel!=null?'<span class="ev '+(ev.rel>=50?'good':'warn')+'">jd match '+ev.rel+'%</span>':'');
+      return '<div class="aicard" id="aic'+i+'"><div class="old">'+esc(byId[r.id])+'</div><div class="new">'+esc(r.text)+'</div><div class="aieval">'+chips+'</div><div class="row"><button class="sm primary" onclick="aiApply('+i+')">✓ Use this</button><button class="sm ghost" onclick="aiCopy('+i+',this)">Copy</button></div></div>';}).join("");
     if(!h)h='<div class="hint">AI didn\'t find anything to improve — your résumé already reads well for this JD.</div>';
+    /* eval-harness readout — every rewrite is scored by the truthfulness guardrail before you see it */
+    if(cand.length)h+='<div class="aisum">Truthfulness guardrail: kept '+rws.length+' of '+cand.length+' rewrites'+(rejected>0?' · rejected '+rejected+' that changed your numbers or added facts':'')+'</div>';
+    var u=d._usage,lat=d._latency;
+    if(u||lat){ var c=aiCost(u);
+      h+='<div class="aiobs">'+(u?'tokens '+(u.total_tokens||((u.prompt_tokens||0)+(u.completion_tokens||0))):'')+(c!=null?' · ~$'+c.toFixed(4):'')+(lat?' · '+(lat/1000).toFixed(1)+'s':'')+(d._critique?' · self-critique on':'')+' · '+esc(d._model||'llama-3.3-70b')+'</div>'; }
     h+='<div class="hint" style="margin-top:10px">AI never invents numbers, employers or skills; anything it suggests stays fully editable via ✎ Edit.</div>';
     aiUI(h);
   }
@@ -1099,15 +1127,16 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     bl=bl.slice(0,12);
     if(window.__AI_FAKE){ renderAI(window.__AI_FAKE,bl); return; }   /* UI test hook (owner's browser only) */
     if(!SB||!AUTH_USER){ aiUI('<div class="hint">Sign in to use AI review.</div>'); return; }
-    aiUI('<div class="hint"><span class="spin"></span>AI is reading your résumé against the JD… (~5s)</div>');
+    aiUI('<div class="hint"><span class="spin"></span>AI is reading your résumé against the JD, then critiquing its own rewrites… (~8s)</div>');
+    var __t0=(window.performance&&performance.now)?performance.now():0;
     try{
-      var res=await SB.functions.invoke("ai",{body:{mode:"review",company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8)}});
+      var res=await SB.functions.invoke("ai",{body:{mode:"review",critique:true,company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8)}});
       if(res.error){ var st=res.error.context&&res.error.context.status;
         if(st===429){ aiUI('<div class="hint">⏳ Daily AI limit reached — try again tomorrow. The deterministic analysis above keeps working.</div>'); }
         else if(st===404){ aiUI('<div class="hint">AI backend isn\'t live yet — the deterministic analysis above still has you covered.</div>'); }
         else { aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
         return; }
-      renderAI(res.data||{},bl);
+      var data=res.data||{}; if(__t0)data._latency=Math.round(performance.now()-__t0); renderAI(data,bl);
     }catch(e){ aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
   };
   window.aiApply=function(i){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r||!CUR)return;
