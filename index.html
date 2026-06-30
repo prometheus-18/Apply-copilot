@@ -1113,6 +1113,8 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     if(!h)h='<div class="hint">AI didn\'t find anything to improve — your résumé already reads well for this JD.</div>';
     /* eval-harness readout — every rewrite is scored by the truthfulness guardrail before you see it */
     if(cand.length)h+='<div class="aisum">Truthfulness guardrail: kept '+rws.length+' of '+cand.length+' rewrites'+(rejected>0?' · rejected '+rejected+' that changed your numbers or added facts':'')+'</div>';
+    var rag=Array.isArray(d._rag)?d._rag:[];
+    if(rag.length)h+='<div class="aisum">RAG · retrieved '+rag.length+' skill clusters from the pgvector knowledge base to ground these rewrites</div><div class="aieval">'+rag.map(function(r){return '<span class="ev good">'+esc(r.tags)+' '+Math.round((r.similarity||0)*100)+'%</span>';}).join("")+'</div>';
     var u=d._usage,lat=d._latency;
     if(u||lat){ var c=aiCost(u);
       h+='<div class="aiobs">'+(u?'tokens '+(u.total_tokens||((u.prompt_tokens||0)+(u.completion_tokens||0))):'')+(c!=null?' · ~$'+c.toFixed(4):'')+(lat?' · '+(lat/1000).toFixed(1)+'s':'')+(d._critique?' · self-critique on':'')+' · '+esc(d._model||'llama-3.3-70b')+'</div>'; }
@@ -1147,6 +1149,8 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var c=$("aic"+i); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} }
   };
   window.aiCopy=function(i,btn){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r)return; navigator.clipboard&&navigator.clipboard.writeText(r.text); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
+  /* one-time setup: run __seedKB() in the browser console while signed in to populate the pgvector knowledge base */
+  window.__seedKB=function(){ if(!SB){console.log("no Supabase client");return;} console.log("seeding KB…"); return SB.functions.invoke("ai",{body:{mode:"seed"}}).then(function(r){console.log("KB seed result:",r.data||r.error);return r;}); };
 
   renderForm();
   setTimeout(function(){ document.body.classList.remove("booting"); },2500);   /* never get stuck on a blank hero */
