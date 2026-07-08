@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Apply Copilot",
+  "schemaVersion": 1,
+  "description": "Sign in, upload your résumé once (any template — two-column, LaTeX, academic, multi-page), paste any job → honest ATS fit score with per-keyword tips, ✦ AI Review that sharpens your bullets without inventing facts, then a custom ATS-optimized résumé and cover letter as a real 1-page PDF. Syncs across devices."
+}
+</script>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -478,12 +485,17 @@ function parseSkills(s){ s=String(s||""); const lines=s.split(/\n+/).map(x=>x.tr
 function expHeaderStrong(l){ if(!l)return false; if(RANGE.test(l))return true; if(TITLE_KW.test(l)&&l.length<110)return true; if(/\s(?:[–—]|\||@|\bat\b)\s/i.test(l)&&/[A-Z]/.test(l)&&l.length<110)return true; return false; }
 const LOCRE=/^[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2}$/;
 const LOCEND=/^(.*?)[ ,]+([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2})\s*$/;
-function splitHeader(h){ h=h.replace(RANGE,"").replace(/\s{2,}/g," ").trim().replace(/[|,]+$/,"").trim();
-  let parts=h.split(/\s+(?:[–—]|\||@|\bat\b)\s+/i).map(x=>tidy(x)).filter(Boolean);
+/* separator residue killer: re-uploading a generated PDF used to leave the render's " · " inside org/degree,
+   and every upload→generate cycle ADDED one more dot ("ZS Associates · · ·"). Collapse runs, strip edges. */
+function cleanSep(s){ s=String(s||"").replace(/[·•]\s*(?=[·•])/g,"");
+  s=s.replace(/^[\s·•|,;]+/,"").replace(/[\s·•|,;]+$/,"").replace(/\s+[-–—]+$/,"");
+  return s.replace(/\s{2,}/g," ").trim(); }
+function splitHeader(h){ h=h.replace(RANGE,"").replace(/(?:\s*[·•]){2,}/g," · ").replace(/\s{2,}/g," ").trim().replace(/[|,]+$/,"").trim();
+  let parts=h.split(/\s+(?:[–—|·•]|@|\bat\b)\s+/i).map(x=>cleanSep(tidy(x))).filter(Boolean);
   const role=parts.shift()||""; let org="",location="";
   if(parts.length){ const lm=parts[0].match(LOCEND); if(lm){ org=lm[1].trim(); location=lm[2].trim(); } else org=parts[0]; }
   for(let i=1;i<parts.length;i++){ const p=parts[i]; if(!p)continue; if(!location&&LOCRE.test(p))location=p; else if(!LOCRE.test(p))org=org?org+" - "+p:p; }
-  return {role:role.slice(0,90),org:org.slice(0,90),location}; }
+  return {role:cleanSep(role).slice(0,90),org:cleanSep(org).slice(0,90),location:cleanSep(location)}; }
 function parseExpLines(lines){ const out=[]; let cur=null;
   for(const raw of lines){ const hadMarker=ENTRY_BULLET.test(raw); const l=raw.replace(ENTRY_BULLET,"").trim(); if(!l)continue;
     const dm=l.match(RANGE);
@@ -540,8 +552,8 @@ function parseEduEntry(x){ x=tidy(x).trim(); if(!x)return null;
   const rng=x.match(RANGE); const yr=x.match(/\b(?:19|20)\d{2}\b/); const dates=rng?normRange(rng[0]):(yr?yr[0]:"");
   const degM=x.match(DEGREE_RE);
   const gpaIdx=gpaM?gpaM.index:Infinity, degIdx=degM?degM.index:Infinity, dateIdx=rng?x.indexOf(rng[0]):(yr?x.indexOf(yr[0]):Infinity);
-  const cut=Math.min(gpaIdx,degIdx,dateIdx); let institution=(cut<Infinity?x.slice(0,cut):x).replace(/[,;:\-–—|\s]+$/,"").trim();
-  let degree=""; if(degM){ let de=x.length; [gpaIdx,dateIdx,x.length].forEach(i=>{ if(i>degIdx&&i<de)de=i; }); degree=x.slice(degIdx,de).replace(/^[,;:\s]+|[,;:\s\-–—|]+$/g,"").trim(); }
+  const cut=Math.min(gpaIdx,degIdx,dateIdx); let institution=(cut<Infinity?x.slice(0,cut):x).replace(/[,;:\-–—|·•\s]+$/,"").trim();
+  let degree=""; if(degM){ let de=x.length; [gpaIdx,dateIdx,x.length].forEach(i=>{ if(i>degIdx&&i<de)de=i; }); degree=x.slice(degIdx,de).replace(/^[,;:·•\s]+|[,;:\s\-–—|·•]+$/g,"").trim(); }
   if(!institution&&!degree)return {raw:x.slice(0,170)};
   /* academic CVs: keep the thesis/dissertation title with the degree */
   const th=x.match(/\b(?:thesis|dissertation)\s*(?:title)?\s*[:\-]\s*([^;|]{5,120}?)(?:[.;|]|$)/i);
@@ -672,13 +684,18 @@ function scoreArrangement(buckets,need,have,structure,zone){
 function jdTokens(jd){ return new Set((jd||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]); }
 function bulletScore(b,jt){ const w=(b||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; let s=0; w.forEach(x=>{if(jt.has(x))s++;}); if(/\d|%|\$|₹/.test(b))s+=2; return s; }
 function jdHas(item,jt){ const w=(item||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; return w.some(x=>jt.has(x))?1:0; }
+function fmtYears(y){ y=Math.round((+y||0)*10)/10; if(y<1)return ""; return (y%1===0?String(y):y.toFixed(1))+" year"+(y>1?"s":"")+" of "; }
+/* summary agent (deterministic base): identity = the candidate's REAL latest title — NEVER the JD role
+   (that would claim a job they haven't held); years = the exact interval-merged figure (1.9 stays "1.9",
+   never rounded up to "2+"); the target role appears only as a stated objective. */
 function tailoredSummary(p,role,company,have,haveYrs){
-  const top=have.slice(0,6); const rec=p.experience&&p.experience[0]; const expPart=rec?(rec.role+(rec.org?" at "+rec.org:"")):"";
-  const yrs=haveYrs>=1?(Math.round(haveYrs)+"+ year"+(Math.round(haveYrs)>1?"s":"")+" of "):"";
-  const rt=role&&role!=="the role"?role:"Professional";
-  let s1=rt+" with "+yrs+"hands-on experience"+(expPart?" — most recently "+expPart:"")+".";
+  const top=have.slice(0,6); const rec=p.experience&&p.experience[0];
+  const id=cleanSep((rec&&rec.role)||"")||"Professional"; const org=cleanSep((rec&&rec.org)||"");
+  const yrs=fmtYears(haveYrs);
+  const rt=role&&role!=="the role"?tidy(role).replace(/^\[.*?\]\s*/,"").replace(/\s+role\s*$/i,""):"";
+  let s1=id+" with "+yrs+"hands-on experience"+(org?", most recently at "+org:"")+".";
   let s2=top.length?("Brings proven strength in "+top.slice(0,4).join(", ")+(top.length>4?", and "+top[4]:"")+", with a record of turning data and effort into measurable business outcomes."):"Brings a record of turning data and effort into measurable business outcomes.";
-  let s3="Comfortable owning work end-to-end, collaborating across functions, and ramping quickly on new tools and domains.";
+  let s3="Comfortable owning work end-to-end, collaborating across functions, and ramping quickly on new tools and domains."+(rt&&rt.toLowerCase()!==id.toLowerCase()?" Now targeting the "+rt+" role.":"");
   /* company-neutral on purpose: the résumé stays reusable; the company name lives in the cover letter only */
   return tidy(s1+" "+s2+" "+s3); }
 function structureScore(p){ return (p.skills.length?1:0)*0.4+(p.experience.length?1:0)*0.4+((p.education.length||p.summary)?1:0)*0.2; }
@@ -754,12 +771,12 @@ function resumeDocHTML(cv){
   const ct=contactHTML(cv); if(ct)h+='<div class="ct">'+ct+'</div>';
   if(cv.summary)h+='<h4>Summary</h4><p>'+esc(cv.summary)+'</p>';
   if(cv.skills&&cv.skills.length)h+='<h4>Skills</h4>'+cv.skills.map(g=>'<p><span class="rh">'+esc(g.group)+':</span> '+(g.items||[]).map(esc).join(", ")+'</p>').join("");
-  if(cv.experience&&cv.experience.length)h+='<h4>Experience</h4>'+cv.experience.map(e=>{ const bl=(e.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join(""); const sub=[e.org,e.location].filter(Boolean).join(" · ");
+  if(cv.experience&&cv.experience.length)h+='<h4>Experience</h4>'+cv.experience.map(e=>{ const bl=(e.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join(""); const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · ");
     return '<div class="role"><span class="rh">'+esc(e.role||e.org)+'</span><span class="r">'+esc(e.dates||"")+'</span></div>'+((sub&&e.role)?'<div class="sub2"><span>'+esc(sub)+'</span></div>':"")+(bl?"<ul>"+bl+"</ul>":""); }).join("");
   if(cv.projects&&cv.projects.length)h+='<h4>Projects</h4>'+cv.projects.map(p=>{ const bl=(p.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join("");
     return '<div class="pj"><span class="rh">'+esc(p.name)+'</span>'+(p.tech?' <span class="tech">| '+esc(p.tech)+'</span>':"")+projLink(p)+'</div>'+(bl?"<ul>"+bl+"</ul>":""); }).join("");
   if(cv.education&&cv.education.length)h+='<h4>Education</h4>'+cv.education.map(e=>{ if(e.raw)return '<p>'+esc(e.raw)+'</p>';
-    const deg=(e.degree||"")+(e.gpa?(e.degree?" · ":"")+"CGPA "+e.gpa:"");
+    const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
     return '<div class="role"><span class="rh">'+esc(e.institution)+'</span><span class="r">'+esc(e.dates||"")+'</span></div>'+((deg||e.location)?'<div class="sub2"><span>'+esc(deg)+'</span><span class="r">'+esc(e.location||"")+'</span></div>':""); }).join("");
   if(cv.certifications&&cv.certifications.length)h+='<h4>Certifications</h4><ul>'+cv.certifications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   if(cv.achievements&&cv.achievements.length)h+='<h4>Achievements</h4><ul>'+cv.achievements.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
@@ -815,7 +832,10 @@ function li(q){ return "https://www.linkedin.com/search/results/people/?keywords
 function liCo(c){ return "https://www.linkedin.com/search/results/companies/?keywords="+encodeURIComponent(c); }
 function domainGuess(c){ return c.toLowerCase().replace(/\b(pvt|private|ltd|limited|inc|llc|technologies|global|the)\b/g,"").replace(/[^a-z0-9]/g,"")+".com"; }
 function firstName(){ return ((CUR&&CUR.cv&&CUR.cv.name)||M.name||"").trim().split(/\s+/)[0]||"me"; }
-function selfPitch(){ const cv=CUR&&CUR.cv||{}; const sk=(cv.skills||[]).flatMap(g=>g.items||[]).slice(0,3).join(", "); return (cv.title||CUR.role||"professional")+(sk?" ("+sk+")":""); }
+function selfPitch(){ const cv=CUR&&CUR.cv||{}; const sk=(cv.skills||[]).flatMap(g=>g.items||[]).slice(0,3).join(", ");
+  /* "I'm a <X>" must be the candidate's REAL title, not the JD role they're applying to */
+  const real=cleanSep((cv.experience&&cv.experience[0]&&cv.experience[0].role)||"");
+  return (real||cv.title||CUR.role||"professional")+(sk?" ("+sk+")":""); }
 function renderOutreach(){ document.getElementById("outEmpty").style.display="none"; const body=document.getElementById("outBody"); body.style.display="block";
   const c=CUR.company,r=(CUR.cv.title||CUR.role),dom=domainGuess(c),fn=firstName(),cv=CUR.cv||{};
   const note="Hi {First} — I just applied for the "+r+" role at "+c+" and would love to connect. I'm a "+selfPitch()+" and admire what your team is building. Open to a quick chat? — "+fn;
@@ -897,14 +917,14 @@ function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWe
   if(cv.skills&&cv.skills.length){ sec("Skills"); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:PDF_HEAD},(g.items||[]).join(", ")],margin:[0,0.6,0,0.6]})); }
   if(cv.experience&&cv.experience.length){ sec("Experience"); cv.experience.forEach(e=>{
     c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
-    const sub=[e.org,e.location].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#444",fontSize:F-1,margin:[0,0,0,1]});
+    const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#444",fontSize:F-1,margin:[0,0,0,1]});
     if((e.bullets||[]).length)c.push({ul:e.bullets,margin:[3,1,0,3],markerColor:"#888"}); }); }
   if(cv.projects&&cv.projects.length){ sec("Projects"); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
     c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   GitHub",link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
     if((p.bullets||[]).length)c.push({ul:p.bullets,margin:[3,0,0,3],markerColor:"#888"}); }); }
   if(cv.education&&cv.education.length){ sec("Education"); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
-    const deg=(e.degree||"")+(e.gpa?(e.degree?" · ":"")+"CGPA "+e.gpa:"");
+    const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
     if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:"#333"}},{width:"auto",text:e.location||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}]}); }); }
   if(cv.certifications&&cv.certifications.length){ sec("Certifications"); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#888"}); }
   if(cv.achievements&&cv.achievements.length){ sec("Achievements"); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#888"}); }
@@ -1094,7 +1114,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   function aiUI(html){ var b=$("aiBody"); if(b)b.innerHTML=html; }
   window.__aiReset=function(){ var box=$("aiBox"); if(!box)return; box.style.display="block"; AI_LAST=null;
     var s=$("aiSrc"); if(s)s.style.display="none";
-    aiUI('<div class="hint" style="margin-bottom:9px">Let AI read your résumé against this exact job — sharper tips plus rewrites of your own bullets (never new facts). You approve every change.</div><button class="sm primary" onclick="aiReview()">✦ Run AI review</button>'); };
+    aiUI('<div class="hint" style="margin-bottom:9px">Let AI read your résumé against this exact job — a truthful summary (your real title &amp; exact years, never inflated), sharper tips, plus rewrites of your own bullets (never new facts). You approve every change.</div><button class="sm primary" onclick="aiReview()">✦ Run AI review</button>'); };
   function digitRuns(s){ return (String(s).match(/\d+(?:\.\d+)?/g)||[]); }
   /* a rewrite must carry EXACTLY the candidate's numbers — none invented, none dropped
      (dropping metrics weakens the bullet; the live e2e test caught the model doing this) */
@@ -1102,6 +1122,21 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     if(nw.length<20||nw.length>320||nw===orig)return false;
     var o=digitRuns(orig),n=digitRuns(nw);
     return n.every(function(x){return o.indexOf(x)>=0;}) && o.every(function(x){return n.indexOf(x)>=0;}); }
+  /* summary-agent guard: every number in the AI summary must already exist in the candidate's own text or be
+     the exact computed years figure (as ONE token — no decimal-split so "9 years" can't pass at 1.9), no
+     "N+ years" inflation ever, and it must not open by claiming the JD role as the candidate's identity
+     (unless the JD role IS their real title — an honest open must not be rejected). */
+  function validSummary(src,nw,years,role,realTitle){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
+    if(nw.length<40||nw.length>460)return false;
+    var y=Math.round(((+years)||0)*10)/10;
+    var allowed=digitRuns(src).concat(digitRuns(String(y)));
+    if(!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;}))return false;
+    if(/\d(?:\.\d+)?\s*\+\s*(?:years?|yrs?)\b/i.test(nw))return false;
+    var r=String(role||"").replace(/^\[.*?\]\s*/,"").trim();
+    if(r&&r!=="the role"&&String(realTitle||"").trim().toLowerCase()!==r.toLowerCase()){
+      var rx=new RegExp("^\\s*(?:an?\\s+|the\\s+)?"+r.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i");
+      if(rx.test(nw))return false; }
+    return true; }
   /* ---- eval harness (deterministic, client-side; no extra LLM call, no quota cost) ---- */
   function aiPropers(s){ s=String(s); var out=[],re=/([A-Za-z][A-Za-z0-9.+#&-]*)/g,m,first=true;
     while(m=re.exec(s)){ var w=m[1];
@@ -1122,8 +1157,19 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var rws=cand.filter(function(r){return validRewrite(byId[r.id],r.text);}).slice(0,6);
     var rejected=cand.length-rws.length;
     AI_LAST={rws:rws,byId:byId};
+    /* ✦ summary agent output — validated before it is ever shown. sumSrc includes the exp roles/orgs/dates
+       the model legitimately received, so an honest echo of them is never falsely rejected. */
+    var sumOld=(CUR&&CUR.cvBase&&CUR.cvBase.summary)||(CUR&&CUR.cv&&CUR.cv.summary)||"";
+    var sumExp=((CUR&&CUR.cvBase&&CUR.cvBase.experience)||[]).map(function(e){return [e.role,e.org,e.dates].join(" ");}).join(" ");
+    var sumSrc=sumOld+" "+bl.map(function(b){return b.text;}).join(" ")+" "+sumExp;
+    var realTitle=((CUR&&CUR.cvBase&&CUR.cvBase.experience&&CUR.cvBase.experience[0])||{}).role||"";
+    var sumNew=(typeof d.summary==="string")?d.summary.trim():"";
+    var sumOK=!!(sumNew&&validSummary(sumSrc,sumNew,(CUR&&CUR.have&&CUR.have.years)||0,(CUR&&CUR.role)||"",realTitle));
+    if(sumOK)AI_LAST.summary=sumNew;
     var s=$("aiSrc"); if(s)s.style.display="inline-flex";
     var h="";
+    if(sumOK)h+='<div class="label" style="margin:2px 0 2px">Summary — rewritten by the summary agent (your real title, exact years)</div>'+
+      '<div class="aicard" id="aicsum"><div class="old">'+esc(sumOld)+'</div><div class="new">'+esc(sumNew)+'</div><div class="row"><button class="sm primary" onclick="aiApplySummary()">✓ Use this</button><button class="sm ghost" onclick="aiCopySummary(this)">Copy</button></div></div>';
     if(tips.length)h+=tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("");
     if(rws.length)h+='<div class="label" style="margin:12px 0 2px">Bullet rewrites — approve only what reads true</div>'+rws.map(function(r,i){
       var ev=aiEvalOne(byId[r.id],r.text,targets);
@@ -1151,7 +1197,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     aiUI('<div class="hint"><span class="spin"></span>AI is reading your résumé against the JD, then critiquing its own rewrites… (~8s)</div>');
     var __t0=(window.performance&&performance.now)?performance.now():0;
     try{
-      var res=await SB.functions.invoke("ai",{body:{mode:"review",critique:true,company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8)}});
+      var res=await SB.functions.invoke("ai",{body:{mode:"review",critique:true,company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8),years:(CUR.have&&CUR.have.years)||0,exp:(cv.experience||[]).slice(0,3).map(function(e){return {role:e.role||"",org:e.org||"",dates:e.dates||""};})}});
       if(res.error){ var st=res.error.context&&res.error.context.status;
         if(st===429){ aiUI('<div class="hint">⏳ Daily AI limit reached — try again tomorrow. The deterministic analysis above keeps working.</div>'); }
         else if(st===404){ aiUI('<div class="hint">AI backend isn\'t live yet — the deterministic analysis above still has you covered.</div>'); }
@@ -1168,6 +1214,11 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var c=$("aic"+i); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} }
   };
   window.aiCopy=function(i,btn){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r)return; navigator.clipboard&&navigator.clipboard.writeText(r.text); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
+  window.aiApplySummary=function(){ var s=AI_LAST&&AI_LAST.summary; if(!s||!CUR)return;
+    if(CUR.cvBase)CUR.cvBase.summary=s; if(CUR.cv)CUR.cv.summary=s;
+    try{ CUR.cv=buildDisplayCv(); renderResume(); }catch(e){}
+    var c=$("aicsum"); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} } };
+  window.aiCopySummary=function(btn){ var s=AI_LAST&&AI_LAST.summary; if(!s)return; navigator.clipboard&&navigator.clipboard.writeText(s); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
   /* one-time setup: run __seedKB() in the browser console while signed in to populate the pgvector knowledge base */
   window.__seedKB=async function(){ if(!SB){console.log("no Supabase client");return;} console.log("seeding KB (batched)…");
     let off=0,total=0,seeded=0; for(let guard=0;guard<30;guard++){ const r=await SB.functions.invoke("ai",{body:{mode:"seed",offset:off}});
