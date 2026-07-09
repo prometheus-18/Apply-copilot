@@ -206,6 +206,18 @@
   .doc .pj{margin-top:8px}.doc .pj .tech{color:#555;font-size:9pt;font-style:italic}
   .doc ul{margin:3px 0 4px 16px;padding:0}.doc li{margin:2.5px 0}.doc p{margin:3px 0}
   .doc.edit{outline:2px dashed #b9c6dd;outline-offset:3px}
+  .doc.edit a{cursor:pointer;text-decoration:underline dotted #1b59b3 1.5px;text-underline-offset:2px}
+  .doc.edit a:hover{background:#eaf1fb;border-radius:3px}
+  #linkPop{position:fixed;z-index:9999;display:none;width:320px;max-width:92vw;background:var(--card2,#232325);color:var(--tx,#c9c7cc);border:1px solid var(--ln,#2e2c30);border-radius:var(--r,14.4px);padding:14px 14px 12px;font-family:'Inter',system-ui,sans-serif}
+  #linkPop .lpt{font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut,#a2a2a2);margin:0 0 8px}
+  #linkPop label{display:block;font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mut,#a2a2a2);margin:9px 0 4px}
+  #linkPop input{width:100%;box-sizing:border-box;background:var(--srf,#161616);border:1px solid var(--ln,#2e2c30);border-radius:9px;color:var(--fog,#f1f1f1);padding:8px 9px;font:500 13px/1.3 'Inter',system-ui,sans-serif}
+  #linkPop input:focus{outline:none;border-color:var(--acc,#ff4c24)}
+  #linkPop .lperr{color:var(--acc-ink,#ff7a52);font-size:11.5px;margin:6px 0 0;display:none}
+  #linkPop .lprow{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+  #linkPop button{font:600 12px/1 'Inter',system-ui,sans-serif;border-radius:9px;padding:7px 11px;cursor:pointer;border:1px solid var(--btn-ln,#504e54);background:transparent;color:var(--tx,#c9c7cc)}
+  #linkPop button.lpsave{background:var(--fog,#f1f1f1);color:#161616;border-color:var(--fog,#f1f1f1)}
+  #linkPop button.lpdel{margin-left:auto;color:var(--acc-ink,#ff7a52);border-color:var(--btn-ln,#504e54)}
   #printArea{display:none}
   @media print{ body{background:#fff} #space,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#1b59b3;text-decoration:none} }
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} .reveal{opacity:1;transform:none} .chip .dot{animation:none} }
@@ -391,6 +403,53 @@
 function val(id){ const e=document.getElementById(id); return e?(e.value||""):""; }
 function set(id,v){ const e=document.getElementById(id); if(e)e.value=(v==null?"":v); }
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+/* ===== shared refinement helpers (name casing · URL safety · company/domain · cover sanitize) ===== */
+function capWord(w){ return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w; }
+/* "RAHUL VERMA" -> "Rahul Verma"; keep already-valid mixed case (McDonald, DeVry) + O'Brien / Jean-Luc */
+function titleCaseName(n){ n=String(n||"").replace(/\s+/g," ").trim(); if(!n)return "";
+  return n.split(" ").map(function(w){ if(/[a-z]/.test(w)&&/[A-Z]/.test(w))return w;   /* keep valid mixed case (McDonald, DeVry) */
+    return w.replace(/[A-Za-z]+/g,function(p){return capWord(p);}); }).join(" "); }   /* case every alpha run: O'Brien, Jean-Luc-Marie */
+/* accept only safe link protocols; upgrade a bare domain to https://; reject javascript:/data:/etc. */
+function safeUrl(u){ u=String(u||"").trim(); if(!u)return "";
+  if(/^(javascript|data|vbscript|file):/i.test(u))return "";
+  if(/^(https?:|mailto:|tel:)/i.test(u))return u;
+  if(/^\/\//.test(u))return "https:"+u;
+  if(/^[\w-]+(\.[\w-]+)+([\/?#].*)?$/.test(u))return "https://"+u;   /* bare domain e.g. github.com/x */
+  return ""; }
+/* strip clear legal-entity suffixes + "part of X group" tails so the company can anchor a search/domain.
+   Deliberately conservative — keeps meaningful words (Technologies, India) that disambiguate the brand. */
+function normCompany(c){ var s=String(c||"").trim(); if(!s)return "";
+  s=s.replace(/\s*[,–—-]\s*(?:a\s+)?(?:part|division|subsidiary|unit|member|brand)\s+of\b.*$/i,"");
+  s=s.replace(/\s*\((?:a\s+)?(?:part|division|subsidiary)\s+of\b[^)]*\)\s*/i," ");
+  s=s.replace(/\s*\([^)]*\)\s*$/,"");                                  /* trailing "(a Walmart company)" descriptor */
+  s=s.replace(/\s*&\s*co(?:mpany)?\.?\s*$/i,"").replace(/\s+and\s+company\s*$/i,"");
+  /* strip legal-entity suffixes ONLY at the END (they are always trailing) — possibly several ("Foo Pvt. Ltd.").
+     End-anchored so it never eats a LEADING/interior brand word ("Limited Brands", "AG Barr", "Co-operative"). */
+  const beforeSuf=s, SUF=/[\s,]+(?:pvt\.?|private|ltd\.?|limited|inc\.?|llc|l\.?l\.?c\.?|corp\.?|corporation|co\.?|gmbh|s\.?a\.?|s\.?r\.?l\.?|b\.?v\.?|plc|ag)\.?\s*$/i;
+  let prev; do{ prev=s; s=s.replace(SUF,""); }while(s!==prev&&s);
+  if(!s.trim()||/^(the|an?)$/i.test(s.trim()))s=beforeSuf;             /* don't reduce "The Limited" to "The"/"" */
+  s=s.replace(/[.,]+$/,"").replace(/\s{2,}/g," ").trim();
+  return s||String(c||"").trim(); }
+/* best-effort company domain from the brand tokens — ALWAYS an unverified guess (labeled as such in UI).
+   Avoids the naive "McKinsey & Company"->"mckinseyandcompany.com" trap by normalizing + dropping filler. */
+function domainGuess(c){ var base=normCompany(c).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");  /* é->e, ü->u */
+  var toks=base.replace(/&/g," and ")
+    .replace(/\b(and|the|of|for|group|holdings?|ventures?|labs?|technolog(?:y|ies)|solutions?|systems?|services?|global|international|india|worldwide|digital|consulting)\b/g," ")
+    .replace(/[^a-z0-9]+/g," ").trim().split(/\s+/).filter(function(t){return t.length>1;});   /* drop 1-char filler ("a") */
+  if(!toks.length){ var f=base.replace(/[^a-z0-9]+/g,""); return (f||"company")+".com"; }
+  return toks.slice(0,2).join("")+".com"; }
+function lcSentence(s){ s=tidy(String(s||"")).replace(/[·•|]\s*$/,"").trim(); if(s&&!/[.!?]$/.test(s))s+="."; return s; }
+/* scrub the PROSE of a cover letter (never the contact block — see detCover). URL/identifier-safe:
+   removes markdown MARKUP, not bare _ / # / backticks that live inside emails, URLs and handles; and
+   removes JS coercion artifacts ("undefined"/"null"/"NaN") ONLY exact-case + standalone, so real names
+   like "Nan"/"Null" and emails like nan@… survive. */
+function sanitizeCover(s){ s=String(s||"");
+  s=s.replace(/\*\*([^*\n]+)\*\*/g,"$1").replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/g,"$1$2");  /* **bold** *italic* */
+  s=s.replace(/`+/g,"").replace(/^[ \t]*#{1,6}\s+/gm,"").replace(/^[ \t]*>\s?/gm,"");                  /* code ticks · headings · quotes */
+  s=s.replace(/\[[^\]\n]*\]/g,"");                                                                     /* [placeholders] */
+  s=s.replace(/(^|[\s(])(undefined|null|N\/A|NaN)(?=[\s).,;:]|$)/g,"$1");                               /* coercion artifacts, exact case */
+  s=s.replace(/[·•]\s*(?=[·•])/g,"").replace(/[ \t]{2,}/g," ").replace(/ +\n/g,"\n").replace(/\n{3,}/g,"\n\n");
+  return s.trim(); }
 function flash(id,t,ms){ const e=document.getElementById(id); if(!e)return; e.textContent=t; clearTimeout(e._t); e._t=setTimeout(()=>{e.textContent="";},ms||1800); }
 function tab(t){ const el=document.getElementById("pane-"+t); if(el){ const y=Math.max(0,el.getBoundingClientRect().top+window.pageYOffset-72); if(window.__lenis)window.__lenis.scrollTo(y,{duration:1.1}); else window.scrollTo({top:y,behavior:"smooth"}); } document.querySelectorAll(".nlinks a").forEach(a=>a.classList.toggle("on",a.dataset.t===t)); }
 function urlify(u){ u=String(u||"").trim(); if(!u)return""; return /^https?:\/\//i.test(u)?u:("https://"+u.replace(/^\/+/,"")); }
@@ -727,10 +786,43 @@ function detRecs(b){ const r=[];
   r.push({t:"Add numbers (%, ₹/$, time, volume) to bullets that don't have them — fix inline with ✎ Edit."});
   r.push({t:"Mirror the JD's exact tool/skill names, and list each skill once in Skills and again inside a bullet."});
   return r; }
-function detCover(c,r,cv){ const rt=(r||"the role").replace(/^\[.*?\]\s*/,""); const nm=(cv&&cv.name)||M.name||""; const rec=cv&&cv.experience&&cv.experience[0];
-  const exp=rec?(" as "+rec.role+(rec.org?" at "+rec.org:"")):""; const sk=cv&&cv.skills?cv.skills.flatMap(g=>g.items||[]).slice(0,4).join(", "):"";
-  const sig="Best regards,\n"+nm+([cv&&cv.phone,cv&&cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
-  return "Dear Hiring Team,\n\nI'm excited to apply for the "+rt+(c&&c!=="the company"?" role at "+c:" position")+". My background"+exp+" maps closely to what this role needs"+(sk?", with hands-on strength in "+sk:"")+".\n\nIn my work I've focused on delivering measurable outcomes — turning data and effort into results — and I ramp quickly on new tools and domains. I'd bring that same momentum to your team from day one.\n\nI'd welcome the chance to discuss how I can contribute to "+(c&&c!=="the company"?c:"your team")+". Thank you for your time and consideration.\n\n"+sig; }
+/* Deterministic cover letter — reads like a person wrote it, uses ONLY facts parsed from the candidate.
+   Four short paragraphs (intro · evidence · second strength · close) + a title-cased signature with a
+   dynamic contact block (present fields only). No AI, no invented facts, no annotation/markdown artifacts. */
+function detCover(c,r,cv){ cv=cv||{};
+  const company=normCompany(c); const hasCo=!!company&&company!=="the company";
+  /* clean role: drop [brackets], a trailing "role", and a leading article; empty/placeholder → no role name */
+  let rt=String(r||"").replace(/\[.*?\]/g,"").replace(/\s+role\s*$/i,"").replace(/^\s*(the|an?)\s+/i,"").trim();
+  if(/^the role$/i.test(String(r||"").trim()))rt="";
+  const nm=titleCaseName((cv.name)||M.name||"");
+  const rec=(cv.experience||[])[0]||null;
+  const realTitle=rec?cleanSep(rec.role||""):""; const org=rec?cleanSep(rec.org||""):"";
+  const yrs=fmtYears(candidateYears(cv.experience||[]));
+  const skills=(cv.skills||[]).flatMap(g=>g.items||[]);
+  const top=skills.slice(0,4);
+  const skillPhrase=top.length?(top.length>1?top.slice(0,-1).join(", ")+", and "+top[top.length-1]:top[0]):"";
+  const allB=[].concat.apply([],(cv.experience||[]).map(e=>e.bullets||[]).concat((cv.projects||[]).map(p=>p.bullets||[])));
+  const quant=(allB.filter(b=>/\d/.test(b)).sort((a,b)=>b.length-a.length)[0])||allB[0]||"";
+  const proj=(cv.projects||[])[0]||null;
+
+  const p1="Dear Hiring Team,\n\nI'm writing to apply for "+(rt?"the "+rt+" position":"this position")+(hasCo?" at "+company:"")+". I'm "+(realTitle?"a "+realTitle:"a professional")+(org?" at "+org:"")+(yrs?" with "+yrs+"experience":"")+", and the work this role centers on is the work I do every day"+(skillPhrase?" — most of all "+skillPhrase:"")+".";
+
+  /* field-neutral (never asserts a data/analytics focus for a non-data candidate); the only specific claim is
+     the candidate's OWN quantified bullet, quoted verbatim */
+  const p2="\n\nWhat matters most to me is work that actually makes a difference — not activity for its own sake, but results the team can point to."+(quant?" One example from my recent work: "+lcSentence(quant):"");
+
+  const p3=proj
+    ? "\n\nOutside my day-to-day role I also built "+proj.name+(proj.tech?", using "+proj.tech:"")+", which meant owning a problem end to end — from the first idea through to something that actually works. I like taking that kind of full responsibility, and I ramp quickly when a new tool or domain is involved."
+    : "\n\nI tend to take full ownership of a problem end to end and ramp quickly on new tools and domains, which lets me start contributing early instead of after a long spin-up.";
+
+  const p4="\n\nI'd welcome the chance to talk through how I could help "+(hasCo?company:"your team")+" and where I'd add the most value. Thank you for your time and consideration.";
+
+  const contactLines=[[cv.phone,cv.email].filter(Boolean).join(" · "),
+    [cv.linkedin&&urlify(cv.linkedin),cv.github&&urlify(cv.github),cv.website&&urlify(cv.website)].filter(Boolean).join(" · ")].filter(Boolean);
+  /* signature/contact block is built from REAL parsed fields — NOT run through sanitizeCover, so emails/URLs
+     with "_"/"#" and real names like "Nan"/"Null" are never corrupted. Only the prose (p1-p4) is scrubbed. */
+  const sig=["Best regards,",nm].filter(Boolean).concat(contactLines).join("\n");
+  return sanitizeCover(p1+p2+p3+p4)+"\n\n"+sig; }
 
 /* ===== generate (staged) ===== */
 let CUR=null;
@@ -813,7 +905,12 @@ function renderKW(){ const o=CUR.orig,t=CUR.tail,b=CUR.buckets;
 function acceptTip(i){ if(!CUR)return; const tip=(CUR.recs||[])[i]; if(!tip||!tip.add)return; CUR.added=CUR.added||[];
   const on=tip.add.every(k=>CUR.added.indexOf(k)>=0);
   if(on)CUR.added=CUR.added.filter(k=>tip.add.indexOf(k)<0); else tip.add.forEach(k=>{if(CUR.added.indexOf(k)<0)CUR.added.push(k);});
-  renderKW(); updateProjected(); }
+  renderKW(); updateProjected();
+  /* keep the tailored résumé in lock-step with what the user just accepted, so "＋ Add" is reflected
+     immediately (not only after "View tailored résumé"). CUR.cv is rebuilt regardless so PDF/copy/view
+     all see the accepted keywords; the DOM is only re-rendered when the résumé isn't being hand-edited. */
+  const doc=document.getElementById("resumeDoc"); const cvBody=document.getElementById("cvBody");
+  if(!(doc&&doc.dataset&&doc.dataset.dirty==="1")){ CUR.cv=buildDisplayCv(); if(cvBody&&cvBody.style.display!=="none")renderResume(); } }
 function buildDisplayCv(){ const cv=JSON.parse(JSON.stringify(CUR.cvBase||CUR.cv)); const added=CUR.added||[];
   if(added.length){ let g=(cv.skills||[]).find(x=>/^(additional|other|core|key) /i.test(x.group)); if(g){ added.forEach(k=>{if(g.items.indexOf(k)<0)g.items.push(k);}); } else (cv.skills=cv.skills||[]).push({group:"Additional Skills",items:added.slice()}); }
   return cv; }
@@ -825,12 +922,73 @@ function updateProjected(){ if(!CUR)return; const added=CUR.added||[],b=CUR.buck
 function viewTailored(){ if(CUR){ CUR.cv=buildDisplayCv(); renderResume(); } tab("cv"); }
 
 /* ===== edit toggle ===== */
-function toggleEdit(id,btn){ const d=document.getElementById(id); const on=d.contentEditable!=="true"; d.contentEditable=on?"true":"false"; d.classList.toggle("edit",on); if(on){ if(!d._dl){ d.addEventListener("input",()=>{d.dataset.dirty="1";}); d._dl=1; } d.focus(); } btn.textContent=on?"✓ Done":"✎ Edit"; }
+function toggleEdit(id,btn){ const d=document.getElementById(id); const on=d.contentEditable!=="true"; d.contentEditable=on?"true":"false"; d.classList.toggle("edit",on);
+  if(on){ if(!d._dl){ d.addEventListener("input",()=>{d.dataset.dirty="1";}); d._dl=1; }
+    /* in the custom résumé editor, clicking a hyperlink opens the link editor instead of navigating */
+    if(id==="resumeDoc"&&!d._ll){ d.addEventListener("click",function(ev){ if(!d.classList.contains("edit"))return; const a=ev.target&&ev.target.closest&&ev.target.closest("a"); if(a&&d.contains(a)){ ev.preventDefault(); openLinkEditor(a,d); } }); d._ll=1; }
+    d.focus(); }
+  else { closeLinkPop(); }
+  btn.textContent=on?"✓ Done":"✎ Edit"; }
+
+/* ===== hyperlink editing (custom résumé only) — mutates the rendered DOM so the edited href flows straight
+   into the PDF via domRuns/domToDocDef and into Copy-text; the master résumé + CUR.cvBase are never touched. */
+let _linkPop=null,_linkA=null,_linkDoc=null;
+function linkPopEl(){ if(_linkPop)return _linkPop;
+  const p=document.createElement("div"); p.id="linkPop";
+  p.innerHTML='<p class="lpt">Edit link</p>'+
+    '<label>Display text</label><input id="lpText" type="text" autocomplete="off" spellcheck="false">'+
+    '<label>URL</label><input id="lpUrl" type="text" autocomplete="off" spellcheck="false" placeholder="https://…">'+
+    '<p class="lperr" id="lpErr"></p>'+
+    '<div class="lprow"><button class="lpsave" onclick="saveLink()">Save link</button>'+
+    '<button onclick="openLinkUrl()">Open</button>'+
+    '<button class="lpdel" onclick="removeLink()">Remove link</button></div>';
+  document.body.appendChild(p); _linkPop=p;
+  document.addEventListener("mousedown",function(e){ if(!_linkPop||_linkPop.style.display!=="block")return;
+    if(_linkPop.contains(e.target))return; if(e.target&&e.target.closest&&e.target.closest("#resumeDoc a"))return; closeLinkPop(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape")closeLinkPop(); });
+  return p; }
+function openLinkEditor(a,doc){ const p=linkPopEl(); _linkA=a; _linkDoc=doc;
+  document.getElementById("lpText").value=a.textContent||"";
+  document.getElementById("lpUrl").value=a.getAttribute("href")||"";
+  const err=document.getElementById("lpErr"); if(err)err.style.display="none";
+  p.style.display="block";
+  const r=a.getBoundingClientRect(),pw=p.offsetWidth||320,ph=p.offsetHeight||210;
+  let left=Math.max(10,Math.min(r.left,window.innerWidth-pw-10));
+  let top=r.bottom+8; if(top+ph>window.innerHeight-10)top=Math.max(10,r.top-ph-8);
+  p.style.left=left+"px"; p.style.top=top+"px";
+  const uf=document.getElementById("lpUrl"); if(uf)uf.focus(); }
+function closeLinkPop(){ if(_linkPop)_linkPop.style.display="none"; _linkA=null; _linkDoc=null; }
+function saveLink(){ if(!_linkA)return; const t=document.getElementById("lpText").value.trim();
+  const u=safeUrl(document.getElementById("lpUrl").value); const err=document.getElementById("lpErr");
+  if(!u){ if(err){ err.textContent="Enter a valid link — https://…, mailto: or tel:. Unsafe or empty URLs aren't allowed."; err.style.display="block"; } return; }
+  _linkA.setAttribute("href",u); _linkA.setAttribute("target","_blank"); _linkA.setAttribute("rel","noopener");
+  if(t)_linkA.textContent=t;
+  if(_linkDoc&&_linkDoc.dataset)_linkDoc.dataset.dirty="1";
+  closeLinkPop(); }
+function removeLink(){ if(!_linkA)return; const tx=document.createTextNode(_linkA.textContent||"");
+  if(_linkA.parentNode)_linkA.parentNode.replaceChild(tx,_linkA);
+  if(_linkDoc&&_linkDoc.dataset)_linkDoc.dataset.dirty="1"; closeLinkPop(); }
+function openLinkUrl(){ const u=safeUrl(document.getElementById("lpUrl").value); if(u)window.open(u,"_blank","noopener"); }
 
 /* ===== outreach ===== */
 function li(q){ return "https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent(q); }
-function liCo(c){ return "https://www.linkedin.com/search/results/companies/?keywords="+encodeURIComponent(c); }
-function domainGuess(c){ return c.toLowerCase().replace(/\b(pvt|private|ltd|limited|inc|llc|technologies|global|the)\b/g,"").replace(/[^a-z0-9]/g,"")+".com"; }
+function liCo(c){ return "https://www.linkedin.com/search/results/companies/?keywords="+encodeURIComponent(normCompany(c)); }
+/* LinkedIn people search anchored on the company: quote the normalized company so it must appear, then OR
+   a role-family title list. Company is the anchor; better keywords = far fewer unrelated-company results. */
+function liAt(company,titles){ const co='"'+normCompany(company)+'"';
+  const t=(titles&&titles.length)?" ("+titles.map(x=>/\s/.test(x)?'"'+x+'"':x).join(" OR ")+")":"";
+  return li(co+t); }
+/* title families keyed off the target role/JD function — a Data Analyst opening shouldn't surface random
+   engineering managers. Returns the hiring-manager titles to search for that function. */
+function roleFamily(){ const t=(((CUR&&CUR.cv&&CUR.cv.title)||(CUR&&CUR.role)||"")+" "+((CUR&&CUR.roleHint)||"")).toLowerCase();
+  if(/data scien|machine learning|\bml\b|\bai\b|deep learning/.test(t))return {fn:"Data Science",mgr:["Data Science Manager","Head of Data Science","Analytics Manager","Machine Learning Manager"]};
+  if(/analyt|data analyst|business intelligen|\bbi\b|insight|reporting/.test(t))return {fn:"Analytics",mgr:["Analytics Manager","Head of Analytics","Director of Analytics","Data Science Manager","Business Intelligence Manager","Decision Analytics"]};
+  if(/product manager|product owner|\bpm\b|product analyst/.test(t))return {fn:"Product",mgr:["Product Manager","Group Product Manager","Head of Product","Director of Product"]};
+  if(/engineer|developer|software|full.?stack|backend|front.?end|sde/.test(t))return {fn:"Engineering",mgr:["Engineering Manager","Software Development Manager","Tech Lead","Head of Engineering","Director of Engineering"]};
+  if(/consult|strateg|associate|engagement/.test(t))return {fn:"Consulting",mgr:["Engagement Manager","Principal","Practice Lead","Manager"]};
+  if(/market|growth|brand/.test(t))return {fn:"Marketing",mgr:["Marketing Manager","Head of Marketing","Growth Manager"]};
+  return {fn:"",mgr:["Manager","Head","Director","Lead"]}; }
+const RECRUITER_TITLES=["Recruiter","Talent Acquisition","Technical Recruiter","Talent Partner","Recruiting Lead","HR Business Partner"];
 function firstName(){ return ((CUR&&CUR.cv&&CUR.cv.name)||M.name||"").trim().split(/\s+/)[0]||"me"; }
 function selfPitch(){ const cv=CUR&&CUR.cv||{}; const sk=(cv.skills||[]).flatMap(g=>g.items||[]).slice(0,3).join(", ");
   /* "I'm a <X>" must be the candidate's REAL title, not the JD role they're applying to */
@@ -838,20 +996,21 @@ function selfPitch(){ const cv=CUR&&CUR.cv||{}; const sk=(cv.skills||[]).flatMap
   return (real||cv.title||CUR.role||"professional")+(sk?" ("+sk+")":""); }
 function renderOutreach(){ document.getElementById("outEmpty").style.display="none"; const body=document.getElementById("outBody"); body.style.display="block";
   const c=CUR.company,r=(CUR.cv.title||CUR.role),dom=domainGuess(c),fn=firstName(),cv=CUR.cv||{};
+  const co=normCompany(c),fam=roleFamily();
   const note="Hi {First} — I just applied for the "+r+" role at "+c+" and would love to connect. I'm a "+selfPitch()+" and admire what your team is building. Open to a quick chat? — "+fn;
   const subj="Referral request — "+r+" at "+c+" (just applied)";
   const mail="Hi {First},\n\nI just submitted my application for the "+r+" role at "+c+" and wanted to reach out directly. I'm a "+selfPitch()+".\n\nIf my background looks like a fit, I'd be grateful for a referral or a pointer to the right person. Happy to share my résumé and the role link. Thanks for your time!\n\nBest,\n"+((cv.name)||M.name||"")+([cv.phone,cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
   const follow="Hi {First}, a gentle nudge on my note about the "+r+" role at "+c+" — I know inboxes get busy. Even a quick steer would mean a lot. Thanks! — "+fn;
   body.innerHTML=
-    '<div class="box"><h5>🔗 Find the right 2 people</h5><div class="row">'+
-      '<a target="_blank" href="'+li(c+" "+r)+'"><button class="sm ghost">Team peers</button></a>'+
-      '<a target="_blank" href="'+li(c+" "+r+" manager OR lead OR head")+'"><button class="sm ghost">Hiring manager</button></a>'+
-      '<a target="_blank" href="'+li(c+" recruiter OR talent")+'"><button class="sm ghost">Recruiter</button></a>'+
+    '<div class="box"><h5>🔗 Find the right 2 people at '+esc(co)+'</h5><div class="row">'+
+      '<a target="_blank" href="'+li('"'+co+'" '+r)+'"><button class="sm ghost">Team peers</button></a>'+
+      '<a target="_blank" href="'+liAt(c,fam.mgr)+'"><button class="sm ghost">Hiring manager</button></a>'+
+      '<a target="_blank" href="'+liAt(c,RECRUITER_TITLES)+'"><button class="sm ghost">Recruiter</button></a>'+
       '<a target="_blank" href="'+liCo(c)+'"><button class="sm ghost">Company page</button></a></div>'+
-      '<div class="hint" style="margin-top:6px">Pick <b>2 max</b> — ideally the hiring manager + one team peer.</div></div>'+
+      '<div class="hint" style="margin-top:6px">Searches are anchored to <b>'+esc(co)+'</b>'+(fam.fn?' and '+esc(fam.fn)+'-function titles':'')+' so results stay on-company. On LinkedIn, add the <b>Current company</b> filter for the tightest match. Pick <b>2 max</b> — ideally the hiring manager + one team peer.</div></div>'+
     '<div class="box"><h5>🤝 Connection note <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(note)+'</div></div>'+
-    '<div class="box"><h5>✉️ Referral email — '+esc(c)+' <button class="sm ghost" onclick="cpText(this)">Copy</button></h5>'+
-      '<div class="hint">Likely pattern: <span class="pill">first.last@'+esc(dom)+'</span><span class="pill">flast@'+esc(dom)+'</span> <i>(verify first)</i></div>'+
+    '<div class="box"><h5>✉️ Referral email — '+esc(co)+' <button class="sm ghost" onclick="cpText(this)">Copy</button></h5>'+
+      '<div class="hint"><b>Pattern-inferred — unverified.</b> The domain <span class="pill">'+esc(dom)+'</span> is a best-effort guess from the company name; confirm the real domain, then a likely address is <span class="pill">first.last@'+esc(dom)+'</span> or <span class="pill">flast@'+esc(dom)+'</span>. Verify on the company site or a tool like Hunter before sending — never treat this as confirmed.</div>'+
       '<div style="margin:6px 0"><b>Subject:</b> '+esc(subj)+'</div><div class="mono">'+esc(mail)+'</div></div>'+
     '<div class="box"><h5>↩️ Follow-up (after ~3 days) <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(follow)+'</div></div>'+
     '<div class="row" style="margin-top:6px">'+(CUR.url?'<a target="_blank" href="'+esc(urlify(CUR.url))+'"><button class="sm ghost">Open job link ↗</button></a>':'')+'<button class="sm primary" onclick="logApp()">✓ I applied — log it</button></div>';
