@@ -606,26 +606,41 @@ function parseExp(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.trim())
     if(role||org)entries.push({role:tidy(role),org:tidy(org),location:(loc.length<40?tidy(loc):""),dates:normRange(a.date),bullets}); }
   return entries; }
 function projHeadLine(s){ if(/\|/.test(s))return true; const letters=s.replace(/[^A-Za-z]/g,""); if(letters&&letters===letters.toUpperCase()&&s.length<60)return true; const m=s.match(/^([A-Z][A-Za-z0-9 &:'.()\-–—]{2,70}?):\s+\S/); if(m&&m[1].split(/\s+/).length<=12)return true; return false; }
+/* ANY http(s)/github URL inside a project meta piece becomes the project link again — critical for
+   re-uploading PDFs this app generated, where the user may have RENAMED the anchor ("AppLink") and the
+   link recovery re-injects "label (https://…)". Returns {link,label,tech} or null. The trailing token
+   before the URL is treated as the anchor LABEL only when a ·/• separator precedes it or it reads like
+   a link word — a lone tech token ("Python (github.com/x)") stays tech. */
+function projLinkBits(x){ const m=x.match(/https?:\/\/[^\s|,)]+/i)||x.match(/\bgithub\.com\/[^\s|,)]+/i); if(!m)return null;
+  const link=urlify(m[0]); const at=x.indexOf(m[0]);
+  let pre=x.slice(0,at).replace(/[(\s]+$/,""), post=x.slice(at+m[0].length).replace(/^[)\s]+/,"");
+  let label="";
+  const t=pre.match(/([A-Za-z][\w+.&-]{1,17})$/);                      /* the anchor word sits right before the URL */
+  if(t){ const tok=t[1], sep=/[·•]\s*$/.test(pre.slice(0,t.index));    /* ·-separated from the tech list? */
+    if(/^(github|link|demo|live|code|repo)$/i.test(tok)){ pre=pre.slice(0,t.index); }
+    else if(sep||/link|app|site|live|demo|store|page|portfolio|web|hub/i.test(tok)){ label=tok; pre=pre.slice(0,t.index); } }
+  const tech=[pre,post].map(s=>s.replace(/^[(),·•|\s]+|[(),·•|\s]+$/g,"").trim()).filter(Boolean).join(", ");
+  return {link,label,tech}; }
 function parseProjHead(head){ let desc="",name=head,rest=""; const bar=head.indexOf("|");
   if(bar>=0){ name=head.slice(0,bar); rest=head.slice(bar+1); } else { const c=head.match(/^([^:]{2,70}?):\s+(.+)$/); if(c){ name=c[1]; desc=c[2]; } }
   name=name.replace(/\s*\(([^)]*(?:19|20)\d{2}[^)]*)\)\s*$/,"").replace(/[\s–—-]+$/,"").trim(); name=tidy(name.replace(/^[^A-Za-z0-9]+/,"")).slice(0,80);
-  let link="",tech=[]; rest.split("|").map(x=>x.trim()).filter(Boolean).forEach(x=>{ const gh=x.match(/github\.com\/[^\s|,)]+/i); if(gh){ link=urlify(gh[0]); const lo=x.replace(/\(?\s*https?:\/\/\S+\)?/ig,"").replace(/\bgithub\b/ig,"").replace(/^[(),·•|\s]+|[(),·•|\s]+$/g,"").trim(); if(lo&&!/^(link|demo|live|code|repo)$/i.test(lo))tech.push(lo); } else if(/^github$/i.test(x))link="__profile__"; else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
-  return {name,tech:tidy(tech.join(", ")),link,desc:desc?tidy(desc):""}; }
+  let link="",label="",tech=[]; rest.split("|").map(x=>x.trim()).filter(Boolean).forEach(x=>{ const lb=projLinkBits(x); if(lb){ if(!link)link=lb.link; if(!label)label=lb.label; if(lb.tech)tech.push(lb.tech); } else if(/^github$/i.test(x)){ if(!link)link="__profile__"; } else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
+  return {name,tech:tidy(tech.join(", ")),link,label,desc:desc?tidy(desc):""}; }
 function parseProjects(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.trim()).filter(Boolean);
   if(_ls.length>=2){ const out=[]; let cur=null;
     for(const raw of _ls){ const stripped=raw.replace(ENTRY_BULLET,"").trim(); if(!stripped)continue;
-      if(projHeadLine(stripped)){ const h=parseProjHead(stripped); cur={name:h.name,tech:h.tech,link:h.link,bullets:[]}; if(h.desc)cur.bullets.push(h.desc); out.push(cur); }
+      if(projHeadLine(stripped)){ const h=parseProjHead(stripped); cur={name:h.name,tech:h.tech,link:h.link,linkLabel:h.label||"",bullets:[]}; if(h.desc)cur.bullets.push(h.desc); out.push(cur); }
       else if(cur){ const lb=cur.bullets.length-1; if(lb>=0&&(/^[a-z(]/.test(stripped)||!/[.!?)]$/.test(cur.bullets[lb])))cur.bullets[lb]=(cur.bullets[lb]+" "+tidy(stripped)).trim(); else cur.bullets.push(tidy(stripped)); }
       else { cur={name:tidy(stripped).slice(0,80),tech:"",link:"",bullets:[]}; out.push(cur); } }
-    const r=out.map(p=>({name:p.name,tech:p.tech,link:p.link,bullets:p.bullets.filter(b=>b.length>5).slice(0,5)})).filter(p=>p.name); if(r.length)return r.slice(0,6); }
+    const r=out.map(p=>({name:p.name,tech:p.tech,link:p.link,linkLabel:p.linkLabel||"",bullets:p.bullets.filter(b=>b.length>5).slice(0,5)})).filter(p=>p.name); if(r.length)return r.slice(0,6); }
   s=s.replace(/\s+/g," ").trim(); if(!s)return[];
   const parts=s.split(/(?=(?:^|[.)’])\s*[A-Z][A-Za-z0-9 &:.'\-]{2,60}?\s\|)/).map(x=>x.trim()).filter(Boolean); const out=[];
   parts.forEach(p=>{ const segs=p.split(/\s[–—•·]\s+/); let head=segs[0]||""; let bullets=segs.slice(1).map(tidy).filter(b=>b.length>6).slice(0,5);
     const bar=head.indexOf("|"); let name=bar>=0?head.slice(0,bar).trim():head.split(/\s[–—]\s/)[0].trim(); name=tidy(name.replace(/^[^A-Za-z]*/,"")).slice(0,80);
     let meta=bar>=0?head.slice(bar+1):""; const pieces=meta.split("|").map(x=>x.trim()).filter(Boolean);
-    let link="",tech=[]; pieces.forEach(x=>{ const gh=x.match(/github\.com\/[^\s|,)]+/i); if(gh){ link=urlify(gh[0]); const lo=x.replace(/\(?\s*https?:\/\/\S+\)?/ig,"").replace(/\bgithub\b/ig,"").replace(/^[(),·•|\s]+|[(),·•|\s]+$/g,"").trim(); if(lo&&!/^(link|demo|live|code|repo)$/i.test(lo))tech.push(lo); } else if(/^github$/i.test(x))link="__profile__"; else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
+    let link="",label="",tech=[]; pieces.forEach(x=>{ const lb=projLinkBits(x); if(lb){ if(!link)link=lb.link; if(!label)label=lb.label; if(lb.tech)tech.push(lb.tech); } else if(/^github$/i.test(x)){ if(!link)link="__profile__"; } else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
     if(!bullets.length && bar>=0){ const tail=tidy(head.slice(bar+1).replace(/\|/g," · ")); if(tail.length>20){tech=[];bullets=[tail];} }
-    if(name&&name.length>1)out.push({name,tech:tidy(tech.join(", ")),link,bullets}); });
+    if(name&&name.length>1)out.push({name,tech:tidy(tech.join(", ")),link,linkLabel:label,bullets}); });
   return out.slice(0,6); }
 function parseEduEntry(x){ x=tidy(x).trim(); if(!x)return null;
   const gpaM=x.match(GPA_RE); const gpa=gpaM?gpaM[1]:"";
@@ -892,7 +907,8 @@ function contactHTML(cv){ const p=[];
   if(cv.email)p.push('<a href="mailto:'+esc(cv.email)+'">'+esc(cv.email)+'</a>');
   const l=[]; if(cv.linkedin)l.push('<a href="'+esc(urlify(cv.linkedin))+'" target="_blank" rel="noopener">LinkedIn</a>'); if(cv.github)l.push('<a href="'+esc(urlify(cv.github))+'" target="_blank" rel="noopener">GitHub</a>'); if(cv.website)l.push('<a href="'+esc(urlify(cv.website))+'" target="_blank" rel="noopener">Portfolio</a>');
   return p.join(" · ")+(l.length?'<br>'+l.join(" · "):""); }
-function projLink(p){ if(!p.link)return""; const u=p.link==="__profile__"?(CUR&&CUR.cv&&CUR.cv.github?urlify(CUR.cv.github):""):p.link; return u?' · <a href="'+esc(u)+'" target="_blank" rel="noopener">GitHub</a>':""; }
+function projLabel(p,u){ return p.linkLabel||(/github\.(com|io)/i.test(u||"")?"GitHub":"Link"); }
+function projLink(p){ if(!p.link)return""; const u=p.link==="__profile__"?(CUR&&CUR.cv&&CUR.cv.github?urlify(CUR.cv.github):""):p.link; return u?' · <a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(projLabel(p,u))+'</a>':""; }
 function resumeDocHTML(cv){
   let h='<h3 class="n">'+esc(cv.name||"Your Name")+'</h3>';
   /* header is name + contacts only ("just the name") — the target role still appears in the summary's first line */
@@ -1166,7 +1182,7 @@ function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWe
     const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#444",fontSize:F-1,margin:[0,0,0,1]});
     if((e.bullets||[]).length)c.push({ul:e.bullets,margin:[3,1,0,3],markerColor:"#888"}); }); }
   if(cv.projects&&cv.projects.length){ sec("Projects"); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
-    c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   GitHub",link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
+    c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
     if((p.bullets||[]).length)c.push({ul:p.bullets,margin:[3,0,0,3],markerColor:"#888"}); }); }
   if(cv.education&&cv.education.length){ sec("Education"); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
@@ -1508,10 +1524,14 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       var ei=heads-1, bj=[].slice.call(node.children).indexOf(li);
       if(ei<0||bj<0)return {kind:"fact"};
       return {kind:"bullet",id:(sec==="experience"?"e":"p")+ei+":"+bj,ei:ei,bj:bj,el:li,text:li.innerText||li.textContent||""}; }
-    return {kind:"fact"}; }                                                 /* skills/edu/certs: keywords + facts — manual edit only */
+    if(sec==="certifications"||sec==="achievements"||sec==="publications"){  /* rephrase-only, digit-guarded like bullets */
+      if(node.tagName!=="UL"||!li)return {kind:"fact"};
+      var ij=[].slice.call(node.children).indexOf(li); if(ij<0)return {kind:"fact"};
+      return {kind:"item",sec:sec,idx:ij,el:li,text:li.innerText||li.textContent||""}; }
+    return {kind:"fact"}; }                                                 /* skills/education: keywords + facts — manual edit only */
 
   /* ---- fab + popup ---- */
-  var _aiPop=null,_aiFab=null,_aiCtx=null,_aiTone="balanced",_aiBusy=false,_aiSeq=0;
+  var _aiPop=null,_aiFab=null,_aiCtx=null,_aiTone="balanced",_aiLen=0,_aiBusy=false,_aiSeq=0;
   function aiFabEl(){ if(_aiFab)return _aiFab; var f=document.createElement("div"); f.id="aiFab"; f.textContent="✦"; f.title="AI edit";
     f.addEventListener("mousedown",function(e){ e.preventDefault(); e.stopPropagation(); });
     f.addEventListener("click",function(){ f.style.display="none"; if(_aiCtx)openAiPop(); });
@@ -1521,6 +1541,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     p.innerHTML='<p class="lpt"><span id="apTitle">✦ AI edit</span><span class="x" onclick="window.__aiPopClose()">✕</span></p>'+
       '<p class="orig" id="apOrig"></p>'+
       '<div id="apTones"></div>'+
+      '<div id="apLens"></div>'+
       '<input id="apCustom" type="text" autocomplete="off" spellcheck="false" placeholder="Optional: your own instruction — e.g. “two lines, formal”">'+
       '<div class="lprow"><button class="go" id="apGo" onclick="aiPopGo(false)">✦ Rewrite</button><button id="apHum" onclick="aiPopGo(true)">Humanize</button></div>'+
       '<p class="aperr" id="apErr"></p><div class="res" id="apRes"></div>';
@@ -1535,6 +1556,8 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   window.__aiPopClose=function(){ if(_aiPop)_aiPop.style.display="none"; if(_aiFab)_aiFab.style.display="none"; _aiCtx=null; };
   window.__aiTone=function(el){ _aiTone=(el&&el.dataset&&el.dataset.t)||"balanced";
     var t=$("apTones"); if(t)[].slice.call(t.children).forEach(function(x){x.classList.toggle("on",x===el);}); };
+  window.__aiLen=function(el){ _aiLen=+((el&&el.dataset&&el.dataset.w)||0)||0;
+    var t=$("apLens"); if(t)[].slice.call(t.children).forEach(function(x){x.classList.toggle("on",x===el);}); };
   function aiMaybeFab(doc,ev){ if(_aiPop&&_aiPop.style.display==="block")return;
     var sel=window.getSelection?window.getSelection():null,node=null,rect=null;
     if(sel&&sel.rangeCount&&sel.anchorNode&&doc.contains(sel.anchorNode)){ node=sel.anchorNode;
@@ -1542,18 +1565,25 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     if(!node&&ev&&ev.target&&ev.target!==doc&&doc.contains(ev.target))node=ev.target;
     if(!node){ if(_aiFab)_aiFab.style.display="none"; return; }
     var ctx=aiMap(doc,node);
-    if(!ctx||(ctx.kind!=="summary"&&ctx.kind!=="bullet"&&ctx.kind!=="cover")||!String(ctx.text||"").trim()){ if(_aiFab)_aiFab.style.display="none"; return; }
+    if(!ctx||(ctx.kind!=="summary"&&ctx.kind!=="bullet"&&ctx.kind!=="cover"&&ctx.kind!=="item")||!String(ctx.text||"").trim()){ if(_aiFab)_aiFab.style.display="none"; return; }
     ctx.docId=doc.id; _aiCtx=ctx;
     if(!rect&&ctx.el&&ctx.el.getBoundingClientRect)rect=ctx.el.getBoundingClientRect();
     var f=aiFabEl(); f.style.display="block";
     f.style.left=Math.min(((rect&&rect.right)||60)+8,window.innerWidth-44)+"px";
     f.style.top=Math.max(8,((rect&&rect.top)||100)-4)+"px"; }
   function openAiPop(){ var p=aiPopEl(),c=_aiCtx; if(!c)return;
-    _aiTone="balanced"; _aiBusy=false; _aiSeq++;   /* invalidate any in-flight request for a previous unit */
-    $("apTitle").textContent="✦ AI edit — "+(c.kind==="summary"?"summary":(c.kind==="cover"?"cover paragraph":"bullet"));
+    _aiTone="balanced"; _aiLen=0; _aiBusy=false; _aiSeq++;   /* invalidate any in-flight request for a previous unit */
+    $("apTitle").textContent="✦ AI edit — "+(c.kind==="summary"?"summary":c.kind==="cover"?"cover paragraph":c.kind==="item"?c.sec.replace(/s$/,""):"bullet");
     $("apOrig").textContent="“"+(c.text.length>180?c.text.slice(0,177)+"…":c.text)+"”";
     $("apTones").innerHTML=["professional","balanced","conversational","bold"].map(function(t){
       return '<span class="aitone'+(t==="balanced"?" on":"")+'" data-t="'+t+'" onclick="window.__aiTone(this)">'+t+'</span>'; }).join("");
+    /* length targets from the CURRENT word count — "30 words? offer ~21 or ~44" (never a full-doc rewrite) */
+    var wc=String(c.text).trim().split(/\s+/).length;
+    var kmax=c.kind==="summary"?220:c.kind==="cover"?160:c.kind==="item"?40:45;
+    var lo=Math.max(6,Math.round(wc*0.7)), hi=Math.min(kmax,Math.round(wc*1.45));
+    $("apLens").innerHTML=wc<8?"":['<span class="aitone" data-w="'+lo+'" onclick="window.__aiLen(this)">tighter ~'+lo+'w</span>',
+      '<span class="aitone on" data-w="0" onclick="window.__aiLen(this)">'+wc+'w now</span>',
+      (hi>wc?'<span class="aitone" data-w="'+hi+'" onclick="window.__aiLen(this)">fuller ~'+hi+'w</span>':"")].join("");
     $("apCustom").value=""; var er=$("apErr"); er.style.display="none"; $("apRes").innerHTML="";
     var locked=(!SB||!AUTH_USER)&&!window.__AI_FAKE_EDIT;
     if(locked){ er.textContent="Sign in to use AI editing — manual editing keeps working."; er.style.display="block"; }
@@ -1569,9 +1599,11 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var er=$("apErr"),res=$("apRes"); er.style.display="none"; res.innerHTML='<div class="hint"><span class="spin"></span>Rewriting…</div>';
     var cv=(CUR&&(CUR.cvBase||CUR.cv))||{};
     var body=Object.assign({tone:_aiTone,custom:($("apCustom").value||"").slice(0,300)},aiGround(cv));
+    if(_aiLen>0)body.wordTarget=_aiLen;
     if(humanize){ body.mode="humanize"; body.texts=[{id:"x",text:c.text}]; }
     else if(c.kind==="summary"){ body.mode="rewrite"; body.section="summary"; body.text=c.text; }
     else if(c.kind==="cover"){ body.mode="rewrite"; body.section="cover-para"; body.text=c.text; }
+    else if(c.kind==="item"){ body.mode="rewrite"; body.section="item"; body.text=c.text; }
     else { body.mode="rewrite"; body.section="bullet"; body.id=c.id; body.text=c.text; }
     _aiBusy=true; var seq=++_aiSeq; var d=null,eMsg=null;
     if(window.__AI_FAKE_EDIT){ d=window.__AI_FAKE_EDIT; }
@@ -1617,6 +1649,10 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       if(!dirty&&CUR&&CUR.cvBase){ var list=(c.id.charAt(0)==="e")?CUR.cvBase.experience:CUR.cvBase.projects; var it=list&&list[c.ei];
         if(it&&it.bullets&&it.bullets[c.bj]!=null){ it.bullets[c.bj]=nw; try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){} } }
       else if(c.el){ c.el.textContent=nw; if(doc&&doc.dataset)doc.dataset.dirty="1"; } }  /* dirty doc: WYSIWYG only, same rule as manual edits */
+    else if(c.kind==="item"){
+      if(!dirty&&CUR&&CUR.cvBase&&Array.isArray(CUR.cvBase[c.sec])&&CUR.cvBase[c.sec][c.idx]!=null){
+        CUR.cvBase[c.sec][c.idx]=nw; try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){} }
+      else if(c.el){ c.el.textContent=nw; if(doc&&doc.dataset)doc.dataset.dirty="1"; } }
     else if(c.kind==="cover"){
       if(!dirty&&CUR&&CUR.cover){ AI_UNDO_COVER=String(CUR.cover); AI_UNDO_COVER_RUN=CUR;   /* Undo + resync notice cover this edit too */
         var segs=String(CUR.cover).split(/(\n+)/); var ti=2*(c.idx-1);
