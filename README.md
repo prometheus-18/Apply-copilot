@@ -39,23 +39,24 @@ Your **real current score first**, then a **projected score after tailoring** �
 ### 4️⃣ Accept the tips that are true &nbsp;·&nbsp; *① ATS Score → Tips*
 **Every missing keyword is its own line with its own ➕ Add button** — you decide, line by line. Add one **only if you genuinely have that skill**; the projected score updates live. *The app never invents anything for you.*
 
-### ✦ 5️⃣ Run the AI Review &nbsp;·&nbsp; *① ATS Score → ✦ AI Review*
-One click sends your bullets + the JD to the AI layer, which returns **tailored tips** and **rewrites of your own bullets** in the job's language — shown as before/after cards. Guard-rails you can rely on:
-- A rewrite must carry **exactly your original numbers** — none invented, none dropped — or it's automatically discarded.
-- Nothing applies until you click **✓ Use this**, and everything stays editable afterward.
-- If AI is unavailable or you hit the daily limit, the deterministic engine simply carries on.
+### ✦ 5️⃣ Edit with AI, right where the text is &nbsp;·&nbsp; *② Custom Résumé*
+Click **✎ Edit**, then click any line — your summary, a bullet, a cover-letter paragraph — and a **✦ AI edit popup** appears with tone presets (**Professional · Balanced · Conversational · Bold**), a box for **your own instruction** ("make it two lines, formal"), and a **Humanize** pass. Toolbar buttons run one-click batch passes: **✦ Improve bullets**, **✦ Humanize**, and **↺ Original** to restore the résumé exactly as generated. Guard-rails you can rely on:
+- A rewrite must carry **exactly your original numbers** — none invented, none dropped — or it's automatically discarded (checked in code, twice: server and browser).
+- **No AI-sounding prose**: em-dashes and cliché AI wording are stripped or rejected deterministically — the output reads like you wrote it.
+- Facts are locked: titles, dates, employers, and your signature never get an AI button.
+- Nothing applies until you click **✓ Apply**; **Undo** is one click; if AI is unavailable, the deterministic engine simply carries on.
 
 ### 6️⃣ Download &nbsp;·&nbsp; *② Custom Résumé · ③ Cover Letter*
-Your résumé **rebuilt for this job** — sharper summary, most relevant bullets first, matched keywords surfaced. **✎ Edit** anything inline, then **⬇ Download PDF**: a clean **one-page** vector PDF with **selectable text and clickable links** (exactly what ATS software reads). Plus a matching, editable cover letter.
+Your résumé **rebuilt for this job** — sharper summary, most relevant bullets first, matched keywords surfaced — then **⬇ Download PDF**: a clean **one-page** vector PDF with **selectable text and clickable links** (exactly what ATS software reads). The **cover letter follows your résumé live**: accept a keyword, apply an AI rewrite, or edit your summary, and the letter updates to match — with its own **✦ Humanize** button.
 
 ### 7️⃣ Outreach, tracking, discovery &nbsp;·&nbsp; *④–⑥*
-- **④ LinkedIn Outreach** — find the hiring manager / a peer / a recruiter + ready-to-personalize messages.
+- **④ LinkedIn Outreach** — **current-employee** team search (company People tab), hiring-manager/recruiter searches narrowed to your cities, an optional **verified-contacts** lookup, and a connection note that always fits LinkedIn's **300-character** limit (live counter included).
 - **⑤ Job Tracker** — log every application (stage + next step), synced to your account; export to CSV/Sheets.
 - **⑥ Find Jobs** — one-click LinkedIn / Indeed / Naukri searches.
 
 <div align="center">
 
-**Sign in → ⓪ Master → ◆ Job → ① Score → ➕ Tips → ✦ AI Review → ② Résumé → ⬇ PDF**
+**Sign in → ⓪ Master → ◆ Job → ① Score → ➕ Tips → ② ✦ AI-edit → ⬇ PDF → ③ Letter → ④ Outreach**
 
 </div>
 
@@ -64,7 +65,9 @@ Your résumé **rebuilt for this job** — sharper summary, most relevant bullet
 ## ✨ Why it's different
 
 - 🎯 **An ATS score you can actually trust.** Deterministic and explainable — real years-of-experience math, honest knockouts, no inflated floor, no AI dice-roll.
-- ✦ **AI that can't lie about you.** The AI layer only rephrases what you wrote; a code-level guard rejects any rewrite whose numbers don't match yours exactly, and you approve every change.
+- ✦ **AI that can't lie about you.** The AI only rephrases what you wrote; a code-level guard rejects any rewrite whose numbers don't match yours exactly, and you approve every change.
+- 🗣 **Reads human, not AI.** A deterministic de-slop filter bans em-dashes and cliché AI phrasing from every AI output — résumé, cover letter, and outreach notes alike.
+- 🔁 **Documents that stay in sync.** Edit the résumé and the cover letter rewrites itself to match; one **↺ Original** click brings back the generated version any time.
 - 🧩 **Reads almost any résumé.** Single/two-column, LaTeX, academic CVs (publications included), tables, icon fonts, multi-page — stress-tested against the popular template families with a content-retention regression suite.
 - 📄 **A real one-page PDF, no watermark.** Built programmatically → selectable text + working links, auto-fitted to one page by trimming only the least job-relevant content.
 - ☁️ **Yours, everywhere.** Sign in once — master résumé + tracker on every device.
@@ -76,7 +79,7 @@ Your résumé **rebuilt for this job** — sharper summary, most relevant bullet
 <details>
 <summary><b>Is my data private?</b></summary>
 
-Your master résumé and tracker live in your own row in a secured database protected by **row-level security** — only your login can read it. When you run ✦ AI Review, your bullets + that job description are processed by the AI provider for that request only; the AI feature is opt-in per click, never automatic.
+Your master résumé and tracker live in your own row in a secured database protected by **row-level security** — only your login can read it. When you use a ✦ AI action, your text + that job description are processed by the AI provider for that request only; every AI feature is opt-in per click, never automatic.
 </details>
 
 <details>
@@ -107,7 +110,7 @@ Yes — the layout auto-shrinks the font and trims only the least job-relevant b
 
 ## 🛠 Tech
 
-One HTML file, vanilla JS. The core is a **deterministic** résumé parser + JD-keyword/seniority scoring engine (same input → same score, fully explainable). On top: **✦ AI Review** via a Supabase Edge Function proxy → Groq (Llama 3.3 70B) — the API key lives server-side only, callers must be signed-in users, per-user daily caps. Auth & cross-device sync: **Supabase** (email/password + Postgres with row-level security). Libraries via CDN: pdf.js, pdfmake, Lenis, supabase-js, Google Fonts. Hosted free on **GitHub Pages**. No build step. The parser is backed by a content-retention regression suite covering the popular résumé template families.
+One HTML file, vanilla JS. The core is a **deterministic** résumé parser + JD-keyword/seniority scoring engine (same input → same score, fully explainable). On top: the **✦ inline AI editor** via a Supabase Edge Function proxy → Groq (**Kimi K2**, automatic Llama 3.3 70B fallback) with RAG grounding — the API key lives server-side only, callers must be signed-in users, per-user daily caps, and every output passes digit-preservation + de-slop filters on **both** the server and the browser. Auth & cross-device sync: **Supabase** (email/password + Postgres with row-level security). Libraries via CDN: pdf.js, pdfmake, Lenis, supabase-js, three.js (the WebGL starfield — degrades gracefully to pure CSS), Google Fonts. Hosted free on **GitHub Pages**. No build step. Backed by 181 regression assertions plus a headless-browser UI harness.
 
 To run your own copy: fork, create a free Supabase project (auth + `profiles`/`ai_usage` tables + an `ai` Edge Function that proxies to Groq, with your own `GROQ_API_KEY` kept as a server-side secret), drop your project URL + publishable key into the account `<script>` block, enable GitHub Pages. Open an issue if you want the Edge Function source.
 
