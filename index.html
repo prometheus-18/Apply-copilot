@@ -442,7 +442,7 @@ window.__act({
   run:function(){ run(); }, loadSampleJD:function(){ loadSampleJD(); },
   viewTailored:function(){ viewTailored(); }, resetResume:function(){ resetResume(); },
   edit:function(el){ toggleEdit(el.dataset.arg,el); }, copyDoc:function(el){ copyDoc(el.dataset.arg,el); },
-  downloadResume:function(){ downloadResume(); }, downloadCover:function(){ downloadCover(); },
+  downloadResume:function(el){ downloadResume(el); }, downloadCover:function(el){ downloadCover(el); },
   copyTrk:function(el){ copyTrk(el); }, exportCSV:function(){ exportCSV(); }, cpText:function(el){ cpText(el); },
   acceptTip:function(el){ acceptTip(+el.dataset.i); },
   saveLink:function(){ saveLink(); }, openLinkUrl:function(){ openLinkUrl(); }, removeLink:function(){ removeLink(); },
@@ -501,7 +501,12 @@ function sanitizeCover(s){ s=String(s||"");
   s=s.replace(/[·•]\s*(?=[·•])/g,"").replace(/[ \t]{2,}/g," ").replace(/ +\n/g,"\n").replace(/\n{3,}/g,"\n\n");
   return s.trim(); }
 function flash(id,t,ms){ const e=document.getElementById(id); if(!e)return; e.textContent=t; clearTimeout(e._t); e._t=setTimeout(()=>{e.textContent="";},ms||1800); }
-function tab(t){ const el=document.getElementById("pane-"+t); if(el){ const y=Math.max(0,el.getBoundingClientRect().top+window.pageYOffset-72); if(window.__lenis)window.__lenis.scrollTo(y,{duration:1.1}); else window.scrollTo({top:y,behavior:"smooth"}); } document.querySelectorAll(".nlinks a").forEach(a=>a.classList.toggle("on",a.dataset.t===t)); }
+/* honest clipboard feedback — the ✓ only shows when the write actually succeeded (in a side panel
+   the API can reject on focus/permission; the old code flashed ✓ unconditionally) */
+function cpWrite(btn,text,okLabel){ const o=btn?btn.textContent:"", done=t=>{ if(!btn)return; btn.textContent=t; clearTimeout(btn._t); btn._t=setTimeout(()=>{btn.textContent=o;},1800); };
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>done(okLabel||"Copied ✓")).catch(()=>done("Copy blocked — select manually"));
+  else done("Copy blocked — select manually"); }
+function tab(t){ const el=document.getElementById("pane-"+t); if(el){ const nav=document.querySelector(".nav"), off=((nav&&nav.offsetHeight)||64)+8; const y=Math.max(0,el.getBoundingClientRect().top+window.pageYOffset-off); if(window.__lenis)window.__lenis.scrollTo(y,{duration:1.1}); else window.scrollTo({top:y,behavior:"smooth"}); } document.querySelectorAll(".nlinks a").forEach(a=>a.classList.toggle("on",a.dataset.t===t)); }
 function urlify(u){ u=String(u||"").trim(); if(!u)return""; return /^https?:\/\//i.test(u)?u:("https://"+u.replace(/^\/+/,"")); }
 function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
 /* normalize exotic punctuation so ATS + PDF stay clean (no AI-looking em-dash run-ons) */
@@ -578,10 +583,18 @@ const CLAUSE_RE=new RegExp(";\\s+|,\\s+(?=(?:which|that|resulting in|leading to|
 function wn(s){ return s?String(s).trim().split(/\s+/).length:0; }
 function mergeShort(parts){ const out=[]; parts.map(p=>String(p||"").trim()).filter(Boolean).forEach(p=>{ if(out.length&&(wn(p)<6||p.length<40))out[out.length-1]+=" "+p; else out.push(p); }); if(out.length>1&&(wn(out[0])<6||out[0].length<40)){ out[1]=out[0]+" "+out[1]; out.shift(); } return out; }
 function polishBullet(f){ f=tidy(f).replace(/^[\s,;:·•|-]+/,"").replace(/^(?:(?:and|also|then|which|that|thereby|thus|additionally|plus)\s+)+/i,"").replace(/^(?:i|we|my|our)\s+(?:(?:have|had|also)\s+)?/i,"").replace(/[\s,;:-]+$/,""); if(/^[a-z]/.test(f)&&!/^[a-z][A-Z0-9]/.test(f))f=f.charAt(0).toUpperCase()+f.slice(1); return lcSentence(f); }
+/* last-resort splitter for long comma-run-ons the sentence/clause passes couldn't break — common when the
+   parser merged two markerless bullets (a source bullet missing its end period) into one ", and ..." paragraph.
+   Splits ONLY at real comma/semicolon boundaries into <=26-word chunks; a comma-less long sentence is returned
+   whole (honest, no invented mid-clause break). Chunks stay <=~30 words so re-upload stays byte-identical. */
+function wrapClauses(s){ const seg=String(s).split(/,\s+|;\s+/); if(seg.length<2)return[s];
+  const out=[]; let cur=""; seg.forEach(p=>{ const cand=cur?cur+", "+p:p; if(cur&&wn(cand)>26){ out.push(cur); cur=p; } else cur=cand; });
+  if(cur)out.push(cur); return mergeShort(out); }
 function splitProse(b){ b=tidy(String(b||"")); if(b.length<=140)return b?[b]:[];
   let parts=b.replace(ABBR_DOT,"$1\u0002").replace(/([.!?])\s+(?=[A-ZÀ-Þ0-9"“])/g,"$1\u0001").split("\u0001").map(s=>s.replace(/\u0002/g,"."));
   if(parts.length===1&&wn(b)<=30)return[b];
   parts=mergeShort(parts).map(s=>wn(s)>30?mergeShort(s.split(CLAUSE_RE)):[s]).reduce((a,x)=>a.concat(x),[]);
+  parts=parts.map(s=>wn(s)>30?wrapClauses(s):[s]).reduce((a,x)=>a.concat(x),[]);   /* break residual comma-run-ons so nothing renders as a paragraph */
   if(parts.length<2)return[b];   /* honestly unsplittable — leave byte-identical */
   return parts.map(polishBullet).filter(x=>x.length>8); }
 function normBullets(list){ const out=[],seen=new Set(); (list||[]).forEach(b=>splitProse(b).forEach(f=>{ const k=f.toLowerCase(); if(!seen.has(k)){seen.add(k);out.push(f);} })); return out.slice(0,12); }
@@ -1195,7 +1208,7 @@ function exportCSV(){ const cols=["date","company","role","stage","next","notes"
   const b=new Blob([lines.join("\n")],{type:"text/csv"}),u=URL.createObjectURL(b),x=document.createElement("a"); x.href=u; x.download="applications.csv"; x.click(); URL.revokeObjectURL(u); }
 function copyTrk(btn){ const cols=["Date","Company","Role","Stage","Next","Notes"],k=["date","company","role","stage","next","notes"];
   const tsv=[cols.join("\t")].concat(LOG.map(a=>k.map(c=>String(a[c]||"").replace(/\t/g," ")).join("\t"))).join("\n");
-  navigator.clipboard&&navigator.clipboard.writeText(tsv); if(btn){const o=btn.textContent;btn.textContent="Copied ✓ paste into Sheets";setTimeout(()=>btn.textContent=o,1800);} }
+  cpWrite(btn,tsv,"Copied ✓ paste into Sheets"); }
 
 /* ===== export: real vector PDF via pdfmake (clickable links + selectable text, no watermark) ===== */
 function fnameFor(which){ const who=String((CUR&&CUR.cv&&CUR.cv.name)||M.name||"Resume").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim()||"Resume"; return who+(which==="coverDoc"?" Cover Letter":" Resume"); }
@@ -1275,14 +1288,17 @@ function makePdf(which){ const cv=CUR&&CUR.cv; if(!cv){alert("Run analysis first
   const node=document.getElementById(which); const edited=node&&node.dataset&&node.dataset.dirty==="1"; let def;
   try{ def=edited?domToDocDef(node,which==="coverDoc"):(which==="coverDoc"?coverDocDef(cv,CUR.cover):resumeDocDef(cv)); }
   catch(e){ try{ def=which==="coverDoc"?coverDocDef(cv,CUR.cover):resumeDocDef(cv); }catch(e2){ printFallback(which); return; } }
-  try{ pdfMake.createPdf(def).download(fnameFor(which)+".pdf"); }
+  try{ pdfMake.createPdf(def).download(fnameFor(which)+".pdf"); return true; }
   catch(e){ console&&console.warn&&console.warn(e); printFallback(which); } }
-function downloadResume(){ makePdf("resumeDoc"); }
-function downloadCover(){ makePdf("coverDoc"); }
+/* the download bubble lives in the MAIN window's chrome — from a side panel the user sees nothing,
+   so the button itself confirms the save */
+function dlFlash(el){ if(!el||!el.textContent)return; const o=el.textContent; el.textContent="Saved to Downloads ⬇"; clearTimeout(el._t); el._t=setTimeout(()=>{el.textContent=o;},2200); }
+function downloadResume(el){ if(makePdf("resumeDoc"))dlFlash(el); }
+function downloadCover(el){ if(makePdf("coverDoc"))dlFlash(el); }
 function printFallback(which){ const node=document.getElementById(which); if(!node||!node.innerText.trim()){alert("Run analysis first.");return;}
   document.getElementById("printArea").innerHTML='<div class="doc">'+node.innerHTML+'</div>'; const old=document.title; document.title=fnameFor(which); window.print(); setTimeout(()=>document.title=old,500); }
-function copyDoc(id,btn){ const n=document.getElementById(id); navigator.clipboard&&navigator.clipboard.writeText(n.innerText); if(btn){const o=btn.textContent;btn.textContent="Copied ✓";setTimeout(()=>btn.textContent=o,1200);} }
-function cpText(btn){ const m=btn.closest(".box").querySelector(".mono"); navigator.clipboard&&navigator.clipboard.writeText(m.innerText); const o=btn.textContent; btn.textContent="Copied ✓"; setTimeout(()=>btn.textContent=o,1200); }
+function copyDoc(id,btn){ const n=document.getElementById(id); cpWrite(btn,n.innerText); }
+function cpText(btn){ const m=btn.closest(".box").querySelector(".mono"); cpWrite(btn,m.innerText); }
 
 /* ===== state / init ===== */
 function updateState(){ const a=document.querySelector('.nlinks a[data-t="mr"]'); if(a)a.classList.toggle("todo",!masterReady()); }
@@ -1299,6 +1315,13 @@ const SAMPLE_RAW=["ALEX MORGAN","alex.morgan@example.com | +1 555 010 1234 | Rem
 "CERTIFICATIONS","Google Data Analytics Certificate — Coursera • IBM Machine Learning with Python — Coursera"].join("\n");
 
 loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
+
+/* the job inputs are page state and a side panel dies instantly on close — draft them locally
+   (never synced to the cloud) and restore on the next open so a pasted JD survives a close */
+const JOBKEY="apply_job_draft_v1";
+try{ const jd0=JSON.parse(localStorage.getItem(JOBKEY)||"{}"); ["inCompany","inRole","inJD","inUrl"].forEach(id=>{ if(jd0[id]&&!val(id))set(id,jd0[id]); }); }catch(e){}
+document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
+  if(id==="inCompany"||id==="inRole"||id==="inJD"||id==="inUrl"){ try{ localStorage.setItem(JOBKEY,JSON.stringify({inCompany:val("inCompany"),inRole:val("inRole"),inJD:val("inJD"),inUrl:val("inUrl")})); }catch(e2){} } });
 </script>
 
 <!-- ===== scroll effects (Lenis smooth-scroll · reveal · progress · nav spy) ===== -->
@@ -1390,9 +1413,19 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   var SB=null;
   try{ if(!window.__noSupabase && window.supabase && window.supabase.createClient) SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }catch(e){}
 
-  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null, BOOTED=false;
+  var AUTH_USER=null, MODE="up", PULLING=false, pushT=null, BOOTED=false, SESS=null;
+  /* dirty flags survive the page (a side panel dies instantly on close — the 900ms debounce
+     timer dies with it). Flags persist in a NON-synced key, gate the cloud-authoritative pull
+     (push-before-pull, so unpushed local edits are never reverted), and clear only on a
+     CONFIRMED push. */
+  var DKEY="apply_dirty_v1";
+  function dirtyGet(){ try{ return JSON.parse(localStorage.getItem(DKEY)||"{}")||{}; }catch(e){ return {}; } }
+  function dirtyMark(k){ try{ var d=dirtyGet(); d[k===MKEY?"master":"tracker"]=1; localStorage.setItem(DKEY,JSON.stringify(d)); }catch(e){} }
+  function dirtyClear(){ try{ localStorage.removeItem(DKEY); }catch(e){} }
 
   function $(id){ return document.getElementById(id); }
+  function syncChip(label,ok){ var box=$("nacct"); if(!box)return; var c=box.querySelector(".chip"); if(!c)return;
+    c.className="chip"+(ok?" ok":""); c.innerHTML='<i class="dot"></i>'+label; }
   function authMsg(t,ok){ var e=$("authMsg"); if(!e)return; e.textContent=t||""; e.className="authmsg"+(ok?" ok":""); }
 
   window.authToggleMode=function(){ MODE=(MODE==="up"?"in":"up"); renderForm(); authMsg("",0); };
@@ -1445,6 +1478,9 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   async function cloudPull(){
     if(!SB||!AUTH_USER)return;
     try{
+      /* unpushed local edits (panel closed inside the debounce window, offline session, …):
+         push them FIRST so the cloud-authoritative pull below can't silently revert them */
+      var d0=dirtyGet(); if(d0.master||d0.tracker){ try{ await cloudPush(); }catch(e){} }
       var r=await SB.from("profiles").select("master_raw,master_name,tracker").eq("id",AUTH_USER.id).maybeSingle();
       if(r.error){ console.warn("[sync] pull:",r.error.message); return; }
       if(r.data){
@@ -1458,22 +1494,47 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       }
     }catch(e){ console.warn("[sync] pull:",e); }
   }
-  function schedulePush(){ if(!SB||!AUTH_USER||PULLING)return; clearTimeout(pushT); pushT=setTimeout(cloudPush,900); }
+  function schedulePush(k){ if(!SB||!AUTH_USER||PULLING)return; if(k)dirtyMark(k); syncChip("Syncing…",0); clearTimeout(pushT); pushT=setTimeout(cloudPush,900); }
+  /* the row is built from ONLY the dirty fields — a tracker touch in one client can no longer
+     clobber a master edited in another (web tab + side panel are the normal posture now) */
+  function dirtyRow(){
+    var d=dirtyGet(), row={ id:AUTH_USER.id, updated_at:new Date().toISOString() };
+    if(d.master){ var m={}; try{ m=JSON.parse(localStorage.getItem(MKEY)||"{}")||{}; }catch(e){} row.master_raw=m.raw||""; row.master_name=m.name||""; }
+    if(d.tracker){ var log=[]; try{ log=JSON.parse(localStorage.getItem(TK)||"[]")||[]; }catch(e){} row.tracker=Array.isArray(log)?log:[]; }
+    return { row:row, any:!!(d.master||d.tracker) };
+  }
   async function cloudPush(){
     if(!SB||!AUTH_USER)return;
-    var m={raw:"",name:""}, log=[];
-    try{ m=JSON.parse(localStorage.getItem(MKEY)||"{}")||{}; }catch(e){}
-    try{ log=JSON.parse(localStorage.getItem(TK)||"[]")||[]; }catch(e){}
-    var row={ id:AUTH_USER.id, master_raw:m.raw||"", master_name:m.name||"", tracker:Array.isArray(log)?log:[], updated_at:new Date().toISOString() };
-    try{ var r=await SB.from("profiles").upsert(row); if(r.error)console.warn("[sync] push:",r.error.message); }catch(e){ console.warn("[sync] push:",e); }
+    var p=dirtyRow(); if(!p.any){ syncChip("Synced",1); return; }
+    try{ var r=await SB.from("profiles").upsert(p.row);
+      if(r.error){ console.warn("[sync] push:",r.error.message); syncChip("Sync pending",0); }
+      else { dirtyClear(); syncChip("Synced",1); }
+    }catch(e){ console.warn("[sync] push:",e); syncChip("Sync pending",0); }
   }
+  /* a side panel document is destroyed the instant it closes — flush any pending push with a
+     keepalive REST upsert (fire-and-forget; dirty flags stay set until a CONFIRMED push, and the
+     push-before-pull guard makes a double-send harmless) */
+  function flushPush(){
+    if(!AUTH_USER||!SESS||!SESS.access_token)return;
+    var p=dirtyRow(); if(!p.any)return;
+    try{ var body=JSON.stringify([p.row]); if(body.length>60000)return; /* keepalive cap ~64KB */
+      fetch(SUPABASE_URL+"/rest/v1/profiles",{ method:"POST", keepalive:true,
+        headers:{ "apikey":SUPABASE_KEY, "Authorization":"Bearer "+SESS.access_token,
+                  "Content-Type":"application/json", "Prefer":"resolution=merge-duplicates,return=minimal" },
+        body:body });
+    }catch(e){}
+  }
+  try{
+    addEventListener("pagehide",flushPush);
+    document.addEventListener("visibilitychange",function(){ if(document.hidden)flushPush(); });
+  }catch(e){}
 
   /* detect local changes to the two app keys → push to cloud (no edits to the engine) */
   try{
     var _set=localStorage.setItem.bind(localStorage);
-    localStorage.setItem=function(k,v){ _set(k,v); if(k===MKEY||k===TK) schedulePush(); };
+    localStorage.setItem=function(k,v){ _set(k,v); if(k===MKEY||k===TK) schedulePush(k); };
     var _rm=localStorage.removeItem.bind(localStorage);
-    localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(); };
+    localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(k); };
   }catch(e){}
 
   /* ===== ✦ AI editor (v4) — the AI Review box is retired: AI now lives WHERE the text lives.
@@ -1691,7 +1752,9 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     res.innerHTML='<div class="aicard" style="margin:9px 0 0"><div class="old">'+esc(c.text)+'</div><div class="new">'+esc(nw)+'</div>'+
       '<div class="aieval"><span class="ev '+(ev.faith>=90?"good":"warn")+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+
       (ev.rel!=null?'<span class="ev '+(ev.rel>=50?"good":"warn")+'">jd match '+ev.rel+'%</span>':'')+'</div>'+
-      '<div class="lprow" style="margin-top:9px"><button class="go" data-act="aiPopApply">✓ Apply</button><button data-act="aiPopCopy">Copy</button><button data-act="aiPopGo" data-hum="'+(humanize?1:0)+'">↻ Try again</button></div></div>'; };
+      '<div class="lprow" style="margin-top:9px"><button class="go" data-act="aiPopApply">✓ Apply</button><button data-act="aiPopCopy">Copy</button><button data-act="aiPopGo" data-hum="'+(humanize?1:0)+'">↻ Try again</button></div></div>';
+    /* the result card grows the popup past its open-time clamp — re-clamp so ✓ Apply stays reachable in short panels */
+    try{ var pb=_aiPop.getBoundingClientRect(); if(pb.bottom>innerHeight-8)_aiPop.style.top=Math.max(10,innerHeight-8-pb.height)+"px"; }catch(e){} };
   window.aiPopApply=function(){ var a=AI_LAST; if(!a||!a.ctx)return; var c=a.ctx,nw=a.text;
     var doc=document.getElementById(c.docId||"resumeDoc");
     var dirty=!!(doc&&doc.dataset&&doc.dataset.dirty==="1");
@@ -1714,8 +1777,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
         else if(c.el)c.el.textContent=nw; }
       else if(c.el){ c.el.textContent=nw; if(doc&&doc.dataset)doc.dataset.dirty="1"; } }
     window.__aiPopClose(); };
-  window.aiPopCopy=function(btn){ var a=AI_LAST; if(!a)return; navigator.clipboard&&navigator.clipboard.writeText(a.text);
-    if(btn){ var o=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){btn.textContent=o;},1200); } };
+  window.aiPopCopy=function(btn){ var a=AI_LAST; if(!a)return; cpWrite(btn,a.text); };
   /* arm the fab on the two editable docs (they exist in the static markup; account block runs at end of body) */
   ["resumeDoc","coverDoc"].forEach(function(id){ var d=document.getElementById(id); if(!d)return;
     d.addEventListener("mouseup",function(ev){ if(!d.classList.contains("edit"))return;
@@ -1864,9 +1926,9 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
 
   if(SB){
     SB.auth.onAuthStateChange(function(event,session){
-      AUTH_USER = session ? session.user : null;
+      AUTH_USER = session ? session.user : null; SESS = session || null;
       /* sign-out wipes this device's local copy so the next account starts clean, then reloads to a fresh gate */
-      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); }catch(e){} location.reload(); return; }
+      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); localStorage.removeItem(DKEY); }catch(e){} location.reload(); return; }
       setAuthed(!!AUTH_USER);
       /* Supabase re-fires SIGNED_IN on every tab refocus — pull + welcome-scroll only ONCE per page load,
          so returning to the tab leaves the user exactly where they were */

@@ -47,7 +47,8 @@ Click **✎ Edit**, then click any line — your summary, a bullet, a cover-lett
 - Nothing applies until you click **✓ Apply**; **Undo** is one click; if AI is unavailable, the deterministic engine simply carries on.
 
 ### 6️⃣ Download &nbsp;·&nbsp; *② Custom Résumé · ③ Cover Letter*
-Your résumé **rebuilt for this job** — sharper summary, most relevant bullets first, matched keywords surfaced — then **⬇ Download PDF**: a clean **one-page** vector PDF with **selectable text and clickable links** (exactly what ATS software reads). The **cover letter follows your résumé live**: accept a keyword, apply an AI rewrite, or edit your summary, and the letter updates to match — with its own **✦ Humanize** button.
+Your résumé **rebuilt for this job** — sharper summary, most relevant bullets first, matched keywords surfaced — then **⬇ Download PDF**: a clean **one-page** vector PDF with **selectable text and clickable links** (exactly what ATS software reads).
+Whatever your original looked like — even dense paragraph-style job descriptions — your experience and projects always come out as **concise, recruiter-style bullet points** (short, verb-first, quantified first, the way recruiters actually scan in 7 seconds), never wall-of-text paragraphs. It only ever splits and reorders your real content; it never invents a thing. The **cover letter follows your résumé live**: accept a keyword, apply an AI rewrite, or edit your summary, and the letter updates to match — with its own **✦ Humanize** button.
 
 ### 7️⃣ Outreach, tracking, discovery &nbsp;·&nbsp; *④–⑥*
 - **④ LinkedIn Outreach** — **current-employee** team search (company People tab), hiring-manager/recruiter searches narrowed to your cities, an optional **verified-contacts** lookup, and a connection note that always fits LinkedIn's **300-character** limit (live counter included).
@@ -69,6 +70,7 @@ Your résumé **rebuilt for this job** — sharper summary, most relevant bullet
 - 🗣 **Reads human, not AI.** A deterministic de-slop filter bans em-dashes and cliché AI phrasing from every AI output — résumé, cover letter, and outreach notes alike.
 - 🔁 **Documents that stay in sync.** Edit the résumé and the cover letter rewrites itself to match; one **↺ Original** click brings back the generated version any time.
 - 🧩 **Reads almost any résumé.** Single/two-column, LaTeX, academic CVs (publications included), tables, icon fonts, multi-page — stress-tested against the popular template families with a content-retention regression suite.
+- 📝 **Recruiter-style bullets, always.** Paragraph-style experience is automatically broken into short, scannable, verb-first bullet points (quantified ones first) — never paragraphs — by splitting and reordering only your real words.
 - 📄 **A real one-page PDF, no watermark.** Built programmatically → selectable text + working links, auto-fitted to one page by trimming only the least job-relevant content.
 - ☁️ **Yours, everywhere.** Sign in once — master résumé + tracker on every device.
 
@@ -110,7 +112,7 @@ Yes — the layout auto-shrinks the font and trims only the least job-relevant b
 
 ## 🛠 Tech
 
-One HTML file, vanilla JS. The core is a **deterministic** résumé parser + JD-keyword/seniority scoring engine (same input → same score, fully explainable). On top: the **✦ inline AI editor** via a Supabase Edge Function proxy → Groq (**Kimi K2**, automatic Llama 3.3 70B fallback) with RAG grounding — the API key lives server-side only, callers must be signed-in users, per-user daily caps, and every output passes digit-preservation + de-slop filters on **both** the server and the browser. Auth & cross-device sync: **Supabase** (email/password + Postgres with row-level security). Libraries via CDN: pdf.js, pdfmake, Lenis, supabase-js, three.js (the WebGL starfield — degrades gracefully to pure CSS), Google Fonts. Hosted free on **GitHub Pages**. No build step. Backed by 181 regression assertions plus a headless-browser UI harness.
+One HTML file, vanilla JS. The core is a **deterministic** résumé parser + JD-keyword/seniority scoring engine (same input → same score, fully explainable). On top: the **✦ inline AI editor** via a Supabase Edge Function proxy → Groq (**Kimi K2**, automatic Llama 3.3 70B fallback) with RAG grounding — the API key lives server-side only, callers must be signed-in users, per-user daily caps, and every output passes digit-preservation + de-slop filters on **both** the server and the browser. Auth & cross-device sync: **Supabase** (email/password + Postgres with row-level security). Libraries via CDN: pdf.js, pdfmake, Lenis, supabase-js, three.js (the WebGL starfield — degrades gracefully to pure CSS), Google Fonts. Hosted free on **GitHub Pages**. No build step. Backed by 234 regression assertions plus a headless-browser UI harness.
 
 To run your own copy: fork, create a free Supabase project (auth + `profiles`/`ai_usage` tables + an `ai` Edge Function that proxies to Groq, with your own `GROQ_API_KEY` kept as a server-side secret), drop your project URL + publishable key into the account `<script>` block, enable GitHub Pages. Open an issue if you want the Edge Function source.
 
