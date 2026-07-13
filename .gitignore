@@ -31,3 +31,4 @@ ROADMAP_PRIVATE.md
 apply_copilot_app.html
 tests/
 supabase/
+.claude/

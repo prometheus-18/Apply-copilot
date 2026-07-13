@@ -3,7 +3,7 @@
 {
   "name": "Apply Copilot",
   "schemaVersion": 1,
-  "description": "Sign in, upload your résumé once (any template — two-column, LaTeX, academic, multi-page), paste any job → honest ATS fit score with per-keyword tips, ✦ AI Review that sharpens your bullets without inventing facts, then a custom ATS-optimized résumé and cover letter as a real 1-page PDF. Syncs across devices."
+  "description": "Sign in, upload your résumé once (any template — two-column, LaTeX, academic, multi-page), paste any job → honest ATS fit score, a tailored ATS-safe résumé + cover letter that stay in sync as you edit, inline ✦ AI editing with tone presets and a humanizer (never invents facts), LinkedIn outreach with current-employee search, and a WebGL space UI."
 }
 </script>
 <html lang="en">
@@ -21,6 +21,7 @@
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.12/build/vfs_fonts.js" onerror="window.__noPdfMake=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.23/dist/lenis.min.js" onerror="window.__noLenis=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="window.__noSupabase=1"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js" onerror="window.__noThree=1"></script>
 <style>
   :root{ color-scheme: dark;
     --obsidian:#161616;--graphite:#3c3a3e;--slate:#7b7a7c;--ash:#a2a2a2;--mist:#c9c7cc;--fog:#f1f1f1;--paper:#f8f8f8;--bone:#ffffff;--ember:#ff4c24;--tangerine:#ff6436;
@@ -41,6 +42,9 @@
     radial-gradient(1px 1px at 28% 86%,rgba(255,255,255,.28),transparent 100%),
     radial-gradient(1.4px 1.4px at 94% 74%,rgba(255,255,255,.25),transparent 100%);
     background-size:520px 520px,640px 640px,760px 760px,880px 880px,700px 700px,980px 980px}
+  /* WebGL depth layer (three.js) — sits over the static CSS starfield, under all content */
+  #space3d{position:fixed;inset:0;z-index:0;pointer-events:none;display:block;opacity:0;transition:opacity 1.6s ease}
+  #space3d.on{opacity:1}
   a{color:var(--hd);text-decoration:none}a:hover{color:var(--acc)}
   #progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;background:var(--ember)}
   /* sticky nav — obsidian glass, always dark */
@@ -131,8 +135,7 @@
   .box h5{margin:0 0 8px;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .box.ok{border-color:var(--ash)}
   #recBox{border-color:var(--tangerine)}
-  /* AI review cards */
-  #aiBox{border-color:#4a3f3a}
+  /* ✦ AI cards (shared by the inline AI editor popup + apply-all messages) */
   .aicard{border:1px solid var(--ln);border-radius:var(--r);padding:12px 14px;margin:9px 0;background:var(--card)}
   .aicard .old{color:var(--fnt);font-size:12px;text-decoration:line-through;text-decoration-color:rgba(255,76,36,.5)}
   .aicard .new{color:var(--tx);font-size:13px;margin:7px 0 9px}
@@ -218,13 +221,31 @@
   #linkPop button{font:600 12px/1 'Inter',system-ui,sans-serif;border-radius:9px;padding:7px 11px;cursor:pointer;border:1px solid var(--btn-ln,#504e54);background:transparent;color:var(--tx,#c9c7cc)}
   #linkPop button.lpsave{background:var(--fog,#f1f1f1);color:#161616;border-color:var(--fog,#f1f1f1)}
   #linkPop button.lpdel{margin-left:auto;color:var(--acc-ink,#ff7a52);border-color:var(--btn-ln,#504e54)}
+  /* ✦ inline AI editor — floating trigger (fab) + popup, same dark-token recipe as #linkPop */
+  #aiFab{position:fixed;z-index:9998;display:none;width:32px;height:32px;border-radius:50%;background:var(--card2,#232325);border:1px solid var(--btn-ln,#504e54);color:var(--acc,#ff7a52);font-size:15px;line-height:30px;text-align:center;cursor:pointer;user-select:none}
+  #aiFab:hover{border-color:var(--acc,#ff7a52)}
+  #aiPop{position:fixed;z-index:9999;display:none;width:400px;max-width:94vw;background:var(--card2,#232325);color:var(--tx,#c9c7cc);border:1px solid var(--ln,#2e2c30);border-radius:var(--r,14.4px);padding:14px 14px 12px;font-family:'Inter',system-ui,sans-serif}
+  #aiPop .lpt{font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut,#a2a2a2);margin:0 0 8px;display:flex;justify-content:space-between}
+  #aiPop .lpt .x{cursor:pointer;color:var(--mut,#a2a2a2)}
+  #aiPop .orig{font-size:12px;color:var(--fnt,#6f6d72);margin:0 0 9px;max-height:64px;overflow:hidden}
+  #aiPop input{width:100%;box-sizing:border-box;background:var(--srf,#161616);border:1px solid var(--ln,#2e2c30);border-radius:9px;color:var(--fog,#f1f1f1);padding:8px 9px;font:500 12.5px/1.3 'Inter',system-ui,sans-serif;margin:2px 0 9px}
+  #aiPop input:focus{outline:none;border-color:var(--acc,#ff4c24)}
+  #aiPop button{font:600 12px/1 'Inter',system-ui,sans-serif;border-radius:9px;padding:7px 11px;cursor:pointer;border:1px solid var(--btn-ln,#504e54);background:transparent;color:var(--tx,#c9c7cc)}
+  #aiPop button.go{background:var(--fog,#f1f1f1);color:#161616;border-color:var(--fog,#f1f1f1)}
+  #aiPop button:disabled{opacity:.45;cursor:default}
+  #aiPop .lprow{display:flex;gap:7px;margin-top:4px;flex-wrap:wrap}
+  #aiPop .aperr{color:var(--acc-ink,#ff7a52);font-size:11.5px;margin:7px 0 0;display:none}
+  #aiPop .res{margin-top:9px}
+  .aitone{display:inline-block;padding:5px 10px;border:1px solid var(--btn-ln,#504e54);border-radius:999px;font:600 10px/1 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;margin:0 6px 8px 0;color:var(--mut,#a2a2a2);user-select:none}
+  .aitone.on{color:var(--hd,#fff);border-color:var(--acc,#ff7a52);background:var(--acc-soft,rgba(255,100,54,.09))}
   #printArea{display:none}
-  @media print{ body{background:#fff} #space,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#1b59b3;text-decoration:none} }
+  @media print{ body{background:#fff} #space,#space3d,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#1b59b3;text-decoration:none} }
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} .reveal{opacity:1;transform:none} .chip .dot{animation:none} }
 </style>
 </head>
 <body class="booting guest">
 <div id="space" aria-hidden="true"></div>
+<canvas id="space3d" aria-hidden="true"></canvas>
 <div id="progress"></div>
 
 <nav class="nav">
@@ -331,7 +352,6 @@
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
       <div class="box" id="recBox" style="display:none"><h5>// Tips to raise your score</h5><ol id="kwRecs" style="margin:0;padding-left:18px"></ol></div>
       <div class="hint" id="recNote" style="display:none;color:var(--acc);margin:6px 0">✓ Accepted keywords will be woven into your résumé when you view it.</div>
-      <div class="box" id="aiBox" style="display:none"><h5><span>✦ AI Review — tailored tips &amp; bullet rewrites</span><span class="chip ok" id="aiSrc" style="display:none">CLOUD AI</span></h5><div id="aiBody"></div></div>
       <div class="row" style="margin-top:6px"><button class="sm primary" onclick="viewTailored()">→ View tailored résumé</button><button class="sm ghost" onclick="tab('cl')">→ Cover letter</button></div>
     </div>
   </div></section>
@@ -342,9 +362,10 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><button class="sm ghost" id="editBtn" onclick="toggleEdit('resumeDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadResume()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('resumeDoc',this)">Copy text</button></div></div>
+        <div class="row"><button class="sm ghost" id="aiAllBtn" onclick="if(window.aiImproveAll)aiImproveAll()">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" onclick="if(window.aiHumanizeResume)aiHumanizeResume()">✦ Humanize</button><button class="sm ghost" id="editBtn" onclick="toggleEdit('resumeDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadResume()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('resumeDoc',this)">Copy text</button></div></div>
+      <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="resumeDoc"></div>
-      <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text, then download.</div>
+      <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div>
     </div>
   </div></section>
 
@@ -354,8 +375,10 @@
     <div id="clEmpty" class="empty">Run analysis to generate a matching cover letter.</div>
     <div id="clBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Cover letter</div>
-        <div class="row"><button class="sm ghost" id="editBtnCl" onclick="toggleEdit('coverDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadCover()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('coverDoc',this)">Copy</button></div></div>
+        <div class="row"><button class="sm ghost" id="aiHumClBtn" onclick="if(window.aiHumanizeCover)aiHumanizeCover()">✦ Humanize</button><button class="sm ghost" id="editBtnCl" onclick="toggleEdit('coverDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadCover()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('coverDoc',this)">Copy</button></div></div>
+      <div class="hint" id="aiClMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="coverDoc"></div>
+      <div class="hint" style="margin-top:7px">The letter follows your résumé live — accepted keywords, AI rewrites and summary edits flow into it. <b>✦ Humanize</b> rewrites the prose in a natural voice (your facts and numbers stay untouched); while editing, click any paragraph for the <b>✦ AI edit</b> popup.</div>
     </div>
   </div></section>
 
@@ -786,6 +809,11 @@ function detRecs(b){ const r=[];
   r.push({t:"Add numbers (%, ₹/$, time, volume) to bullets that don't have them — fix inline with ✎ Edit."});
   r.push({t:"Mirror the JD's exact tool/skill names, and list each skill once in Skills and again inside a bullet."});
   return r; }
+/* résumé summaries are third-person fragments ("Brings proven strength in…") — flip the KNOWN deterministic
+   openers to first person for the letter; unknown (AI/manual) sentences pass through untouched. */
+function firstPerson(s){ s=String(s||"").trim();
+  return s.replace(/^Brings\b/,"I bring").replace(/^Offers\b/,"I offer").replace(/^Delivers\b/,"I deliver")
+          .replace(/^Comfortable\b/,"I'm comfortable").replace(/^Experienced\b/,"I'm experienced").replace(/^Skilled\b/,"I'm skilled"); }
 /* Deterministic cover letter — reads like a person wrote it, uses ONLY facts parsed from the candidate.
    Four short paragraphs (intro · evidence · second strength · close) + a title-cased signature with a
    dynamic contact block (present fields only). No AI, no invented facts, no annotation/markdown artifacts. */
@@ -807,9 +835,17 @@ function detCover(c,r,cv){ cv=cv||{};
 
   const p1="Dear Hiring Team,\n\nI'm writing to apply for "+(rt?"the "+rt+" position":"this position")+(hasCo?" at "+company:"")+". I'm "+(realTitle?"a "+realTitle:"a professional")+(org?" at "+org:"")+(yrs?" with "+yrs+"experience":"")+", and the work this role centers on is the work I do every day"+(skillPhrase?" — most of all "+skillPhrase:"")+".";
 
-  /* field-neutral (never asserts a data/analytics focus for a non-data candidate); the only specific claim is
-     the candidate's OWN quantified bullet, quoted verbatim */
-  const p2="\n\nWhat matters most to me is work that actually makes a difference — not activity for its own sake, but results the team can point to."+(quant?" One example from my recent work: "+lcSentence(quant):"");
+  /* p2 mirrors the candidate's CURRENT summary (minus the identity/objective sentences p1 already covers),
+     so summary tweaks — accepted tips, AI rewrites, manual edits — flow straight into the letter.
+     Field-neutral fallback when there is no summary; the only specific claim is their OWN quantified bullet. */
+  /* sentence split must not break at decimals ("1.6 years") — boundary = punctuation + space + capital/digit */
+  const sumBits=String(cv.summary||"").replace(/([.!?])\s+(?=[A-ZÀ-Þ0-9"“])/g,"$1\u0001").split("\u0001").map(s=>s.trim()).filter(Boolean)
+    .filter(s=>!/^now targeting/i.test(s))
+    .filter((s,i)=>!(i===0&&realTitle&&s.toLowerCase().indexOf(realTitle.toLowerCase())>=0));
+  const sumLead=sumBits.slice(0,2).map(firstPerson).join(" ").trim();
+  const evid=quant?" One example from my recent work: "+lcSentence(quant):"";
+  const p2="\n\n"+(sumLead?sumLead+evid
+    :"What matters most to me is work that actually makes a difference, not activity for its own sake, but results the team can point to."+evid);
 
   const p3=proj
     ? "\n\nOutside my day-to-day role I also built "+proj.name+(proj.tech?", using "+proj.tech:"")+", which meant owning a problem end to end — from the first idea through to something that actually works. I like taking that kind of full responsibility, and I ramp quickly when a new tool or domain is involved."
@@ -910,7 +946,18 @@ function acceptTip(i){ if(!CUR)return; const tip=(CUR.recs||[])[i]; if(!tip||!ti
      immediately (not only after "View tailored résumé"). CUR.cv is rebuilt regardless so PDF/copy/view
      all see the accepted keywords; the DOM is only re-rendered when the résumé isn't being hand-edited. */
   const doc=document.getElementById("resumeDoc"); const cvBody=document.getElementById("cvBody");
-  if(!(doc&&doc.dataset&&doc.dataset.dirty==="1")){ CUR.cv=buildDisplayCv(); if(cvBody&&cvBody.style.display!=="none")renderResume(); } }
+  if(!(doc&&doc.dataset&&doc.dataset.dirty==="1")){ CUR.cv=buildDisplayCv(); if(cvBody&&cvBody.style.display!=="none")renderResume(); }
+  syncDerived(); }
+/* cover letter + outreach are DERIVED documents — regenerate them whenever the résumé model changes so
+   accepted tips, AI rewrites and summary edits flow through (owner bug 2026-07-13: the cover was frozen
+   at analyze() time). A hand-edited (dirty) coverDoc is never re-rendered — CUR.cover still updates so
+   the non-edited PDF path stays honest. */
+function syncDerived(){ if(!CUR)return;
+  CUR.cover=detCover(CUR.company,CUR.role,CUR.cv||CUR.cvBase);
+  const cd=document.getElementById("coverDoc"), cb=document.getElementById("clBody");
+  if(!(cd&&cd.dataset&&cd.dataset.dirty==="1")&&cb&&cb.style.display!=="none")renderCover();
+  const ob=document.getElementById("outBody"); if(ob&&ob.style.display!=="none")renderOutreach();
+  if(window.__coverResynced)window.__coverResynced(!(cd&&cd.dataset&&cd.dataset.dirty==="1")); }   /* account block: notify if a humanized letter was rebuilt (arg = visibly re-rendered) */
 function buildDisplayCv(){ const cv=JSON.parse(JSON.stringify(CUR.cvBase||CUR.cv)); const added=CUR.added||[];
   if(added.length){ let g=(cv.skills||[]).find(x=>/^(additional|other|core|key) /i.test(x.group)); if(g){ added.forEach(k=>{if(g.items.indexOf(k)<0)g.items.push(k);}); } else (cv.skills=cv.skills||[]).push({group:"Additional Skills",items:added.slice()}); }
   return cv; }
@@ -919,7 +966,10 @@ function updateProjected(){ if(!CUR)return; const added=CUR.added||[],b=CUR.buck
   const cv=buildDisplayCv(); let t=scoreArrangement(nb,CUR.need,CUR.have,structureScore(cv),zoneOf(cv)); if(t.score<CUR.orig.score)t.score=CUR.orig.score; CUR.tail=t;
   const el=document.getElementById("scoreTail"); if(el)el.textContent=t.score; const bar=document.getElementById("barTail"); if(bar)bar.style.width=t.score+"%";
   const d=document.getElementById("scoreDelta"); if(d)d.innerHTML=added.length?('▲ +'+(t.score-CUR.orig.score)+' incl. your accepted additions'):(t.score>CUR.orig.score?'▲ +'+(t.score-CUR.orig.score)+' from surfacing matched keywords':'Same keywords — reordered for impact'); }
-function viewTailored(){ if(CUR){ CUR.cv=buildDisplayCv(); renderResume(); } tab("cv"); }
+function viewTailored(){ if(CUR){ const d=document.getElementById("resumeDoc");
+  if(d&&d.dataset&&d.dataset.dirty==="1"&&!confirm("Rebuild the tailored résumé? Your manual edits in the document will be discarded."))
+    { tab("cv"); return; }
+  CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); } tab("cv"); }
 
 /* ===== edit toggle ===== */
 function toggleEdit(id,btn){ const d=document.getElementById(id); const on=d.contentEditable!=="true"; d.contentEditable=on?"true":"false"; d.classList.toggle("edit",on);
@@ -927,7 +977,15 @@ function toggleEdit(id,btn){ const d=document.getElementById(id); const on=d.con
     /* in the custom résumé editor, clicking a hyperlink opens the link editor instead of navigating */
     if(id==="resumeDoc"&&!d._ll){ d.addEventListener("click",function(ev){ if(!d.classList.contains("edit"))return; const a=ev.target&&ev.target.closest&&ev.target.closest("a"); if(a&&d.contains(a)){ ev.preventDefault(); openLinkEditor(a,d); } }); d._ll=1; }
     d.focus(); }
-  else { closeLinkPop(); }
+  else { closeLinkPop(); if(window.__aiPopClose)window.__aiPopClose();
+    /* leaving edit mode: pull an edited Summary back into the model so the score, PDF and cover letter
+       stay in step with what the user actually wrote (other manual edits stay DOM-only by design). */
+    if(id==="resumeDoc"&&d.dataset&&d.dataset.dirty==="1"&&CUR){
+      const hs=Array.prototype.slice.call(d.querySelectorAll("h4")).find(h=>/^summary$/i.test((h.textContent||"").trim()));
+      let p=hs&&hs.nextElementSibling; const parts=[];   /* an Enter-split summary spans several <p>s — take them all */
+      while(p&&p.tagName==="P"){ parts.push(p.innerText||p.textContent||""); p=p.nextElementSibling; }
+      const txt=parts.length?tidy(parts.join(" ")):"";
+      if(txt&&CUR.cvBase&&txt!==CUR.cvBase.summary){ CUR.cvBase.summary=txt; if(CUR.cv)CUR.cv.summary=txt; syncDerived(); } } }
   btn.textContent=on?"✓ Done":"✎ Edit"; }
 
 /* ===== hyperlink editing (custom résumé only) — mutates the rendered DOM so the edited href flows straight
@@ -974,10 +1032,22 @@ function openLinkUrl(){ const u=safeUrl(document.getElementById("lpUrl").value);
 function li(q){ return "https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent(q); }
 function liCo(c){ return "https://www.linkedin.com/search/results/companies/?keywords="+encodeURIComponent(normCompany(c)); }
 /* LinkedIn people search anchored on the company: quote the normalized company so it must appear, then OR
-   a role-family title list. Company is the anchor; better keywords = far fewer unrelated-company results. */
-function liAt(company,titles){ const co='"'+normCompany(company)+'"';
+   a role-family title list. Company is the anchor; better keywords = far fewer unrelated-company results.
+   Optional loc narrows to the candidate's likely office city (LinkedIn keyword search matches location). */
+function liAt(company,titles,loc){ const co='"'+normCompany(company)+'"';
   const t=(titles&&titles.length)?" ("+titles.map(x=>/\s/.test(x)?'"'+x+'"':x).join(" OR ")+")":"";
-  return li(co+t); }
+  const l=loc?' "'+loc+'"':"";
+  return li(co+t+l); }
+/* best-effort LinkedIn company slug — like domainGuess, an UNVERIFIED guess (labeled in the UI) */
+function slugGuess(c){ return normCompany(c).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,""); }
+/* the company page's People tab lists CURRENT employees only — fixes keyword search surfacing ex-employees */
+function liPeople(c,kw){ const s=slugGuess(c); return s?("https://www.linkedin.com/company/"+s+"/people/?keywords="+encodeURIComponent(kw||"")):liCo(c); }
+/* cities the candidate has actually worked in (contact block first, then role locations) — recruiters/peers
+   for the target role usually sit where the candidate's market is */
+function candidateLocs(cv){ const L=[]; const push=x=>{ x=cleanSep(String(x||"")).trim();
+  if(/^(remote|hybrid|wfh|work from home|onsite|on-site)$/i.test(x))return;   /* not real cities — would pollute the search */
+  if(x&&L.every(y=>y.toLowerCase()!==x.toLowerCase()))L.push(x); };
+  push(cv.location); (cv.experience||[]).forEach(e=>push(e.location)); return L.slice(0,2); }
 /* title families keyed off the target role/JD function — a Data Analyst opening shouldn't surface random
    engineering managers. Returns the hiring-manager titles to search for that function. */
 function roleFamily(){ const t=(((CUR&&CUR.cv&&CUR.cv.title)||(CUR&&CUR.role)||"")+" "+((CUR&&CUR.roleHint)||"")).toLowerCase();
@@ -989,31 +1059,43 @@ function roleFamily(){ const t=(((CUR&&CUR.cv&&CUR.cv.title)||(CUR&&CUR.role)||"
   if(/market|growth|brand/.test(t))return {fn:"Marketing",mgr:["Marketing Manager","Head of Marketing","Growth Manager"]};
   return {fn:"",mgr:["Manager","Head","Director","Lead"]}; }
 const RECRUITER_TITLES=["Recruiter","Talent Acquisition","Technical Recruiter","Talent Partner","Recruiting Lead","HR Business Partner"];
-function firstName(){ return ((CUR&&CUR.cv&&CUR.cv.name)||M.name||"").trim().split(/\s+/)[0]||"me"; }
+/* Title-Cased first name — an ALL-CAPS résumé header ("RAHUL VERMA") must never sign a note as "RAHUL" */
+function firstName(){ return titleCaseName(((CUR&&CUR.cv&&CUR.cv.name)||M.name||"").trim().split(/\s+/)[0]||"")||"me"; }
 function selfPitch(){ const cv=CUR&&CUR.cv||{}; const sk=(cv.skills||[]).flatMap(g=>g.items||[]).slice(0,3).join(", ");
   /* "I'm a <X>" must be the candidate's REAL title, not the JD role they're applying to */
   const real=cleanSep((cv.experience&&cv.experience[0]&&cv.experience[0].role)||"");
   return (real||cv.title||CUR.role||"professional")+(sk?" ("+sk+")":""); }
+/* LinkedIn connection notes cap at 300 CHARACTERS (not words) — build ≤280 and degrade gracefully */
+function connNote(r,co,fn){ const sig=fn&&fn!=="me"?" – "+fn:"";
+  let pitch=selfPitch();
+  let note="Hi {First}, I just applied for the "+r+" role at "+co+". I'm a "+pitch+" and I'd value a quick connect with someone on the team. Open to a chat?"+sig;
+  if(note.length>280){ pitch=pitch.replace(/\s*\([^)]*\)$/,"");   /* drop the (skills) parenthetical first */
+    note="Hi {First}, I just applied for the "+r+" role at "+co+". I'm a "+pitch+" and I'd value a quick connect."+sig; }
+  if(note.length>280)note="Hi {First}, I just applied for the "+r+" role at "+co+" and would love to connect."+sig;
+  if(note.length>280)note=note.slice(0,277).replace(/\s+\S*$/,"")+"…";   /* pathological role/company lengths */
+  return note; }
 function renderOutreach(){ document.getElementById("outEmpty").style.display="none"; const body=document.getElementById("outBody"); body.style.display="block";
   const c=CUR.company,r=(CUR.cv.title||CUR.role),dom=domainGuess(c),fn=firstName(),cv=CUR.cv||{};
-  const co=normCompany(c),fam=roleFamily();
-  const note="Hi {First} — I just applied for the "+r+" role at "+c+" and would love to connect. I'm a "+selfPitch()+" and admire what your team is building. Open to a quick chat? — "+fn;
-  const subj="Referral request — "+r+" at "+c+" (just applied)";
-  const mail="Hi {First},\n\nI just submitted my application for the "+r+" role at "+c+" and wanted to reach out directly. I'm a "+selfPitch()+".\n\nIf my background looks like a fit, I'd be grateful for a referral or a pointer to the right person. Happy to share my résumé and the role link. Thanks for your time!\n\nBest,\n"+((cv.name)||M.name||"")+([cv.phone,cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
-  const follow="Hi {First}, a gentle nudge on my note about the "+r+" role at "+c+" — I know inboxes get busy. Even a quick steer would mean a lot. Thanks! — "+fn;
+  const co=normCompany(c),fam=roleFamily(),locs=candidateLocs(cv),loc=locs[0]||"";
+  const note=connNote(r,co,fn);
+  const subj="Referral request: "+r+" at "+co+" (just applied)";
+  const mail="Hi {First},\n\nI just submitted my application for the "+r+" role at "+co+" and wanted to reach out directly. I'm a "+selfPitch()+".\n\nIf my background looks like a fit, I'd be grateful for a referral or a pointer to the right person. Happy to share my résumé and the role link. Thanks for your time!\n\nBest,\n"+titleCaseName((cv.name)||M.name||"")+([cv.phone,cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
+  const follow="Hi {First}, a quick nudge on my note about the "+r+" role at "+co+". I know inboxes get busy, so even a quick steer would mean a lot. Thanks!"+(fn!=="me"?" – "+fn:"");
   body.innerHTML=
     '<div class="box"><h5>🔗 Find the right 2 people at '+esc(co)+'</h5><div class="row">'+
-      '<a target="_blank" href="'+li('"'+co+'" '+r)+'"><button class="sm ghost">Team peers</button></a>'+
-      '<a target="_blank" href="'+liAt(c,fam.mgr)+'"><button class="sm ghost">Hiring manager</button></a>'+
+      '<a target="_blank" href="'+liPeople(c,r)+'"><button class="sm ghost">Team peers · current</button></a>'+
+      '<a target="_blank" href="'+liAt(c,fam.mgr,loc)+'"><button class="sm ghost">Hiring manager</button></a>'+
       '<a target="_blank" href="'+liAt(c,RECRUITER_TITLES)+'"><button class="sm ghost">Recruiter</button></a>'+
       '<a target="_blank" href="'+liCo(c)+'"><button class="sm ghost">Company page</button></a></div>'+
-      '<div class="hint" style="margin-top:6px">Searches are anchored to <b>'+esc(co)+'</b>'+(fam.fn?' and '+esc(fam.fn)+'-function titles':'')+' so results stay on-company. On LinkedIn, add the <b>Current company</b> filter for the tightest match. Pick <b>2 max</b> — ideally the hiring manager + one team peer.</div></div>'+
-    '<div class="box"><h5>🤝 Connection note <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(note)+'</div></div>'+
+      '<div class="hint" style="margin-top:6px"><b>Team peers</b> opens the company page’s People tab — it lists <b>current employees only</b> (if the company link misses, open Company page → People). Manager/recruiter searches are anchored to <b>'+esc(co)+'</b>'+(fam.fn?' and '+esc(fam.fn)+'-function titles':'')+(loc?', narrowed to <b>'+esc(loc)+'</b>':'')+'. On LinkedIn, add the <b>Current company</b>'+(locs.length?' and <b>Locations</b> ('+esc(locs.join(", "))+')':'')+' filters for the tightest match. Pick <b>2 max</b> — ideally the hiring manager + one team peer.</div>'+
+      '<div id="outContacts"></div></div>'+
+    '<div class="box"><h5>🤝 Connection note <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(note)+'</div><div class="hint" style="margin-top:5px">'+note.length+'/300 characters — fits LinkedIn’s connection-note limit.</div></div>'+
     '<div class="box"><h5>✉️ Referral email — '+esc(co)+' <button class="sm ghost" onclick="cpText(this)">Copy</button></h5>'+
       '<div class="hint"><b>Pattern-inferred — unverified.</b> The domain <span class="pill">'+esc(dom)+'</span> is a best-effort guess from the company name; confirm the real domain, then a likely address is <span class="pill">first.last@'+esc(dom)+'</span> or <span class="pill">flast@'+esc(dom)+'</span>. Verify on the company site or a tool like Hunter before sending — never treat this as confirmed.</div>'+
       '<div style="margin:6px 0"><b>Subject:</b> '+esc(subj)+'</div><div class="mono">'+esc(mail)+'</div></div>'+
     '<div class="box"><h5>↩️ Follow-up (after ~3 days) <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(follow)+'</div></div>'+
     '<div class="row" style="margin-top:6px">'+(CUR.url?'<a target="_blank" href="'+esc(urlify(CUR.url))+'"><button class="sm ghost">Open job link ↗</button></a>':'')+'<button class="sm primary" onclick="logApp()">✓ I applied — log it</button></div>';
+  if(window.__outArm)window.__outArm();   /* account block injects the verified-contacts (Apollo) UI here */
 }
 
 /* ===== find jobs ===== */
@@ -1166,6 +1248,59 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     if(cur){ var t=cur.replace("pane-",""); document.querySelectorAll(".nlinks a").forEach(function(a){a.classList.toggle("on",a.dataset.t===t);}); }
     ticking=false; });} }
   addEventListener("scroll",onScroll,{passive:true}); onScroll();
+  /* ===== WebGL space depth (three.js returned 2026-07-13, owner-approved) — an ADDITIVE layer over the
+     static CSS starfield. Hard guards: reduced-motion → never starts; CDN failure (__noThree) or WebGL
+     unavailable → the CSS field simply stands alone; any runtime throw → canvas removed. ~30fps cap,
+     pauses when the tab is hidden. Zero coupling to the engine or account blocks. */
+  function initSpace3d(){
+    if(reduce||window.__noThree||!window.THREE)return;
+    var cv=document.getElementById("space3d"); if(!cv||cv.__inited)return; cv.__inited=1;
+    try{
+      var mob=matchMedia("(max-width:760px)").matches;
+      var renderer=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:false,powerPreference:"low-power"});
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mob?1.25:1.75));
+      renderer.setSize(innerWidth,innerHeight);
+      var scene=new THREE.Scene();
+      var cam=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,260); cam.position.z=52;
+      /* three depth shells of stars; mostly white/mist with a few ember sparks (ratified palette only) */
+      function shell(n,spread,size,emberFrac){
+        var g=new THREE.BufferGeometry(),pos=new Float32Array(n*3),col=new Float32Array(n*3);
+        for(var i=0;i<n;i++){ var i3=i*3;
+          pos[i3]=(Math.random()-0.5)*spread; pos[i3+1]=(Math.random()-0.5)*spread*0.62; pos[i3+2]=(Math.random()-0.5)*spread;
+          var b=0.55+Math.random()*0.45;
+          if(Math.random()<emberFrac){ col[i3]=1; col[i3+1]=0.42; col[i3+2]=0.22; }
+          else { col[i3]=b; col[i3+1]=b; col[i3+2]=Math.min(1,b*1.06); } }
+        g.setAttribute("position",new THREE.BufferAttribute(pos,3));
+        g.setAttribute("color",new THREE.BufferAttribute(col,3));
+        var m=new THREE.PointsMaterial({size:size,vertexColors:true,transparent:true,opacity:0.85,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true});
+        var p=new THREE.Points(g,m); scene.add(p); return p; }
+      var far=shell(mob?500:900,220,0.55,0.02), mid=shell(mob?350:700,150,0.9,0.04), near=shell(mob?150:360,95,1.5,0.06);
+      var mx=0,my=0,tx=0,ty=0;
+      addEventListener("pointermove",function(e){ tx=(e.clientX/innerWidth-0.5)*2; ty=(e.clientY/innerHeight-0.5)*2; },{passive:true});
+      addEventListener("resize",function(){ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mob?1.25:1.75));   /* re-clamp on monitor/DPR change */
+        renderer.setSize(innerWidth,innerHeight); },{passive:true});
+      var t0=0,dead=false;
+      /* ONE rAF chain for the page's lifetime — the browser throttles it to 0fps when hidden, and
+         scheduling extra chains on visibilitychange leaks one chain per hide/show cycle. */
+      function loop(t){ if(dead)return; requestAnimationFrame(loop);
+        try{
+          if(document.hidden)return;
+          if(t-t0<33)return; t0=t;                                 /* ~30fps — stars don't need more */
+          var k=t*0.00001;
+          far.rotation.y=k*0.6; mid.rotation.y=-k; near.rotation.y=k*1.6;
+          mx+=(tx-mx)*0.03; my+=(ty-my)*0.03;                      /* lazy mouse parallax */
+          cam.position.x=mx*3.2; cam.position.y=-my*2.2-Math.min(sy*0.004,22);   /* scroll = slow descent */
+          cam.lookAt(0,0,0);
+          renderer.render(scene,cam);
+        }catch(e){ dead=true; try{ cv.parentNode.removeChild(cv); }catch(_){} } }
+      requestAnimationFrame(loop);
+      cv.classList.add("on");                                       /* fade the layer in once live */
+    }catch(e){ try{ cv.parentNode.removeChild(cv); }catch(_){} }
+  }
+  /* three.js loads with `defer` (decorative — must not block first paint of the sign-in gate), so THREE
+     may not exist yet when this inline block runs: retry once the window has fully loaded. */
+  if(window.THREE)initSpace3d(); else addEventListener("load",initSpace3d,{once:true});
 })();
 </script>
 
@@ -1266,14 +1401,14 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     localStorage.removeItem=function(k){ _rm(k); if(k===MKEY||k===TK) schedulePush(); };
   }catch(e){}
 
-  /* ===== ✦ AI Review (v3) — Groq via the 'ai' Supabase Edge Function. The deterministic engine
-     is always the base and the fallback; AI only rephrases what already exists, and every
-     suggestion passes a truthfulness check (no numbers that weren't yours) + needs your approval. */
-  var AI_LAST=null;
-  function aiUI(html){ var b=$("aiBody"); if(b)b.innerHTML=html; }
-  window.__aiReset=function(){ var box=$("aiBox"); if(!box)return; box.style.display="block"; AI_LAST=null;
-    var s=$("aiSrc"); if(s)s.style.display="none";
-    aiUI('<div class="hint" style="margin-bottom:9px">Let AI read your résumé against this exact job — a truthful summary (your real title &amp; exact years, never inflated), sharper tips, plus rewrites of your own bullets (never new facts). You approve every change.</div><button class="sm primary" onclick="aiReview()">✦ Run AI review</button>'); };
+  /* ===== ✦ AI editor (v4) — the AI Review box is retired: AI now lives WHERE the text lives.
+     While editing (✎), click or select any summary line, bullet, or cover paragraph → a ✦ fab appears →
+     the AI edit popup offers tone presets (Professional/Balanced/Conversational/Bold), your own custom
+     instruction, and a Humanize pass. Toolbar buttons run one-click batch passes (Improve bullets ·
+     Humanize · Humanize letter). Same Groq edge fn, same truthfulness contract: AI only rephrases what
+     exists, every digit is re-checked client-side, and AI-slop (em-dashes as punctuation, "leverage/
+     spearheaded/…") is stripped or rejected deterministically — never trusted to the model. */
+  var AI_LAST=null, AI_UNDO=null, AI_UNDO_RUN=null, AI_AFTER=null, AI_UNDO_FORCE=0, AI_UNDO_COVER=null, AI_UNDO_COVER_RUN=null, OUT_HTML=null, OUT_RUN=null;
   function digitRuns(s){ return (String(s).match(/\d+(?:\.\d+)?/g)||[]); }
   /* a rewrite must carry EXACTLY the candidate's numbers — none invented, none dropped
      (dropping metrics weakens the bullet; the live e2e test caught the model doing this) */
@@ -1284,9 +1419,10 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   /* summary-agent guard: every number in the AI summary must already exist in the candidate's own text or be
      the exact computed years figure (as ONE token — no decimal-split so "9 years" can't pass at 1.9), no
      "N+ years" inflation ever, and it must not open by claiming the JD role as the candidate's identity
-     (unless the JD role IS their real title — an honest open must not be rejected). */
-  function validSummary(src,nw,years,role,realTitle){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
-    if(nw.length<40||nw.length>460)return false;
+     (unless the JD role IS their real title — an honest open must not be rejected). maxLen defaults to 460;
+     the inline editor passes 1500 so a "make it 200 words" custom instruction can be honored. */
+  function validSummary(src,nw,years,role,realTitle,maxLen){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
+    if(nw.length<40||nw.length>(maxLen||460))return false;
     var y=Math.round(((+years)||0)*10)/10;
     var allowed=digitRuns(src).concat(digitRuns(String(y)));
     if(!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;}))return false;
@@ -1296,6 +1432,19 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       var rx=new RegExp("^\\s*(?:an?\\s+|the\\s+)?"+r.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i");
       if(rx.test(nw))return false; }
     return true; }
+  /* ---- deterministic de-slop: the model is TOLD not to write AI-slop, but never trusted ---- */
+  var SLOP_RE=/\b(leverag(e|es|ed|ing)|delve|delving|spearhead(ed|ing)?|seamless(ly)?|cutting-edge|synerg\w*|utiliz(e|es|ed|ing)|holistic|testament to|fast-paced|pivotal role|esteemed|i am excited to|i am confident that)\b/i;
+  /* a slop word that appears in the CANDIDATE'S OWN source text is not slop (employer "Synergy Labs",
+     product "Seamless") — pass orig to allow it; without orig the check is strict. */
+  function slopFree(s,orig){ var m=String(s||"").match(SLOP_RE); if(!m)return true;
+    if(orig&&new RegExp(m[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i").test(String(orig)))return true;
+    return false; }
+  /* em-dash is never punctuation in our output (commas read human); spaced en-dash too.
+     Digit ranges like 2019-2022 and grouped numbers like $1,200,000 are untouched. */
+  function deSlop(s){ s=String(s||"");
+    s=s.replace(/\s+[—–]\s+/g,", ").replace(/—/g,", ");
+    s=s.replace(/\s+,/g,",").replace(/,{2,}/g,",").replace(/,([^\s\d])/g,", $1").replace(/ {2,}/g," ");
+    return s.trim(); }
   /* ---- eval harness (deterministic, client-side; no extra LLM call, no quota cost) ---- */
   function aiPropers(s){ s=String(s); var out=[],re=/([A-Za-z][A-Za-z0-9.+#&-]*)/g,m,first=true;
     while(m=re.exec(s)){ var w=m[1];
@@ -1307,77 +1456,297 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var faith=inv.length?Math.max(55,100-inv.length*15):100;                            /* numbers are already guaranteed by validRewrite */
     var T=(targets||[]).slice(0,8),hits=0; T.forEach(function(k){ if(k&&nw.toLowerCase().indexOf(String(k).toLowerCase())>=0)hits++; });
     return {faith:faith, rel:(T.length?Math.round(hits/T.length*100):null), inv:inv.slice(0,4)}; }
-  function aiCost(u){ if(!u)return null; return ((u.prompt_tokens||0)/1e6*0.59)+((u.completion_tokens||0)/1e6*0.79); } /* Groq llama-3.3-70b list price, est. */
-  function renderAI(d,bl){
+  /* ---- shared context builders ---- */
+  function sumContext(){ var cvb=(CUR&&CUR.cvBase)||{},bl=[];
+    ((cvb.experience)||[]).forEach(function(e){(e.bullets||[]).forEach(function(t){bl.push(t);});});
+    ((cvb.projects)||[]).forEach(function(p){(p.bullets||[]).forEach(function(t){bl.push(t);});});
+    var exp=((cvb.experience)||[]).map(function(e){return [e.role,e.org,e.dates].join(" ");}).join(" ");
+    return {src:((cvb.summary)||"")+" "+bl.join(" ")+" "+exp,
+            years:(CUR&&CUR.have&&CUR.have.years)||0, role:(CUR&&CUR.role)||"",
+            realTitle:String((((cvb.experience)||[])[0]||{}).role||"")}; }
+  function aiGround(cv){ return {company:(CUR&&CUR.company)||"",role:(CUR&&CUR.role)||"",jd:val("inJD").slice(0,5000),
+    summary:((cv&&cv.summary)||"").slice(0,600),skills:((cv&&cv.skills)||[]).flatMap(function(g){return g.items||[]}).slice(0,30),
+    missing:((CUR&&CUR.buckets&&CUR.buckets.reqMiss)||[]).slice(0,8),years:(CUR&&CUR.have&&CUR.have.years)||0,
+    exp:((cv&&cv.experience)||[]).slice(0,3).map(function(e){return {role:e.role||"",org:e.org||"",dates:e.dates||""};})}; }
+  function collectBullets(cv){ var bl=[];
+    ((cv&&cv.experience)||[]).forEach(function(e,i){(e.bullets||[]).forEach(function(t,j){bl.push({id:"e"+i+":"+j,text:t});});});
+    ((cv&&cv.projects)||[]).forEach(function(p,i){(p.bullets||[]).forEach(function(t,j){bl.push({id:"p"+i+":"+j,text:t});});});
+    return bl.slice(0,12); }
+  function aiMsg(id,html){ var m=$(id); if(!m)return; m.style.display=html?"block":"none"; m.innerHTML=html||""; }
+  window.__aiReset=function(){ if(window.__aiPopClose)window.__aiPopClose(); };
+  /* résumé changed → a previously humanized letter has been rebuilt deterministically; tell the user once */
+  window.__coverResynced=function(rerendered){ if(AI_UNDO_COVER){ AI_UNDO_COVER=null;
+    if(rerendered)aiMsg("aiClMsg","Résumé changed — the letter was rebuilt to match it. Run ✦ Humanize again for the human voice."); } };
+
+  /* ---- inline ✦ editor: map a caret/selection in the editable doc to the unit it belongs to ---- */
+  function aiMap(doc,rawNode){
+    var node=rawNode,li=null;
+    while(node&&node!==doc){ if(node.nodeType===1&&node.tagName==="LI"&&!li)li=node;
+      if(node.parentNode===doc)break; node=node.parentNode; }
+    if(!node||node===doc||node.parentNode!==doc)return null;
+    if(doc.id==="coverDoc"){ var kids=[].slice.call(doc.children); var i=kids.indexOf(node); if(i<1)return null;   /* [0] = date line */
+      var paras=String((CUR&&CUR.cover)||"").split(/\n+/); var sigAt=-1;
+      for(var s=0;s<paras.length;s++){ if(/^best regards,?$/i.test(paras[s].trim())){ sigAt=s; break; } }
+      if(sigAt>=0&&(i-1)>=sigAt)return {kind:"fact"};                       /* signature/contact block = facts */
+      /* hand-edited (dirty) docs skew the index — ALSO fence the signature by CONTENT */
+      var ntx=(node.innerText||node.textContent||"").trim();
+      if(/^best regards,?$/i.test(ntx))return {kind:"fact"};
+      if(sigAt>=0&&paras.slice(sigAt).some(function(pl){return pl.trim()&&pl.trim()===ntx;}))return {kind:"fact"};
+      return {kind:"cover",idx:i,el:node,text:node.innerText||node.textContent||""}; }
+    var sec=null,n=node; while(n){ if(n.nodeType===1&&n.tagName==="H4"){ sec=(n.textContent||"").trim().toLowerCase(); break; } n=n.previousElementSibling; }
+    if(!sec)return null;
+    if(sec==="summary"&&node.tagName==="P")return {kind:"summary",el:node,text:node.innerText||node.textContent||""};
+    if(sec==="experience"||sec==="projects"){
+      if(node.tagName!=="UL"||!li)return {kind:"fact"};                     /* .role/.sub2/.pj header lines = titles, orgs, dates */
+      var cls=(sec==="experience")?"role":"pj",heads=0,m=node.previousElementSibling;
+      while(m&&m.tagName!=="H4"){ if(m.classList&&m.classList.contains(cls))heads++; m=m.previousElementSibling; }
+      var ei=heads-1, bj=[].slice.call(node.children).indexOf(li);
+      if(ei<0||bj<0)return {kind:"fact"};
+      return {kind:"bullet",id:(sec==="experience"?"e":"p")+ei+":"+bj,ei:ei,bj:bj,el:li,text:li.innerText||li.textContent||""}; }
+    return {kind:"fact"}; }                                                 /* skills/edu/certs: keywords + facts — manual edit only */
+
+  /* ---- fab + popup ---- */
+  var _aiPop=null,_aiFab=null,_aiCtx=null,_aiTone="balanced",_aiBusy=false,_aiSeq=0;
+  function aiFabEl(){ if(_aiFab)return _aiFab; var f=document.createElement("div"); f.id="aiFab"; f.textContent="✦"; f.title="AI edit";
+    f.addEventListener("mousedown",function(e){ e.preventDefault(); e.stopPropagation(); });
+    f.addEventListener("click",function(){ f.style.display="none"; if(_aiCtx)openAiPop(); });
+    document.body.appendChild(f); _aiFab=f; return f; }
+  function aiPopEl(){ if(_aiPop)return _aiPop;
+    var p=document.createElement("div"); p.id="aiPop";
+    p.innerHTML='<p class="lpt"><span id="apTitle">✦ AI edit</span><span class="x" onclick="window.__aiPopClose()">✕</span></p>'+
+      '<p class="orig" id="apOrig"></p>'+
+      '<div id="apTones"></div>'+
+      '<input id="apCustom" type="text" autocomplete="off" spellcheck="false" placeholder="Optional: your own instruction — e.g. “two lines, formal”">'+
+      '<div class="lprow"><button class="go" id="apGo" onclick="aiPopGo(false)">✦ Rewrite</button><button id="apHum" onclick="aiPopGo(true)">Humanize</button></div>'+
+      '<p class="aperr" id="apErr"></p><div class="res" id="apRes"></div>';
+    document.body.appendChild(p); _aiPop=p;
+    document.addEventListener("mousedown",function(e){
+      if(_aiFab&&_aiFab.style.display==="block"&&!_aiFab.contains(e.target))_aiFab.style.display="none";
+      if(!_aiPop||_aiPop.style.display!=="block")return;
+      if(_aiPop.contains(e.target))return; if(_aiFab&&_aiFab.contains(e.target))return;
+      window.__aiPopClose(); });
+    document.addEventListener("keydown",function(e){ if(e.key==="Escape")window.__aiPopClose(); });
+    return p; }
+  window.__aiPopClose=function(){ if(_aiPop)_aiPop.style.display="none"; if(_aiFab)_aiFab.style.display="none"; _aiCtx=null; };
+  window.__aiTone=function(el){ _aiTone=(el&&el.dataset&&el.dataset.t)||"balanced";
+    var t=$("apTones"); if(t)[].slice.call(t.children).forEach(function(x){x.classList.toggle("on",x===el);}); };
+  function aiMaybeFab(doc,ev){ if(_aiPop&&_aiPop.style.display==="block")return;
+    var sel=window.getSelection?window.getSelection():null,node=null,rect=null;
+    if(sel&&sel.rangeCount&&sel.anchorNode&&doc.contains(sel.anchorNode)){ node=sel.anchorNode;
+      try{ var rr=sel.getRangeAt(0).getBoundingClientRect(); if(rr&&(rr.width||rr.height))rect=rr; }catch(e){} }
+    if(!node&&ev&&ev.target&&ev.target!==doc&&doc.contains(ev.target))node=ev.target;
+    if(!node){ if(_aiFab)_aiFab.style.display="none"; return; }
+    var ctx=aiMap(doc,node);
+    if(!ctx||(ctx.kind!=="summary"&&ctx.kind!=="bullet"&&ctx.kind!=="cover")||!String(ctx.text||"").trim()){ if(_aiFab)_aiFab.style.display="none"; return; }
+    ctx.docId=doc.id; _aiCtx=ctx;
+    if(!rect&&ctx.el&&ctx.el.getBoundingClientRect)rect=ctx.el.getBoundingClientRect();
+    var f=aiFabEl(); f.style.display="block";
+    f.style.left=Math.min(((rect&&rect.right)||60)+8,window.innerWidth-44)+"px";
+    f.style.top=Math.max(8,((rect&&rect.top)||100)-4)+"px"; }
+  function openAiPop(){ var p=aiPopEl(),c=_aiCtx; if(!c)return;
+    _aiTone="balanced"; _aiBusy=false; _aiSeq++;   /* invalidate any in-flight request for a previous unit */
+    $("apTitle").textContent="✦ AI edit — "+(c.kind==="summary"?"summary":(c.kind==="cover"?"cover paragraph":"bullet"));
+    $("apOrig").textContent="“"+(c.text.length>180?c.text.slice(0,177)+"…":c.text)+"”";
+    $("apTones").innerHTML=["professional","balanced","conversational","bold"].map(function(t){
+      return '<span class="aitone'+(t==="balanced"?" on":"")+'" data-t="'+t+'" onclick="window.__aiTone(this)">'+t+'</span>'; }).join("");
+    $("apCustom").value=""; var er=$("apErr"); er.style.display="none"; $("apRes").innerHTML="";
+    var locked=(!SB||!AUTH_USER)&&!window.__AI_FAKE_EDIT;
+    if(locked){ er.textContent="Sign in to use AI editing — manual editing keeps working."; er.style.display="block"; }
+    var go=$("apGo"),hum=$("apHum"); if(go)go.disabled=locked; if(hum)hum.disabled=locked;
+    p.style.display="block";
+    var r=(c.el&&c.el.getBoundingClientRect)?c.el.getBoundingClientRect():{left:60,top:120,bottom:130};
+    var pw=p.offsetWidth||400,ph=p.offsetHeight||250;
+    var left=Math.max(10,Math.min(r.left,window.innerWidth-pw-10));
+    var top=r.bottom+8; if(top+ph>window.innerHeight-10)top=Math.max(10,r.top-ph-8);
+    p.style.left=left+"px"; p.style.top=top+"px";
+    var cu=$("apCustom"); if(cu&&!locked)cu.focus(); }
+  window.aiPopGo=async function(humanize){ var c=_aiCtx; if(!c||_aiBusy)return;
+    var er=$("apErr"),res=$("apRes"); er.style.display="none"; res.innerHTML='<div class="hint"><span class="spin"></span>Rewriting…</div>';
+    var cv=(CUR&&(CUR.cvBase||CUR.cv))||{};
+    var body=Object.assign({tone:_aiTone,custom:($("apCustom").value||"").slice(0,300)},aiGround(cv));
+    if(humanize){ body.mode="humanize"; body.texts=[{id:"x",text:c.text}]; }
+    else if(c.kind==="summary"){ body.mode="rewrite"; body.section="summary"; body.text=c.text; }
+    else if(c.kind==="cover"){ body.mode="rewrite"; body.section="cover-para"; body.text=c.text; }
+    else { body.mode="rewrite"; body.section="bullet"; body.id=c.id; body.text=c.text; }
+    _aiBusy=true; var seq=++_aiSeq; var d=null,eMsg=null;
+    if(window.__AI_FAKE_EDIT){ d=window.__AI_FAKE_EDIT; }
+    else{ try{ var r=await SB.functions.invoke("ai",{body:body});
+        if(r.error){ var st=r.error.context&&r.error.context.status;
+          eMsg=(st===429)?"⏳ Daily AI limit reached — try again tomorrow.":(st===404)?"AI backend isn't deployed yet — manual editing keeps working.":"AI is unreachable right now — try again in a moment."; }
+        else d=r.data||{};
+      }catch(e){ eMsg="AI is unreachable right now — try again in a moment."; } }
+    _aiBusy=false;
+    if(seq!==_aiSeq||_aiCtx!==c)return;   /* stale response: popup was closed or retargeted while awaiting */
+    if(eMsg){ res.innerHTML=""; er.textContent=eMsg; er.style.display="block"; return; }
+    var nw="";
+    if(c.kind==="summary"&&typeof d.summary==="string")nw=d.summary;
+    else if(typeof d.text==="string")nw=d.text;
+    else if(Array.isArray(d.rewrites)&&d.rewrites.length)nw=(d.rewrites[0]&&d.rewrites[0].text)||"";
+    else if(c.kind==="cover"&&typeof d.cover==="string")nw=d.cover;
+    nw=deSlop(String(nw||"").trim());
+    if(!nw){ res.innerHTML="";
+      er.textContent=(d&&d._v===2)?"The server-side truthfulness guard rejected the AI's suggestion — try again or adjust the instruction.":"The AI backend returned an unexpected shape — it may need a re-deploy. Manual editing keeps working.";
+      er.style.display="block"; return; }
+    var bad="";
+    if(!slopFree(nw,c.text))bad="Rejected by the guardrail: the rewrite used AI-slop wording.";
+    else if(c.kind==="summary"){ var sc=sumContext();
+      if(!validSummary(sc.src+" "+c.text,nw,sc.years,sc.role,sc.realTitle,1500))bad="Rejected by the guardrail: it changed your numbers, inflated years, or claimed the target role as your identity."; }
+    else if(c.kind==="cover"){ var sc2=sumContext(); var allowed=digitRuns(sc2.src+" "+c.text+" "+String(Math.round(sc2.years*10)/10));
+      if(nw.length<20||nw.length>2200||!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;}))bad="Rejected by the guardrail: it invented numbers or came back the wrong length."; }
+    else { if(!validRewrite(c.text,nw))bad="Rejected by the guardrail: it changed your numbers or isn't bullet-sized (20–320 chars)."; }
+    if(bad){ res.innerHTML=""; er.textContent=bad+" Try again or adjust the instruction."; er.style.display="block"; return; }
+    AI_LAST={ctx:c,text:nw};
+    var ev=aiEvalOne(c.text,nw,((CUR&&CUR.buckets&&CUR.buckets.reqMiss)||[]));
+    res.innerHTML='<div class="aicard" style="margin:9px 0 0"><div class="old">'+esc(c.text)+'</div><div class="new">'+esc(nw)+'</div>'+
+      '<div class="aieval"><span class="ev '+(ev.faith>=90?"good":"warn")+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+
+      (ev.rel!=null?'<span class="ev '+(ev.rel>=50?"good":"warn")+'">jd match '+ev.rel+'%</span>':'')+'</div>'+
+      '<div class="lprow" style="margin-top:9px"><button class="go" onclick="aiPopApply()">✓ Apply</button><button onclick="aiPopCopy(this)">Copy</button><button onclick="aiPopGo('+(humanize?"true":"false")+')">↻ Try again</button></div></div>'; };
+  window.aiPopApply=function(){ var a=AI_LAST; if(!a||!a.ctx)return; var c=a.ctx,nw=a.text;
+    var doc=document.getElementById(c.docId||"resumeDoc");
+    var dirty=!!(doc&&doc.dataset&&doc.dataset.dirty==="1");
+    if(c.kind==="summary"){ if(CUR&&CUR.cvBase)CUR.cvBase.summary=nw; if(CUR&&CUR.cv)CUR.cv.summary=nw;
+      if(dirty){ if(c.el)c.el.textContent=nw; }                              /* keep the user's other manual edits */
+      else { try{ CUR.cv=buildDisplayCv(); renderResume(); }catch(e){} }
+      try{ syncDerived(); }catch(e){} }
+    else if(c.kind==="bullet"){
+      if(!dirty&&CUR&&CUR.cvBase){ var list=(c.id.charAt(0)==="e")?CUR.cvBase.experience:CUR.cvBase.projects; var it=list&&list[c.ei];
+        if(it&&it.bullets&&it.bullets[c.bj]!=null){ it.bullets[c.bj]=nw; try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){} } }
+      else if(c.el){ c.el.textContent=nw; if(doc&&doc.dataset)doc.dataset.dirty="1"; } }  /* dirty doc: WYSIWYG only, same rule as manual edits */
+    else if(c.kind==="cover"){
+      if(!dirty&&CUR&&CUR.cover){ AI_UNDO_COVER=String(CUR.cover); AI_UNDO_COVER_RUN=CUR;   /* Undo + resync notice cover this edit too */
+        var segs=String(CUR.cover).split(/(\n+)/); var ti=2*(c.idx-1);
+        if(ti>=0&&ti<segs.length){ segs[ti]=nw; CUR.cover=segs.join(""); try{ renderCover(); }catch(e){} }
+        else if(c.el)c.el.textContent=nw; }
+      else if(c.el){ c.el.textContent=nw; if(doc&&doc.dataset)doc.dataset.dirty="1"; } }
+    window.__aiPopClose(); };
+  window.aiPopCopy=function(btn){ var a=AI_LAST; if(!a)return; navigator.clipboard&&navigator.clipboard.writeText(a.text);
+    if(btn){ var o=btn.textContent; btn.textContent="Copied ✓"; setTimeout(function(){btn.textContent=o;},1200); } };
+  /* arm the fab on the two editable docs (they exist in the static markup; account block runs at end of body) */
+  ["resumeDoc","coverDoc"].forEach(function(id){ var d=document.getElementById(id); if(!d)return;
+    d.addEventListener("mouseup",function(ev){ if(!d.classList.contains("edit"))return;
+      if(id==="resumeDoc"&&ev.target&&ev.target.closest&&ev.target.closest("a"))return;   /* the link editor owns anchors */
+      setTimeout(function(){ aiMaybeFab(d,ev); },0); });
+    d.addEventListener("input",function(){ if(_aiFab)_aiFab.style.display="none"; }); });
+
+  /* ---- batch passes (résumé toolbar) — apply-all with one Undo; guarded when hand-editing ---- */
+  async function aiBulk(mode){
+    if(!CUR){ aiMsg("aiCvMsg","Run the analysis first."); return; }
+    var doc=document.getElementById("resumeDoc");
+    if(doc&&doc.dataset&&doc.dataset.dirty==="1"){ aiMsg("aiCvMsg","Finish manual editing first (✓ Done) — a batch AI pass would overwrite your changes."); return; }
+    var run0=CUR, cv=CUR.cvBase||CUR.cv, bl=collectBullets(cv);
+    var body;
+    if(mode==="review")body=Object.assign({mode:"review",critique:true,bullets:bl},aiGround(cv));
+    else body=Object.assign({mode:"humanize",texts:[{id:"sum",text:cv.summary||""}].concat(bl.slice(0,7)).filter(function(t){return t.text;})},aiGround(cv));
+    aiMsg("aiCvMsg",'<span class="spin"></span>'+(mode==="review"?"AI is enriching your bullets against this JD, then critiquing itself… (~8s)":"AI is rewording your résumé in a human voice — every fact and number stays…"));
+    var d=null;
+    if(window.__AI_FAKE){ d=window.__AI_FAKE; }
+    else{ if(!SB||!AUTH_USER){ aiMsg("aiCvMsg","Sign in to use AI editing."); return; }
+      try{ var r=await SB.functions.invoke("ai",{body:body});
+        if(r.error){ var st=r.error.context&&r.error.context.status;
+          aiMsg("aiCvMsg",(st===429)?"⏳ Daily AI limit reached — try again tomorrow. Deterministic tailoring keeps working.":(st===404)?"AI backend isn't deployed yet — deterministic tailoring still has you covered.":"AI is unreachable right now — try again in a moment."); return; }
+        d=r.data||{};
+      }catch(e){ aiMsg("aiCvMsg","AI is unreachable right now — try again in a moment."); return; } }
+    /* the await freed the event loop — re-check the world before touching anything */
+    if(CUR!==run0){ aiMsg("aiCvMsg","That AI pass expired — a new analysis ran while it was working. Nothing was changed."); return; }
+    var doc2=document.getElementById("resumeDoc");
+    if(doc2&&doc2.dataset&&doc2.dataset.dirty==="1"){ aiMsg("aiCvMsg","You started manual edits while AI was working — nothing was applied, so they stay safe."); return; }
+    if(mode!=="review"&&!window.__AI_FAKE&&(!d||d._v!==2)){ aiMsg("aiCvMsg","Humanize needs the latest AI backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
     var byId={}; bl.forEach(function(b){byId[b.id]=b.text;});
-    var targets=((CUR&&CUR.buckets&&CUR.buckets.reqMiss)||[]).concat((CUR&&CUR.buckets&&CUR.buckets.prefMiss)||[]);
-    var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,6);
-    var cand=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(r){return r&&byId[r.id];});
-    var rws=cand.filter(function(r){return validRewrite(byId[r.id],r.text);}).slice(0,6);
-    var rejected=cand.length-rws.length;
-    AI_LAST={rws:rws,byId:byId};
-    /* ✦ summary agent output — validated before it is ever shown. sumSrc includes the exp roles/orgs/dates
-       the model legitimately received, so an honest echo of them is never falsely rejected. */
-    var sumOld=(CUR&&CUR.cvBase&&CUR.cvBase.summary)||(CUR&&CUR.cv&&CUR.cv.summary)||"";
-    var sumExp=((CUR&&CUR.cvBase&&CUR.cvBase.experience)||[]).map(function(e){return [e.role,e.org,e.dates].join(" ");}).join(" ");
-    var sumSrc=sumOld+" "+bl.map(function(b){return b.text;}).join(" ")+" "+sumExp;
-    var realTitle=((CUR&&CUR.cvBase&&CUR.cvBase.experience&&CUR.cvBase.experience[0])||{}).role||"";
-    var sumNew=(typeof d.summary==="string")?d.summary.trim():"";
-    var sumOK=!!(sumNew&&validSummary(sumSrc,sumNew,(CUR&&CUR.have&&CUR.have.years)||0,(CUR&&CUR.role)||"",realTitle));
-    if(sumOK)AI_LAST.summary=sumNew;
-    var s=$("aiSrc"); if(s)s.style.display="inline-flex";
-    var h="";
-    if(sumOK)h+='<div class="label" style="margin:2px 0 2px">Summary — rewritten by the summary agent (your real title, exact years)</div>'+
-      '<div class="aicard" id="aicsum"><div class="old">'+esc(sumOld)+'</div><div class="new">'+esc(sumNew)+'</div><div class="row"><button class="sm primary" onclick="aiApplySummary()">✓ Use this</button><button class="sm ghost" onclick="aiCopySummary(this)">Copy</button></div></div>';
-    if(tips.length)h+=tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("");
-    if(rws.length)h+='<div class="label" style="margin:12px 0 2px">Bullet rewrites — approve only what reads true</div>'+rws.map(function(r,i){
-      var ev=aiEvalOne(byId[r.id],r.text,targets);
-      var chips='<span class="ev '+(ev.faith>=90?'good':'warn')+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+(ev.rel!=null?'<span class="ev '+(ev.rel>=50?'good':'warn')+'">jd match '+ev.rel+'%</span>':'');
-      return '<div class="aicard" id="aic'+i+'"><div class="old">'+esc(byId[r.id])+'</div><div class="new">'+esc(r.text)+'</div><div class="aieval">'+chips+'</div><div class="row"><button class="sm primary" onclick="aiApply('+i+')">✓ Use this</button><button class="sm ghost" onclick="aiCopy('+i+',this)">Copy</button></div></div>';}).join("");
-    if(!h)h='<div class="hint">AI didn\'t find anything to improve — your résumé already reads well for this JD.</div>';
-    /* eval-harness readout — every rewrite is scored by the truthfulness guardrail before you see it */
-    if(cand.length)h+='<div class="aisum">Truthfulness guardrail: kept '+rws.length+' of '+cand.length+' rewrites'+(rejected>0?' · rejected '+rejected+' that changed your numbers or added facts':'')+'</div>';
-    var rag=Array.isArray(d._rag)?d._rag:[];
-    if(rag.length)h+='<div class="aisum">RAG · retrieved '+rag.length+' skill clusters from the pgvector knowledge base to ground these rewrites</div><div class="aieval">'+rag.map(function(r){return '<span class="ev good">'+esc(r.tags)+' '+Math.round((r.similarity||0)*100)+'%</span>';}).join("")+'</div>';
-    var u=d._usage,lat=d._latency;
-    if(u||lat){ var c=aiCost(u);
-      h+='<div class="aiobs">'+(u?'tokens '+(u.total_tokens||((u.prompt_tokens||0)+(u.completion_tokens||0))):'')+(c!=null?' · ~$'+c.toFixed(4):'')+(lat?' · '+(lat/1000).toFixed(1)+'s':'')+(d._critique?' · self-critique on':'')+' · '+esc(d._model||'llama-3.3-70b')+'</div>'; }
-    h+='<div class="hint" style="margin-top:10px">AI never invents numbers, employers or skills; anything it suggests stays fully editable via ✎ Edit.</div>';
-    aiUI(h);
-  }
-  window.aiReview=async function(){
-    if(!CUR){ aiUI('<div class="hint">Run the analysis first.</div>'); return; }
-    var cv=CUR.cvBase||CUR.cv, bl=[];
-    (cv.experience||[]).forEach(function(e,i){(e.bullets||[]).forEach(function(t,j){bl.push({id:"e"+i+":"+j,text:t});});});
-    (cv.projects||[]).forEach(function(p,i){(p.bullets||[]).forEach(function(t,j){bl.push({id:"p"+i+":"+j,text:t});});});
-    bl=bl.slice(0,12);
-    if(window.__AI_FAKE){ renderAI(window.__AI_FAKE,bl); return; }   /* UI test hook (owner's browser only) */
-    if(!SB||!AUTH_USER){ aiUI('<div class="hint">Sign in to use AI review.</div>'); return; }
-    aiUI('<div class="hint"><span class="spin"></span>AI is reading your résumé against the JD, then critiquing its own rewrites… (~8s)</div>');
-    var __t0=(window.performance&&performance.now)?performance.now():0;
-    try{
-      var res=await SB.functions.invoke("ai",{body:{mode:"review",critique:true,company:CUR.company||"",role:CUR.role||"",jd:val("inJD").slice(0,5000),summary:(cv.summary||"").slice(0,600),skills:(cv.skills||[]).flatMap(function(g){return g.items||[]}).slice(0,30),bullets:bl,missing:(CUR.buckets&&CUR.buckets.reqMiss||[]).slice(0,8),years:(CUR.have&&CUR.have.years)||0,exp:(cv.experience||[]).slice(0,3).map(function(e){return {role:e.role||"",org:e.org||"",dates:e.dates||""};})}});
-      if(res.error){ var st=res.error.context&&res.error.context.status;
-        if(st===429){ aiUI('<div class="hint">⏳ Daily AI limit reached — try again tomorrow. The deterministic analysis above keeps working.</div>'); }
-        else if(st===404){ aiUI('<div class="hint">AI backend isn\'t live yet — the deterministic analysis above still has you covered.</div>'); }
-        else { aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
-        return; }
-      var data=res.data||{}; if(__t0)data._latency=Math.round(performance.now()-__t0); renderAI(data,bl);
-    }catch(e){ aiUI('<div class="hint">AI is unreachable right now — the deterministic analysis above still has you covered. <button class="sm ghost" onclick="aiReview()">Retry</button></div>'); }
-  };
-  window.aiApply=function(i){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r||!CUR)return;
-    var m=r.id.match(/^([ep])(\d+):(\d+)$/); if(!m)return;
-    var list=(m[1]==="e"?(CUR.cvBase&&CUR.cvBase.experience):(CUR.cvBase&&CUR.cvBase.projects)); var it=list&&list[+m[2]]; if(!it||!it.bullets||it.bullets[+m[3]]==null)return;
-    it.bullets[+m[3]]=r.text;
-    try{ CUR.cv=buildDisplayCv(); renderResume(); }catch(e){}
-    var c=$("aic"+i); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} }
-  };
-  window.aiCopy=function(i,btn){ var r=AI_LAST&&AI_LAST.rws[i]; if(!r)return; navigator.clipboard&&navigator.clipboard.writeText(r.text); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
-  window.aiApplySummary=function(){ var s=AI_LAST&&AI_LAST.summary; if(!s||!CUR)return;
-    if(CUR.cvBase)CUR.cvBase.summary=s; if(CUR.cv)CUR.cv.summary=s;
-    try{ CUR.cv=buildDisplayCv(); renderResume(); }catch(e){}
-    var c=$("aicsum"); if(c){ c.classList.add("applied"); var btn=c.querySelector("button"); if(btn){btn.textContent="✓ Applied";btn.disabled=true;} } };
-  window.aiCopySummary=function(btn){ var s=AI_LAST&&AI_LAST.summary; if(!s)return; navigator.clipboard&&navigator.clipboard.writeText(s); if(btn){var o=btn.textContent;btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=o;},1200);} };
+    var cand=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(x){return x&&byId[x.id];});
+    var rws=cand.map(function(x){return {id:x.id,text:deSlop(String(x.text||"").trim())};})
+                .filter(function(x){return validRewrite(byId[x.id],x.text)&&slopFree(x.text,byId[x.id]);}).slice(0,12);
+    var sumNew="",sc=sumContext();
+    if(mode==="review"&&typeof d.summary==="string")sumNew=deSlop(d.summary.trim());
+    if(mode==="humanize"){ var s0=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(x){return x&&x.id==="sum";})[0];
+      if(s0)sumNew=deSlop(String(s0.text||"").trim()); rws=rws.filter(function(x){return x.id!=="sum";}); }
+    var sumOK=!!(sumNew&&slopFree(sumNew,sc.src)&&validSummary(sc.src,sumNew,sc.years,sc.role,sc.realTitle));
+    if(!rws.length&&!sumOK){ aiMsg("aiCvMsg",cand.length?"The truthfulness guardrail rejected every suggestion (changed numbers or slop wording) — nothing was applied.":"AI didn't find anything to improve — your résumé already reads well for this JD."); return; }
+    AI_UNDO=JSON.stringify(CUR.cvBase); AI_UNDO_RUN=CUR;
+    rws.forEach(function(x){ var m=x.id.match(/^([ep])(\d+):(\d+)$/); if(!m)return;
+      var list=(m[1]==="e"?CUR.cvBase.experience:CUR.cvBase.projects); var it=list&&list[+m[2]];
+      if(it&&it.bullets&&it.bullets[+m[3]]!=null)it.bullets[+m[3]]=x.text; });
+    if(sumOK)CUR.cvBase.summary=sumNew;
+    try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
+    AI_AFTER=JSON.stringify(CUR.cvBase); AI_UNDO_FORCE=0;
+    var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,3);
+    aiMsg("aiCvMsg",'✦ Applied '+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
+      (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+
+      ' <button class="sm ghost" onclick="aiUndoAll()">Undo</button>'+
+      (tips.length?'<div style="margin-top:6px">'+tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("")+'</div>':"")); }
+  window.aiImproveAll=function(){ aiBulk("review"); };
+  window.aiHumanizeResume=function(){ aiBulk("humanize"); };
+  window.aiUndoAll=function(){ if(!AI_UNDO||!CUR)return;
+    if(AI_UNDO_RUN!==CUR){ aiMsg("aiCvMsg","That undo expired — a new analysis was run since."); AI_UNDO=null; return; }
+    if(AI_AFTER&&JSON.stringify(CUR.cvBase)!==AI_AFTER&&!AI_UNDO_FORCE){ AI_UNDO_FORCE=1;
+      aiMsg("aiCvMsg","You've edited since the AI pass — Undo discards those edits too. <button class=\"sm ghost\" onclick=\"aiUndoAll()\">Undo anyway</button>"); return; }
+    AI_UNDO_FORCE=0;
+    try{ CUR.cvBase=JSON.parse(AI_UNDO); CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
+    AI_UNDO=null; aiMsg("aiCvMsg","↩ Reverted — your previous wording is back."); };
+
+  /* ---- ✦ Humanize the whole cover letter (prose only — the signature/contact block never goes to the AI) ---- */
+  window.aiHumanizeCover=async function(){ if(!CUR||!CUR.cover){ aiMsg("aiClMsg","Run the analysis first."); return; }
+    var doc=document.getElementById("coverDoc");
+    if(doc&&doc.dataset&&doc.dataset.dirty==="1"){ aiMsg("aiClMsg","Finish manual editing first (✓ Done) — Humanize would overwrite your changes."); return; }
+    var run0=CUR;
+    var cover=String(CUR.cover); var cut=cover.indexOf("\n\nBest regards,");
+    var prose=cut>=0?cover.slice(0,cut):cover, sig=cut>=0?cover.slice(cut):"";
+    var cv=CUR.cvBase||CUR.cv;
+    aiMsg("aiClMsg",'<span class="spin"></span>AI is rewording the letter in a human voice — your facts, numbers and signature stay…');
+    var d=null;
+    if(window.__AI_FAKE_COVER){ d=window.__AI_FAKE_COVER; }
+    else{ if(!SB||!AUTH_USER){ aiMsg("aiClMsg","Sign in to use AI editing."); return; }
+      try{ var r=await SB.functions.invoke("ai",{body:Object.assign({mode:"cover",cover:prose.slice(0,2600),tone:"balanced"},aiGround(cv))});
+        if(r.error){ var st=r.error.context&&r.error.context.status;
+          aiMsg("aiClMsg",(st===429)?"⏳ Daily AI limit reached — try again tomorrow.":(st===404)?"AI backend isn't deployed yet — the deterministic letter stands.":"AI is unreachable right now — try again in a moment."); return; }
+        d=r.data||{};
+      }catch(e){ aiMsg("aiClMsg","AI is unreachable right now — try again in a moment."); return; } }
+    /* the await freed the event loop — never write a Company-A letter into a Company-B analysis */
+    if(CUR!==run0){ aiMsg("aiClMsg","That Humanize expired — a new analysis ran while it was working. Nothing was changed."); return; }
+    var cd2=document.getElementById("coverDoc");
+    if(cd2&&cd2.dataset&&cd2.dataset.dirty==="1"){ aiMsg("aiClMsg","You started manual edits while AI was working — nothing was applied, so they stay safe."); return; }
+    var nw=(typeof d.cover==="string")?deSlop(d.cover.trim()):"";
+    if(!nw){ aiMsg("aiClMsg",(d&&d._v===2)?"The server-side truthfulness guard rejected the AI version — the deterministic letter stands.":"The AI backend returned an unexpected shape — it may need a re-deploy. The deterministic letter stands."); return; }
+    var sc=sumContext(); var allowed=digitRuns(sc.src+" "+prose+" "+String(Math.round(sc.years*10)/10));
+    if(!slopFree(nw,sc.src+" "+prose)||nw.length<200||nw.length>2600||!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;})){
+      aiMsg("aiClMsg","The guardrail rejected the AI version (changed numbers or slop wording) — the deterministic letter stands."); return; }
+    AI_UNDO_COVER=cover; AI_UNDO_COVER_RUN=CUR;
+    CUR.cover=sanitizeCover(nw)+sig;
+    try{ renderCover(); }catch(e){}
+    aiMsg("aiClMsg",'✦ Letter humanized — facts and signature untouched. <button class="sm ghost" onclick="aiUndoCover()">Undo</button>'); };
+  window.aiUndoCover=function(){ if(!AI_UNDO_COVER||!CUR)return;
+    if(AI_UNDO_COVER_RUN!==CUR){ aiMsg("aiClMsg","That undo expired — a new analysis was run since."); AI_UNDO_COVER=null; return; }
+    CUR.cover=AI_UNDO_COVER; AI_UNDO_COVER=null; try{ renderCover(); }catch(e){} aiMsg("aiClMsg","↩ Reverted to the previous letter."); };
+
+  /* ---- verified contacts (Apollo.io behind the edge fn; the outreach section calls __outArm after render) ---- */
+  window.__outArm=function(){ var box=document.getElementById("outContacts"); if(!box)return;
+    if(!SB){ box.innerHTML=""; return; }
+    if(OUT_HTML&&OUT_RUN===CUR){ box.innerHTML=OUT_HTML; return; }   /* keep fetched contacts across outreach re-renders (tips etc.) */
+    box.innerHTML='<div class="row" style="margin-top:9px"><button class="sm ghost" onclick="outContacts()">🔎 Find verified contacts</button></div>'+
+      '<div class="hint" id="outCMsg" style="display:none;margin-top:6px"></div><div id="outCList"></div>'; };
+  window.outContacts=async function(){ if(!CUR)return; var list=$("outCList");
+    function m(h){ aiMsg("outCMsg",h); }
+    if(!AUTH_USER){ m("Sign in to fetch verified contacts — the search links above work without it."); return; }
+    m('<span class="spin"></span>Searching current employees via Apollo…'); if(list)list.innerHTML="";
+    var titles=((roleFamily().mgr)||[]).concat(RECRUITER_TITLES).slice(0,8);
+    var locs=candidateLocs(CUR.cv||{});
+    try{ var r=await SB.functions.invoke("ai",{body:{mode:"contacts",company:normCompany(CUR.company||""),titles:titles,locations:locs}});
+      if(r.error){ var st=r.error.context&&r.error.context.status;
+        m((st===429)?"⏳ Daily AI limit reached — try again tomorrow.":(st===404)?"Backend isn't deployed yet — use the search links above.":"Contact search is unreachable right now — use the links above."); return; }
+      var d=r.data||{};
+      if(d.error==="no_apollo"){ m("Not configured yet — add an <b>APOLLO_API_KEY</b> secret to the edge function to enable live contact search. The links above work today."); return; }
+      if(d.error){ m("Apollo couldn't complete the search — use the links above."); return; }
+      var cs=Array.isArray(d.contacts)?d.contacts.slice(0,8):null;
+      if(!cs){ m("Backend needs the latest update — use the search links above."); return; }
+      /* belt-and-braces: only show people whose company actually matches (Apollo name-matching can drift) */
+      var want=normCompany(CUR.company||"").toLowerCase();
+      if(want)cs=cs.filter(function(p){ var pc=String(p.company||"").toLowerCase(); return !pc||pc.indexOf(want)>=0||want.indexOf(pc)>=0; });
+      if(!cs.length){ m("No matching current employees found via Apollo — the search links above cast a wider net."); return; }
+      m('<b>Live from Apollo</b> — current employees matching hiring-manager/recruiter titles'+(locs.length?' near '+esc(locs.join(", ")):'')+':');
+      if(list)list.innerHTML=cs.map(function(p){ var lk=p.linkedin?safeUrl(p.linkedin):"";
+        return '<div class="aicard" style="padding:9px 12px;margin:7px 0"><b>'+esc(p.name||"")+'</b> — '+esc(p.title||"")+(p.city?' · '+esc(p.city):'')+(lk?' · <a href="'+esc(lk)+'" target="_blank" rel="noopener">Profile ↗</a>':'')+'</div>'; }).join("");
+      var bx=document.getElementById("outContacts"); if(bx){ OUT_HTML=bx.innerHTML; OUT_RUN=CUR; }
+    }catch(e){ m("Contact search is unreachable right now — use the links above."); } };
+
   /* one-time setup: run __seedKB() in the browser console while signed in to populate the pgvector knowledge base */
   window.__seedKB=async function(){ if(!SB){console.log("no Supabase client");return;} console.log("seeding KB (batched)…");
     let off=0,total=0,seeded=0; for(let guard=0;guard<30;guard++){ const r=await SB.functions.invoke("ai",{body:{mode:"seed",offset:off}});
