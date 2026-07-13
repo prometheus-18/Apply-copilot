@@ -362,7 +362,7 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><button class="sm ghost" id="aiAllBtn" onclick="if(window.aiImproveAll)aiImproveAll()">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" onclick="if(window.aiHumanizeResume)aiHumanizeResume()">✦ Humanize</button><button class="sm ghost" id="editBtn" onclick="toggleEdit('resumeDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadResume()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('resumeDoc',this)">Copy text</button></div></div>
+        <div class="row"><button class="sm ghost" id="resetBtn" onclick="resetResume()" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" onclick="if(window.aiImproveAll)aiImproveAll()">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" onclick="if(window.aiHumanizeResume)aiHumanizeResume()">✦ Humanize</button><button class="sm ghost" id="editBtn" onclick="toggleEdit('resumeDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadResume()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('resumeDoc',this)">Copy text</button></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="resumeDoc"></div>
       <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div>
@@ -833,7 +833,7 @@ function detCover(c,r,cv){ cv=cv||{};
   const quant=(allB.filter(b=>/\d/.test(b)).sort((a,b)=>b.length-a.length)[0])||allB[0]||"";
   const proj=(cv.projects||[])[0]||null;
 
-  const p1="Dear Hiring Team,\n\nI'm writing to apply for "+(rt?"the "+rt+" position":"this position")+(hasCo?" at "+company:"")+". I'm "+(realTitle?"a "+realTitle:"a professional")+(org?" at "+org:"")+(yrs?" with "+yrs+"experience":"")+", and the work this role centers on is the work I do every day"+(skillPhrase?" — most of all "+skillPhrase:"")+".";
+  const p1="Dear Hiring Team,\n\nI'm writing to apply for "+(rt?"the "+rt+" position":"this position")+(hasCo?" at "+company:"")+". I'm "+(realTitle?"a "+realTitle:"a professional")+(org?" at "+org:"")+(yrs?" with "+yrs+"experience":"")+", and the work this role centers on is the work I do every day"+(skillPhrase?", most of all "+skillPhrase:"")+".";
 
   /* p2 mirrors the candidate's CURRENT summary (minus the identity/objective sentences p1 already covers),
      so summary tweaks — accepted tips, AI rewrites, manual edits — flow straight into the letter.
@@ -877,7 +877,9 @@ function run(){
   tab("kw");
   runStages(()=>{ const res=analyze(company,role,jd);
     if(!res){ btn.disabled=false; btn.innerHTML="▶ Run analysis & tailor"; document.getElementById("kwRun").style.display="none"; document.getElementById("kwEmpty").style.display="block"; flash("inMsg","Couldn't read your résumé — re-upload it in ⓪ Master.",6000); tab("mr"); return; }
-    CUR=Object.assign({url},res); CUR.cvBase=JSON.parse(JSON.stringify(res.cv)); CUR.added=[]; renderAll();
+    CUR=Object.assign({url},res); CUR.cvBase=JSON.parse(JSON.stringify(res.cv)); CUR.added=[];
+    CUR.cv0=JSON.parse(JSON.stringify(res.cv));   /* pristine snapshot — powers "↺ Original" */
+    renderAll();
     document.getElementById("kwRun").style.display="none"; document.getElementById("kwBody").style.display="block";
     btn.disabled=false; btn.innerHTML="▶ Run analysis & tailor"; flash("inMsg","Done — original score in ① Fit, tailored résumé in ② Résumé →",7000);
   }); }
@@ -966,6 +968,11 @@ function updateProjected(){ if(!CUR)return; const added=CUR.added||[],b=CUR.buck
   const cv=buildDisplayCv(); let t=scoreArrangement(nb,CUR.need,CUR.have,structureScore(cv),zoneOf(cv)); if(t.score<CUR.orig.score)t.score=CUR.orig.score; CUR.tail=t;
   const el=document.getElementById("scoreTail"); if(el)el.textContent=t.score; const bar=document.getElementById("barTail"); if(bar)bar.style.width=t.score+"%";
   const d=document.getElementById("scoreDelta"); if(d)d.innerHTML=added.length?('▲ +'+(t.score-CUR.orig.score)+' incl. your accepted additions'):(t.score>CUR.orig.score?'▲ +'+(t.score-CUR.orig.score)+' from surfacing matched keywords':'Same keywords — reordered for impact'); }
+/* "↺ Original" — restore the résumé exactly as analyze() generated it (AI + manual tweaks discarded;
+   accepted keyword tips are kept — they live in CUR.added and re-apply via buildDisplayCv) */
+function resetResume(){ if(!CUR||!CUR.cv0)return;
+  if(!confirm("Restore the originally generated résumé? AI and manual tweaks will be discarded (your accepted keyword tips are kept)."))return;
+  CUR.cvBase=JSON.parse(JSON.stringify(CUR.cv0)); CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }
 function viewTailored(){ if(CUR){ const d=document.getElementById("resumeDoc");
   if(d&&d.dataset&&d.dataset.dirty==="1"&&!confirm("Rebuild the tailored résumé? Your manual edits in the document will be discarded."))
     { tab("cv"); return; }
