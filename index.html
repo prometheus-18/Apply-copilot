@@ -3,7 +3,7 @@
 {
   "name": "Apply Copilot",
   "schemaVersion": 1,
-  "description": "Sign in, upload your résumé once (any template — two-column, LaTeX, academic, multi-page), paste any job → honest ATS fit score, a tailored ATS-safe résumé + cover letter that stay in sync as you edit, inline ✦ AI editing with tone presets and a humanizer (never invents facts), LinkedIn outreach with current-employee search, and a WebGL space UI."
+  "description": "Sign in, upload your résumé once (any template — two-column, LaTeX, academic, multi-page), paste any job → honest ATS fit score, a tailored ATS-safe résumé + cover letter that stay in sync as you edit — experience and projects always come out as concise recruiter-style bullet points (never paragraphs), inline ✦ AI editing with tone presets and a humanizer (never invents facts), LinkedIn outreach with current-employee search, and a WebGL space UI."
 }
 </script>
 <html lang="en">
@@ -247,17 +247,17 @@
 <div id="progress"></div>
 
 <nav class="nav">
-  <div class="nbrand" onclick="tab('top')">Apply Co·Pilot</div>
+  <div class="nbrand" data-act="tab" data-arg="top">Apply Co·Pilot</div>
   <div class="nright">
     <div class="nlinks">
-      <a data-t="mr" onclick="tab('mr')">⓪ Master Résumé</a>
-      <a data-t="job" onclick="tab('job')">◆ Job Description</a>
-      <a data-t="kw" onclick="tab('kw')">① ATS Score</a>
-      <a data-t="cv" onclick="tab('cv')">② Custom Résumé</a>
-      <a data-t="cl" onclick="tab('cl')">③ Cover Letter</a>
-      <a data-t="out" onclick="tab('out')">④ LinkedIn Outreach</a>
-      <a data-t="trk" onclick="tab('trk')">⑤ Job Tracker</a>
-      <a data-t="find" onclick="tab('find')">⑥ Find Jobs</a>
+      <a data-t="mr" data-act="tab" data-arg="mr">⓪ Master Résumé</a>
+      <a data-t="job" data-act="tab" data-arg="job">◆ Job Description</a>
+      <a data-t="kw" data-act="tab" data-arg="kw">① ATS Score</a>
+      <a data-t="cv" data-act="tab" data-arg="cv">② Custom Résumé</a>
+      <a data-t="cl" data-act="tab" data-arg="cl">③ Cover Letter</a>
+      <a data-t="out" data-act="tab" data-arg="out">④ LinkedIn Outreach</a>
+      <a data-t="trk" data-act="tab" data-arg="trk">⑤ Job Tracker</a>
+      <a data-t="find" data-act="tab" data-arg="find">⑥ Find Jobs</a>
     </div>
     <div class="nacct" id="nacct"></div>
   </div>
@@ -274,16 +274,16 @@
       <div class="authcard panel">
         <div class="seclabel" id="authTitle">Create your free account</div>
         <label class="fld">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
-        <label class="fld">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSubmit()">
+        <label class="fld">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="new-password" data-enter="authSubmit">
         <div class="authmsg" id="authMsg"></div>
-        <button class="primary" id="authGo" onclick="authSubmit()" style="width:100%;margin-top:13px">Create account</button>
-        <div class="hint" style="margin-top:13px;text-align:center">Already have an account? <a id="authToggle" onclick="authToggleMode()">Sign in →</a></div>
+        <button class="primary" id="authGo" data-act="authSubmit" style="width:100%;margin-top:13px">Create account</button>
+        <div class="hint" style="margin-top:13px;text-align:center">Already have an account? <a id="authToggle" data-act="authToggle">Sign in →</a></div>
         <div class="hint" id="authIntro" style="margin-top:9px;text-align:center">Free · your résumé &amp; tracker sync across all your devices.</div>
       </div>
     </div>
 
     <!-- signed in: CTA into the app -->
-    <div class="heroCTA row" style="justify-content:center;gap:10px;margin-top:42px"><button class="primary" onclick="tab('mr')">Get started ↓</button><button onclick="tab('job')">Paste a job</button></div>
+    <div class="heroCTA row" style="justify-content:center;gap:10px;margin-top:42px"><button class="primary" data-act="tab" data-arg="mr">Get started ↓</button><button data-act="tab" data-arg="job">Paste a job</button></div>
 
     <div class="hdesc">Your résumé, tailored to any job. Upload once, paste a job description — get an honest ATS fit score, then a custom résumé &amp; cover letter as a real PDF with clickable links.</div>
     <div class="scrollcue">scroll to begin ↓</div>
@@ -297,18 +297,18 @@
       <div class="drop">
         <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⬆ UPLOAD ]</div>
         <div style="margin:7px 0"><b>Upload your résumé</b> (PDF or TXT)</div>
-        <input type="file" id="mFileIn" accept=".pdf,.txt" onchange="onResumeFile(this)" style="max-width:320px;margin:0 auto">
+        <input type="file" id="mFileIn" accept=".pdf,.txt" data-chg="resumeFile" style="max-width:320px;margin:0 auto">
         <div class="hint" id="imMsg" style="margin-top:9px"></div>
       </div>
       <label class="fld" style="margin-top:11px">…or paste your résumé text, then “Set as master”</label>
       <textarea id="mPaste" class="short" placeholder="Paste the full text of your résumé…"></textarea>
-      <div class="row" style="margin-top:8px"><button class="sm" onclick="setMasterFromPaste()">Set as master</button><button class="sm ghost" onclick="loadSample()">Load a sample</button></div>
+      <div class="row" style="margin-top:8px"><button class="sm" data-act="setMasterFromPaste">Set as master</button><button class="sm ghost" data-act="loadSample">Load a sample</button></div>
     </div>
     <div id="mSet" style="display:none">
       <div class="box ok">
         <h5 class="ok5">✓ Master résumé set <span class="hint" id="mMeta"></span></h5>
         <div class="mono" id="mPreview" style="max-height:210px"></div>
-        <div class="row" style="margin-top:10px"><button class="sm" onclick="replaceMaster()">↻ Replace (upload new)</button><button class="sm ghost" onclick="clearMaster()">✕ Clear</button><span class="hint" id="mMsg"></span></div>
+        <div class="row" style="margin-top:10px"><button class="sm" data-act="replaceMaster">↻ Replace (upload new)</button><button class="sm ghost" data-act="clearMaster">✕ Clear</button><span class="hint" id="mMsg"></span></div>
       </div>
     </div>
     <div class="hint" style="margin-top:8px">100% PRIVATE — everything stays on this device — your résumé, the tailored output, and your tracker live only in your browser.</div>
@@ -323,7 +323,7 @@
     </div>
     <label class="fld">Job URL (optional · for the apply link)</label><input type="text" id="inUrl" placeholder="https://…">
     <label class="fld">Full job description</label><textarea id="inJD" placeholder="Paste the entire JD here…"></textarea>
-    <div class="row" style="margin-top:13px"><button id="goBtn" class="primary" onclick="run()">▶ Run analysis &amp; tailor</button><button class="ghost sm" onclick="loadSampleJD()">Sample JD</button></div>
+    <div class="row" style="margin-top:13px"><button id="goBtn" class="primary" data-act="run">▶ Run analysis &amp; tailor</button><button class="ghost sm" data-act="loadSampleJD">Sample JD</button></div>
     <div class="hint" id="inMsg" style="margin-top:9px"></div>
   </div></section>
 
@@ -350,7 +350,7 @@
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
       <div class="box" id="recBox" style="display:none"><h5>// Tips to raise your score</h5><ol id="kwRecs" style="margin:0;padding-left:18px"></ol></div>
       <div class="hint" id="recNote" style="display:none;color:var(--acc);margin:6px 0">✓ Accepted keywords will be woven into your résumé when you view it.</div>
-      <div class="row" style="margin-top:6px"><button class="sm primary" onclick="viewTailored()">→ View tailored résumé</button><button class="sm ghost" onclick="tab('cl')">→ Cover letter</button></div>
+      <div class="row" style="margin-top:6px"><button class="sm primary" data-act="viewTailored">→ View tailored résumé</button><button class="sm ghost" data-act="tab" data-arg="cl">→ Cover letter</button></div>
     </div>
   </div></section>
 
@@ -360,7 +360,7 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><button class="sm ghost" id="resetBtn" onclick="resetResume()" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" onclick="if(window.aiImproveAll)aiImproveAll()">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" onclick="if(window.aiHumanizeResume)aiHumanizeResume()">✦ Humanize</button><button class="sm ghost" id="editBtn" onclick="toggleEdit('resumeDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadResume()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('resumeDoc',this)">Copy text</button></div></div>
+        <div class="row"><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" data-act="aiHumanizeResume">✦ Humanize</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="resumeDoc"></div>
       <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div>
@@ -373,7 +373,7 @@
     <div id="clEmpty" class="empty">Run analysis to generate a matching cover letter.</div>
     <div id="clBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Cover letter</div>
-        <div class="row"><button class="sm ghost" id="aiHumClBtn" onclick="if(window.aiHumanizeCover)aiHumanizeCover()">✦ Humanize</button><button class="sm ghost" id="editBtnCl" onclick="toggleEdit('coverDoc',this)">✎ Edit</button><button class="sm primary" onclick="downloadCover()">⬇ Download PDF</button><button class="sm ghost" onclick="copyDoc('coverDoc',this)">Copy</button></div></div>
+        <div class="row"><button class="sm ghost" id="aiHumClBtn" data-act="aiHumanizeCover">✦ Humanize</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc">Copy</button></div></div>
       <div class="hint" id="aiClMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="coverDoc"></div>
       <div class="hint" style="margin-top:7px">The letter follows your résumé live — accepted keywords, AI rewrites and summary edits flow into it. <b>✦ Humanize</b> rewrites the prose in a natural voice (your facts and numbers stay untouched); while editing, click any paragraph for the <b>✦ AI edit</b> popup.</div>
@@ -390,7 +390,7 @@
   <section class="step" id="pane-trk"><div class="wm reveal" aria-hidden="true">Tracker</div><div class="panel reveal">
     <div class="seclabel">⑤ · Job Tracker</div>
     <div class="row" id="trkStats" style="gap:8px;margin-bottom:8px"></div>
-    <div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="hint">Saved in your browser · export opens in <b>Excel</b> &amp; <b>Google Sheets</b>.</div><div class="row"><button class="sm ghost" onclick="copyTrk(this)">⧉ Copy for Sheets</button><button class="sm primary" onclick="exportCSV()">⬇ Export CSV</button></div></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="hint">Saved in your browser · export opens in <b>Excel</b> &amp; <b>Google Sheets</b>.</div><div class="row"><button class="sm ghost" data-act="copyTrk">⧉ Copy for Sheets</button><button class="sm primary" data-act="exportCSV">⬇ Export CSV</button></div></div>
     <div style="overflow:auto"><table id="trkTbl"><thead><tr><th>Date</th><th>Company / Role</th><th>Stage</th><th>Next</th><th>Notes</th><th></th></tr></thead><tbody id="trkRows"></tbody></table></div>
   </div></section>
 
@@ -402,7 +402,7 @@
       <div><label class="fld">Role</label><input type="text" id="fjRole" placeholder="e.g. Data Analyst"></div>
       <div><label class="fld">Location</label><input type="text" id="fjLoc" placeholder="e.g. Bengaluru · Remote"></div>
     </div>
-    <div class="row" style="margin-top:11px"><button class="sm" onclick="findJobs('li')">LinkedIn ↗</button><button class="sm ghost" onclick="findJobs('in')">Indeed ↗</button><button class="sm ghost" onclick="findJobs('na')">Naukri ↗</button></div>
+    <div class="row" style="margin-top:11px"><button class="sm" data-act="findJobs" data-arg="li">LinkedIn ↗</button><button class="sm ghost" data-act="findJobs" data-arg="in">Indeed ↗</button><button class="sm ghost" data-act="findJobs" data-arg="na">Naukri ↗</button></div>
   </div></section>
 
   <!-- SUPPORT -->
@@ -424,6 +424,35 @@
 function val(id){ const e=document.getElementById(id); return e?(e.value||""):""; }
 function set(id,v){ const e=document.getElementById(id); if(e)e.value=(v==null?"":v); }
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+/* ===== CSP-safe actions — MV3 extension pages ban inline on*= handlers. Controls carry
+   data-act (click) / data-chg (change) / data-enter (keydown Enter); one document-level
+   listener per event dispatches through this allowlist. Later blocks register via window.__act.
+   Convention: never nest a data-act element inside another (closest() would fire only the inner one). ===== */
+const ACT={};
+window.__act=function(m){ Object.assign(ACT,m); };
+function actRun(attr,ev){ const n=ev.target&&ev.target.closest?ev.target.closest("["+attr+"]"):null;
+  const f=n&&ACT[n.getAttribute(attr)]; if(f)f(n,ev); }
+document.addEventListener("click",function(ev){ actRun("data-act",ev); });
+document.addEventListener("change",function(ev){ actRun("data-chg",ev); });
+document.addEventListener("keydown",function(ev){ if(ev.key==="Enter")actRun("data-enter",ev); });
+window.__act({
+  tab:function(el){ tab(el.dataset.arg); }, findJobs:function(el){ findJobs(el.dataset.arg); },
+  setMasterFromPaste:function(){ setMasterFromPaste(); }, loadSample:function(){ loadSample(); },
+  replaceMaster:function(){ replaceMaster(); }, clearMaster:function(){ clearMaster(); },
+  run:function(){ run(); }, loadSampleJD:function(){ loadSampleJD(); },
+  viewTailored:function(){ viewTailored(); }, resetResume:function(){ resetResume(); },
+  edit:function(el){ toggleEdit(el.dataset.arg,el); }, copyDoc:function(el){ copyDoc(el.dataset.arg,el); },
+  downloadResume:function(){ downloadResume(); }, downloadCover:function(){ downloadCover(); },
+  copyTrk:function(el){ copyTrk(el); }, exportCSV:function(){ exportCSV(); }, cpText:function(el){ cpText(el); },
+  acceptTip:function(el){ acceptTip(+el.dataset.i); },
+  saveLink:function(){ saveLink(); }, openLinkUrl:function(){ openLinkUrl(); }, removeLink:function(){ removeLink(); },
+  logApp:function(){ logApp(); }, delApp:function(el){ delApp(+el.dataset.i); },
+  upd:function(el){ upd(+el.dataset.i,el.dataset.k,el.value); },
+  resumeFile:function(el){ onResumeFile(el); },
+  aiImproveAll:function(){ if(window.aiImproveAll)window.aiImproveAll(); },
+  aiHumanizeResume:function(){ if(window.aiHumanizeResume)window.aiHumanizeResume(); },
+  aiHumanizeCover:function(){ if(window.aiHumanizeCover)window.aiHumanizeCover(); },
+});
 /* ===== shared refinement helpers (name casing · URL safety · company/domain · cover sanitize) ===== */
 function capWord(w){ return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w; }
 /* "RAHUL VERMA" -> "Rahul Verma"; keep already-valid mixed case (McDonald, DeVry) + O'Brien / Jean-Luc */
@@ -517,7 +546,7 @@ function mergeLinkAnnots(items,annots){
   return s;
 }
 async function extractPdfText(f){ if(!window.pdfjsLib||window.__noPdfJs)throw new Error("pdf.js unavailable");
-  try{window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}catch(e){}
+  try{window.pdfjsLib.GlobalWorkerOptions.workerSrc=window.__pdfWorkerSrc||"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}catch(e){}
   const pdf=await window.pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise; let out=[];
   for(let i=1;i<=pdf.numPages;i++){ const p=await pdf.getPage(i); const tc=await p.getTextContent();
     let annots=[]; try{ annots=(await p.getAnnotations()).filter(a=>a&&a.subtype==="Link"&&(a.url||a.unsafeUrl)).map(a=>({url:a.url||a.unsafeUrl,rect:a.rect})); }catch(e){}
@@ -539,6 +568,23 @@ function cleanName(c){ const lines=String(c||"").replace(/\r/g,"").split("\n").s
 function lastHeaderStart(region){ let last=-1,m,re=/[.!?)’"']\s+(?=[A-Z(])/g; while((m=re.exec(region)))last=m.index+m[0].length; return last<0?0:last; }
 function firstBulletIdx(s){ const m=s.match(/\s[–—•·▪]\s/); return m?m.index:-1; }
 function splitBullets(s){ s=String(s||"").trim(); if(!s)return[]; return s.split(/\s[–—•·▪]\s+/).map(x=>tidy(x.replace(/^[–—•·▪\s]+/,""))).filter(b=>b.length>8).slice(0,12); }
+/* recruiter-style bullets (analyze()-only — NEVER in buildDisplayCv/AI paths: aiMap addresses cvBase bullets by index):
+   split paragraph prose into ~15-30 word pointers at real sentence/clause boundaries only — never invents text.
+   Idempotent: anything ≤140 chars, or a single sentence ≤30 words, passes through byte-identical, so
+   re-uploading a generated PDF never re-fragments (tests/stress_pro.js [19]). */
+const ABBR_DOT=/\b(e\.g|i\.e|etc|vs|approx|est|Sr|Jr|St|Dr|Mr|Mrs|Ms|Prof|No|Fig|Ph\.D|B\.Tech|M\.Tech|B\.Sc|M\.Sc|B\.E|M\.E|Inc|Ltd|Pvt|Co)\.(?=\s)/g;
+const GERUNDS="reducing|improving|increasing|saving|boosting|cutting|delivering|driving|achieving|enabling|lifting|lowering";
+const CLAUSE_RE=new RegExp(";\\s+|,\\s+(?=(?:which|that|resulting in|leading to|"+GERUNDS+")\\b)|\\s+and\\s+(?=(?:"+GERUNDS+")\\b)|\\s-\\s(?=[A-Za-z])");
+function wn(s){ return s?String(s).trim().split(/\s+/).length:0; }
+function mergeShort(parts){ const out=[]; parts.map(p=>String(p||"").trim()).filter(Boolean).forEach(p=>{ if(out.length&&(wn(p)<6||p.length<40))out[out.length-1]+=" "+p; else out.push(p); }); if(out.length>1&&(wn(out[0])<6||out[0].length<40)){ out[1]=out[0]+" "+out[1]; out.shift(); } return out; }
+function polishBullet(f){ f=tidy(f).replace(/^[\s,;:·•|-]+/,"").replace(/^(?:(?:and|also|then|which|that|thereby|thus|additionally|plus)\s+)+/i,"").replace(/^(?:i|we|my|our)\s+(?:(?:have|had|also)\s+)?/i,"").replace(/[\s,;:-]+$/,""); if(/^[a-z]/.test(f)&&!/^[a-z][A-Z0-9]/.test(f))f=f.charAt(0).toUpperCase()+f.slice(1); return lcSentence(f); }
+function splitProse(b){ b=tidy(String(b||"")); if(b.length<=140)return b?[b]:[];
+  let parts=b.replace(ABBR_DOT,"$1\u0002").replace(/([.!?])\s+(?=[A-ZÀ-Þ0-9"“])/g,"$1\u0001").split("\u0001").map(s=>s.replace(/\u0002/g,"."));
+  if(parts.length===1&&wn(b)<=30)return[b];
+  parts=mergeShort(parts).map(s=>wn(s)>30?mergeShort(s.split(CLAUSE_RE)):[s]).reduce((a,x)=>a.concat(x),[]);
+  if(parts.length<2)return[b];   /* honestly unsplittable — leave byte-identical */
+  return parts.map(polishBullet).filter(x=>x.length>8); }
+function normBullets(list){ const out=[],seen=new Set(); (list||[]).forEach(b=>splitProse(b).forEach(f=>{ const k=f.toLowerCase(); if(!seen.has(k)){seen.add(k);out.push(f);} })); return out.slice(0,12); }
 function splitRoleOrg(h){ h=h.replace(/\s+/g," ").trim(); const m=h.split(/\s[–—|]\s|\s-\s|\sat\s/i); return [(m[0]||"").trim(),(m.slice(1).join(" ").trim())]; }
 function normDate(s){ s=String(s||"").trim(); if(/present|current|now|ongoing/i.test(s))return"Present";
   const m=s.match(/([A-Za-z]{3,9})\.?\s*'?(\d{2,4})/); if(m){ const i=MFULL.findIndex(x=>x.toLowerCase().startsWith(m[1].slice(0,3).toLowerCase())); let y=m[2]; if(y.length===2)y=(+y>50?"19":"20")+y; return (i>=0?MFULL[i]+" ":"")+y; }
@@ -807,8 +853,10 @@ function analyze(company,role,jd){ const parsed=parseResume(M.raw); if(!parsed)r
   const allHave=buckets.reqHave.concat(buckets.prefHave);
   const cv=JSON.parse(JSON.stringify(parsed)); cv.title=tidy((role||cv.title||"").replace(/^\[.*?\]\s*/,""));
   if((cv.experience||[]).length>8)cv.experience=cv.experience.slice(0,8);   /* parse keeps ≤14 for honest scoring; render stays 1-page */
-  cv.experience=(cv.experience||[]).map(e=>{ const sc=(e.bullets||[]).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.map(x=>x.b).slice(0,6)}; });
-  cv.projects=(cv.projects||[]).slice(0,5).map(p=>({...p,bullets:(p.bullets||[]).slice(0,3)}));
+  /* recruiter-style pointers: prose → concise bullets BEFORE scoring, so fragments rank individually
+     (quantified ones float up via bulletScore's digit bonus) and the caps keep the most JD-relevant ones */
+  cv.experience=(cv.experience||[]).map(e=>{ const sc=normBullets(e.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.map(x=>x.b).slice(0,6)}; });
+  cv.projects=(cv.projects||[]).slice(0,5).map(p=>{ const sc=normBullets(p.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...p,bullets:sc.map(x=>x.b).slice(0,4)}; });
   cv.skills=(cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHas(b,jt)-jdHas(a,jt))}));
   cv.summary=tailoredSummary(parsed,cv.title,company,allHave,have.years);
   const orig=scoreArrangement(buckets,need,have,struct,zoneOf(parsed));
@@ -949,7 +997,7 @@ function renderKW(){ const o=CUR.orig,t=CUR.tail,b=CUR.buckets;
   document.getElementById("kwPref").innerHTML=pref.length?pref.join(""):'<span class="hint">No preferred-tier keywords detected.</span>';
   const recs=CUR.recs||[]; document.getElementById("recBox").style.display=recs.length?"block":"none"; CUR.added=CUR.added||[];
   document.getElementById("kwRecs").innerHTML=recs.map((x,i)=>{ const a=x.add&&x.add.length; const on=a&&x.add.every(k=>CUR.added.indexOf(k)>=0);
-    return '<li style="margin:6px 0;'+(a?"list-style:none":"")+'">'+(a?'<button class="sm '+(on?"primary":"ghost")+'" style="margin-right:9px;padding:4px 10px" onclick="acceptTip('+i+')">'+(on?"✓ Added":"＋ Add")+'</button>':"")+esc(x.t)+'</li>'; }).join("");
+    return '<li style="margin:6px 0;'+(a?"list-style:none":"")+'">'+(a?'<button class="sm '+(on?"primary":"ghost")+'" style="margin-right:9px;padding:4px 10px" data-act="acceptTip" data-i="'+i+'">'+(on?"✓ Added":"＋ Add")+'</button>':"")+esc(x.t)+'</li>'; }).join("");
   const note=document.getElementById("recNote"); if(note)note.style.display=(CUR.added.length?"block":"none");
   if(window.__aiReset)window.__aiReset(); }
 
@@ -1018,9 +1066,9 @@ function linkPopEl(){ if(_linkPop)return _linkPop;
     '<label>Display text</label><input id="lpText" type="text" autocomplete="off" spellcheck="false">'+
     '<label>URL</label><input id="lpUrl" type="text" autocomplete="off" spellcheck="false" placeholder="https://…">'+
     '<p class="lperr" id="lpErr"></p>'+
-    '<div class="lprow"><button class="lpsave" onclick="saveLink()">Save link</button>'+
-    '<button onclick="openLinkUrl()">Open</button>'+
-    '<button class="lpdel" onclick="removeLink()">Remove link</button></div>';
+    '<div class="lprow"><button class="lpsave" data-act="saveLink">Save link</button>'+
+    '<button data-act="openLinkUrl">Open</button>'+
+    '<button class="lpdel" data-act="removeLink">Remove link</button></div>';
   document.body.appendChild(p); _linkPop=p;
   document.addEventListener("mousedown",function(e){ if(!_linkPop||_linkPop.style.display!=="block")return;
     if(_linkPop.contains(e.target))return; if(e.target&&e.target.closest&&e.target.closest("#resumeDoc a"))return; closeLinkPop(); });
@@ -1110,12 +1158,12 @@ function renderOutreach(){ document.getElementById("outEmpty").style.display="no
       '<a target="_blank" href="'+liCo(c)+'"><button class="sm ghost">Company page</button></a></div>'+
       '<div class="hint" style="margin-top:6px"><b>Team peers</b> opens the company page’s People tab — it lists <b>current employees only</b> (if the company link misses, open Company page → People). Manager/recruiter searches are anchored to <b>'+esc(co)+'</b>'+(fam.fn?' and '+esc(fam.fn)+'-function titles':'')+(loc?', narrowed to <b>'+esc(loc)+'</b>':'')+'. On LinkedIn, add the <b>Current company</b>'+(locs.length?' and <b>Locations</b> ('+esc(locs.join(", "))+')':'')+' filters for the tightest match. Pick <b>2 max</b> — ideally the hiring manager + one team peer.</div>'+
       '<div id="outContacts"></div></div>'+
-    '<div class="box"><h5>🤝 Connection note <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(note)+'</div><div class="hint" style="margin-top:5px">'+note.length+'/300 characters — fits LinkedIn’s connection-note limit.</div></div>'+
-    '<div class="box"><h5>✉️ Referral email — '+esc(co)+' <button class="sm ghost" onclick="cpText(this)">Copy</button></h5>'+
+    '<div class="box"><h5>🤝 Connection note <button class="sm ghost" data-act="cpText">Copy</button></h5><div class="mono">'+esc(note)+'</div><div class="hint" style="margin-top:5px">'+note.length+'/300 characters — fits LinkedIn’s connection-note limit.</div></div>'+
+    '<div class="box"><h5>✉️ Referral email — '+esc(co)+' <button class="sm ghost" data-act="cpText">Copy</button></h5>'+
       '<div class="hint"><b>Pattern-inferred — unverified.</b> The domain <span class="pill">'+esc(dom)+'</span> is a best-effort guess from the company name; confirm the real domain, then a likely address is <span class="pill">first.last@'+esc(dom)+'</span> or <span class="pill">flast@'+esc(dom)+'</span>. Verify on the company site or a tool like Hunter before sending — never treat this as confirmed.</div>'+
       '<div style="margin:6px 0"><b>Subject:</b> '+esc(subj)+'</div><div class="mono">'+esc(mail)+'</div></div>'+
-    '<div class="box"><h5>↩️ Follow-up (after ~3 days) <button class="sm ghost" onclick="cpText(this)">Copy</button></h5><div class="mono">'+esc(follow)+'</div></div>'+
-    '<div class="row" style="margin-top:6px">'+(CUR.url?'<a target="_blank" href="'+esc(urlify(CUR.url))+'"><button class="sm ghost">Open job link ↗</button></a>':'')+'<button class="sm primary" onclick="logApp()">✓ I applied — log it</button></div>';
+    '<div class="box"><h5>↩️ Follow-up (after ~3 days) <button class="sm ghost" data-act="cpText">Copy</button></h5><div class="mono">'+esc(follow)+'</div></div>'+
+    '<div class="row" style="margin-top:6px">'+(CUR.url?'<a target="_blank" href="'+esc(urlify(CUR.url))+'"><button class="sm ghost">Open job link ↗</button></a>':'')+'<button class="sm primary" data-act="logApp">✓ I applied — log it</button></div>';
   if(window.__outArm)window.__outArm();   /* account block injects the verified-contacts (Apollo) UI here */
 }
 
@@ -1138,9 +1186,9 @@ function renderTracker(){ const tb=document.getElementById("trkRows"),st=documen
   const counts={}; STAGES_T.forEach(s=>counts[s]=0); LOG.forEach(a=>counts[a.stage]=(counts[a.stage]||0)+1);
   st.innerHTML='<span class="pill">Total '+LOG.length+'</span>'+STAGES_T.filter(s=>counts[s]).map(s=>'<span class="stmt" style="background:'+STCOL[s]+'">'+s+' '+counts[s]+'</span>').join(" ");
   if(!LOG.length){ tb.innerHTML='<tr><td colspan="6" class="empty">No applications yet. Tailor a résumé, then hit “I applied”.</td></tr>'; return; }
-  tb.innerHTML=LOG.map((a,i)=>{ const stg='<select onchange="upd('+i+',\'stage\',this.value)">'+STAGES_T.map(s=>'<option '+(s===a.stage?'selected':'')+'>'+s+'</option>').join("")+'</select>';
-    const nx='<select onchange="upd('+i+',\'next\',this.value)">'+NEXT.map(s=>'<option '+(s===a.next?'selected':'')+'>'+s+'</option>').join("")+'</select>';
-    return '<tr><td>'+a.date+'</td><td><b>'+esc(a.company)+'</b><div class="hint">'+esc(a.role)+'</div></td><td>'+stg+'</td><td>'+nx+'</td><td><input type="text" value="'+esc(a.notes||"")+'" onchange="upd('+i+',\'notes\',this.value)" style="min-width:110px"></td><td><button class="sm ghost" onclick="delApp('+i+')">✕</button></td></tr>'; }).join(""); }
+  tb.innerHTML=LOG.map((a,i)=>{ const stg='<select data-chg="upd" data-i="'+i+'" data-k="stage">'+STAGES_T.map(s=>'<option '+(s===a.stage?'selected':'')+'>'+s+'</option>').join("")+'</select>';
+    const nx='<select data-chg="upd" data-i="'+i+'" data-k="next">'+NEXT.map(s=>'<option '+(s===a.next?'selected':'')+'>'+s+'</option>').join("")+'</select>';
+    return '<tr><td>'+a.date+'</td><td><b>'+esc(a.company)+'</b><div class="hint">'+esc(a.role)+'</div></td><td>'+stg+'</td><td>'+nx+'</td><td><input type="text" value="'+esc(a.notes||"")+'" data-chg="upd" data-i="'+i+'" data-k="notes" style="min-width:110px"></td><td><button class="sm ghost" data-act="delApp" data-i="'+i+'">✕</button></td></tr>'; }).join(""); }
 function upd(i,k,v){ LOG[i][k]=v; saveLog(); if(k==="stage")renderTracker(); }
 function delApp(i){ LOG.splice(i,1); saveLog(); renderTracker(); }
 function exportCSV(){ const cols=["date","company","role","stage","next","notes","url"]; const lines=[cols.join(",")].concat(LOG.map(a=>cols.map(c=>'"'+String(a[c]||"").replace(/"/g,'""')+'"').join(",")));
@@ -1158,12 +1206,18 @@ function cvWeight(cv){ let n=(cv.summary||"").length; (cv.skills||[]).forEach(g=
   (cv.experience||[]).forEach(e=>{n+=46;(e.bullets||[]).forEach(b=>n+=b.length+6);}); (cv.projects||[]).forEach(p=>{n+=24+(p.tech||"").length;(p.bullets||[]).forEach(b=>n+=b.length+6);});
   (cv.education||[]).forEach(()=>n+=70); n+=(cv.certifications||[]).join(" ").length+(cv.achievements||[]).join(" ").length+(cv.publications||[]).join(" ").length; return n; }
 function baseFont(w){ return w<1500?10.4:w<2200?9.6:w<2900?9:w<3500?8.5:w<4200?8:7.6; }
-/* trim the lowest-relevance bullets (already JD-sorted) until content fits ~1 page */
+/* trim the lowest-relevance bullets (already JD-sorted) until content fits ~1 page.
+   Tiered floors keep the recruiter format: older roles first (floor 3), then projects (floor 2),
+   then drop extra projects, then the most recent role (floor 3); the final tier restores the old
+   floor-of-1 behavior for pathological résumés — 1 page always wins. */
 function finalizeOnePage(cv0){ const cv=JSON.parse(JSON.stringify(cv0)); let g=0;
+  const pop=(list,floor)=>{ const xs=(list||[]).filter(e=>(e.bullets||[]).length>floor); if(!xs.length)return false; xs.sort((a,b)=>b.bullets.join("").length-a.bullets.join("").length); xs[0].bullets.pop(); return true; };
   while(cvWeight(cv)>4400 && g++<60){
-    let exp=(cv.experience||[]).filter(e=>(e.bullets||[]).length>1); if(exp.length){ exp.sort((a,b)=>b.bullets.join("").length-a.bullets.join("").length); exp[0].bullets.pop(); continue; }
-    let pj=(cv.projects||[]).filter(p=>(p.bullets||[]).length>1); if(pj.length){ pj.sort((a,b)=>b.bullets.join("").length-a.bullets.join("").length); pj[0].bullets.pop(); continue; }
+    if(pop((cv.experience||[]).slice(1),3))continue;
+    if(pop(cv.projects,2))continue;
     if((cv.projects||[]).length>2){ cv.projects.pop(); continue; }
+    if(pop(cv.experience,3))continue;
+    if(pop(cv.experience,1)||pop(cv.projects,1))continue;
     break; }
   return cv; }
 function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWeight(cv)); const c=[];
@@ -1253,7 +1307,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   var bar=document.getElementById("progress");
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* DEV badge on every non-official deployment (dev-branch previews, local files) — official Pages domain stays clean */
-  try{ if(location.hostname!=="prometheus-18.github.io"){ var nb=document.querySelector(".nbrand"); if(nb)nb.insertAdjacentHTML("beforeend",'<span class="devtag">DEV</span>'); } }catch(e){}
+  try{ if(location.protocol!=="chrome-extension:"&&location.hostname!=="prometheus-18.github.io"){ var nb=document.querySelector(".nbrand"); if(nb)nb.insertAdjacentHTML("beforeend",'<span class="devtag">DEV</span>'); } }catch(e){}
   /* Lenis buttery smooth-scroll (skip on reduced-motion) */
   if(!reduce && !window.__noLenis && window.Lenis){ try{ var lenis=new Lenis({lerp:0.085,smoothWheel:true,wheelMultiplier:1}); function _raf(t){lenis.raf(t);requestAnimationFrame(_raf);} requestAnimationFrame(_raf); window.__lenis=lenis; }catch(e){} }
   /* scroll-reveal */
@@ -1377,7 +1431,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var box=$("nacct"); if(!box)return;
     if(AUTH_USER){
       var em=AUTH_USER.email||"account";
-      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" onclick="authSignOut()">Sign out</button>';
+      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="authSignOut">Sign out</button>';
     } else { box.innerHTML=""; }
   }
   function setAuthed(on){
@@ -1538,12 +1592,12 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     document.body.appendChild(f); _aiFab=f; return f; }
   function aiPopEl(){ if(_aiPop)return _aiPop;
     var p=document.createElement("div"); p.id="aiPop";
-    p.innerHTML='<p class="lpt"><span id="apTitle">✦ AI edit</span><span class="x" onclick="window.__aiPopClose()">✕</span></p>'+
+    p.innerHTML='<p class="lpt"><span id="apTitle">✦ AI edit</span><span class="x" data-act="aiPopClose">✕</span></p>'+
       '<p class="orig" id="apOrig"></p>'+
       '<div id="apTones"></div>'+
       '<div id="apLens"></div>'+
       '<input id="apCustom" type="text" autocomplete="off" spellcheck="false" placeholder="Optional: your own instruction — e.g. “two lines, formal”">'+
-      '<div class="lprow"><button class="go" id="apGo" onclick="aiPopGo(false)">✦ Rewrite</button><button id="apHum" onclick="aiPopGo(true)">Humanize</button></div>'+
+      '<div class="lprow"><button class="go" id="apGo" data-act="aiPopGo" data-hum="0">✦ Rewrite</button><button id="apHum" data-act="aiPopGo" data-hum="1">Humanize</button></div>'+
       '<p class="aperr" id="apErr"></p><div class="res" id="apRes"></div>';
     document.body.appendChild(p); _aiPop=p;
     document.addEventListener("mousedown",function(e){
@@ -1576,14 +1630,14 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     $("apTitle").textContent="✦ AI edit — "+(c.kind==="summary"?"summary":c.kind==="cover"?"cover paragraph":c.kind==="item"?c.sec.replace(/s$/,""):"bullet");
     $("apOrig").textContent="“"+(c.text.length>180?c.text.slice(0,177)+"…":c.text)+"”";
     $("apTones").innerHTML=["professional","balanced","conversational","bold"].map(function(t){
-      return '<span class="aitone'+(t==="balanced"?" on":"")+'" data-t="'+t+'" onclick="window.__aiTone(this)">'+t+'</span>'; }).join("");
+      return '<span class="aitone'+(t==="balanced"?" on":"")+'" data-t="'+t+'" data-act="aiTone">'+t+'</span>'; }).join("");
     /* length targets from the CURRENT word count — "30 words? offer ~21 or ~44" (never a full-doc rewrite) */
     var wc=String(c.text).trim().split(/\s+/).length;
     var kmax=c.kind==="summary"?220:c.kind==="cover"?160:c.kind==="item"?40:45;
     var lo=Math.max(6,Math.round(wc*0.7)), hi=Math.min(kmax,Math.round(wc*1.45));
-    $("apLens").innerHTML=wc<8?"":['<span class="aitone" data-w="'+lo+'" onclick="window.__aiLen(this)">tighter ~'+lo+'w</span>',
-      '<span class="aitone on" data-w="0" onclick="window.__aiLen(this)">'+wc+'w now</span>',
-      (hi>wc?'<span class="aitone" data-w="'+hi+'" onclick="window.__aiLen(this)">fuller ~'+hi+'w</span>':"")].join("");
+    $("apLens").innerHTML=wc<8?"":['<span class="aitone" data-w="'+lo+'" data-act="aiLen">tighter ~'+lo+'w</span>',
+      '<span class="aitone on" data-w="0" data-act="aiLen">'+wc+'w now</span>',
+      (hi>wc?'<span class="aitone" data-w="'+hi+'" data-act="aiLen">fuller ~'+hi+'w</span>':"")].join("");
     $("apCustom").value=""; var er=$("apErr"); er.style.display="none"; $("apRes").innerHTML="";
     var locked=(!SB||!AUTH_USER)&&!window.__AI_FAKE_EDIT;
     if(locked){ er.textContent="Sign in to use AI editing — manual editing keeps working."; er.style.display="block"; }
@@ -1637,7 +1691,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     res.innerHTML='<div class="aicard" style="margin:9px 0 0"><div class="old">'+esc(c.text)+'</div><div class="new">'+esc(nw)+'</div>'+
       '<div class="aieval"><span class="ev '+(ev.faith>=90?"good":"warn")+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+
       (ev.rel!=null?'<span class="ev '+(ev.rel>=50?"good":"warn")+'">jd match '+ev.rel+'%</span>':'')+'</div>'+
-      '<div class="lprow" style="margin-top:9px"><button class="go" onclick="aiPopApply()">✓ Apply</button><button onclick="aiPopCopy(this)">Copy</button><button onclick="aiPopGo('+(humanize?"true":"false")+')">↻ Try again</button></div></div>'; };
+      '<div class="lprow" style="margin-top:9px"><button class="go" data-act="aiPopApply">✓ Apply</button><button data-act="aiPopCopy">Copy</button><button data-act="aiPopGo" data-hum="'+(humanize?1:0)+'">↻ Try again</button></div></div>'; };
   window.aiPopApply=function(){ var a=AI_LAST; if(!a||!a.ctx)return; var c=a.ctx,nw=a.text;
     var doc=document.getElementById(c.docId||"resumeDoc");
     var dirty=!!(doc&&doc.dataset&&doc.dataset.dirty==="1");
@@ -1712,14 +1766,14 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,3);
     aiMsg("aiCvMsg",'✦ Applied '+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
       (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+
-      ' <button class="sm ghost" onclick="aiUndoAll()">Undo</button>'+
+      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+
       (tips.length?'<div style="margin-top:6px">'+tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("")+'</div>':"")); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
   window.aiUndoAll=function(){ if(!AI_UNDO||!CUR)return;
     if(AI_UNDO_RUN!==CUR){ aiMsg("aiCvMsg","That undo expired — a new analysis was run since."); AI_UNDO=null; return; }
     if(AI_AFTER&&JSON.stringify(CUR.cvBase)!==AI_AFTER&&!AI_UNDO_FORCE){ AI_UNDO_FORCE=1;
-      aiMsg("aiCvMsg","You've edited since the AI pass — Undo discards those edits too. <button class=\"sm ghost\" onclick=\"aiUndoAll()\">Undo anyway</button>"); return; }
+      aiMsg("aiCvMsg","You've edited since the AI pass — Undo discards those edits too. <button class=\"sm ghost\" data-act=\"aiUndoAll\">Undo anyway</button>"); return; }
     AI_UNDO_FORCE=0;
     try{ CUR.cvBase=JSON.parse(AI_UNDO); CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
     AI_UNDO=null; aiMsg("aiCvMsg","↩ Reverted — your previous wording is back."); };
@@ -1753,7 +1807,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
     AI_UNDO_COVER=cover; AI_UNDO_COVER_RUN=CUR;
     CUR.cover=sanitizeCover(nw)+sig;
     try{ renderCover(); }catch(e){}
-    aiMsg("aiClMsg",'✦ Letter humanized — facts and signature untouched. <button class="sm ghost" onclick="aiUndoCover()">Undo</button>'); };
+    aiMsg("aiClMsg",'✦ Letter humanized — facts and signature untouched. <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
   window.aiUndoCover=function(){ if(!AI_UNDO_COVER||!CUR)return;
     if(AI_UNDO_COVER_RUN!==CUR){ aiMsg("aiClMsg","That undo expired — a new analysis was run since."); AI_UNDO_COVER=null; return; }
     CUR.cover=AI_UNDO_COVER; AI_UNDO_COVER=null; try{ renderCover(); }catch(e){} aiMsg("aiClMsg","↩ Reverted to the previous letter."); };
@@ -1762,7 +1816,7 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
   window.__outArm=function(){ var box=document.getElementById("outContacts"); if(!box)return;
     if(!SB){ box.innerHTML=""; return; }
     if(OUT_HTML&&OUT_RUN===CUR){ box.innerHTML=OUT_HTML; return; }   /* keep fetched contacts across outreach re-renders (tips etc.) */
-    box.innerHTML='<div class="row" style="margin-top:9px"><button class="sm ghost" onclick="outContacts()">🔎 Find verified contacts</button></div>'+
+    box.innerHTML='<div class="row" style="margin-top:9px"><button class="sm ghost" data-act="outContacts">🔎 Find verified contacts</button></div>'+
       '<div class="hint" id="outCMsg" style="display:none;margin-top:6px"></div><div id="outCList"></div>'; };
   window.outContacts=async function(){ if(!CUR)return; var list=$("outCList");
     function m(h){ aiMsg("outCMsg",h); }
@@ -1794,6 +1848,16 @@ loadMaster(); renderMasterUI(); loadLog(); renderTracker(); updateState();
       if(r.error){ console.log("KB seed error at offset "+off+":",r.error); return r; }
       const d=r.data||{}; seeded+=(d.seeded||0); total=d.total||total; console.log("  seeded "+seeded+"/"+total+(d.failed?(" ("+d.failed+" failed in batch)"):"")); if(d.next==null)break; off=d.next; }
     console.log("✅ KB seed done: "+seeded+"/"+total); return {seeded:seeded,total:total}; };
+
+  /* CSP-safe action registry for this block's controls (dispatcher lives in the logic block) */
+  if(window.__act)window.__act({
+    authSubmit:function(){ window.authSubmit(); }, authToggle:function(){ window.authToggleMode(); },
+    authSignOut:function(){ window.authSignOut(); },
+    aiPopClose:function(){ window.__aiPopClose(); }, aiTone:function(el){ window.__aiTone(el); }, aiLen:function(el){ window.__aiLen(el); },
+    aiPopGo:function(el){ window.aiPopGo(el.dataset.hum==="1"); }, aiPopApply:function(){ window.aiPopApply(); }, aiPopCopy:function(el){ window.aiPopCopy(el); },
+    aiUndoAll:function(){ window.aiUndoAll(); }, aiUndoCover:function(){ window.aiUndoCover(); },
+    outContacts:function(){ window.outContacts(); },
+  });
 
   renderForm();
   setTimeout(function(){ document.body.classList.remove("booting"); },2500);   /* never get stuck on a blank hero */
