@@ -219,6 +219,19 @@
   #linkPop button{font:600 12px/1 'Inter',system-ui,sans-serif;border-radius:9px;padding:7px 11px;cursor:pointer;border:1px solid var(--btn-ln,#504e54);background:transparent;color:var(--tx,#c9c7cc)}
   #linkPop button.lpsave{background:var(--fog,#f1f1f1);color:#161616;border-color:var(--fog,#f1f1f1)}
   #linkPop button.lpdel{margin-left:auto;color:var(--acc-ink,#ff7a52);border-color:var(--btn-ln,#504e54)}
+  /* ⚙ AI settings (BYOK key) popup — same dark-token recipe as #linkPop */
+  #aiKeysPop{position:fixed;z-index:9999;display:none;width:340px;max-width:92vw;background:var(--card2,#232325);color:var(--tx,#c9c7cc);border:1px solid var(--ln,#2e2c30);border-radius:var(--r,14.4px);padding:14px 14px 12px;font-family:'Inter',system-ui,sans-serif}
+  #aiKeysPop .lpt{font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut,#a2a2a2);margin:0 0 8px;display:flex;justify-content:space-between}
+  #aiKeysPop .lpt .x{cursor:pointer}
+  #aiKeysPop label{display:block;font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mut,#a2a2a2);margin:9px 0 4px}
+  #aiKeysPop input,#aiKeysPop select{width:100%;box-sizing:border-box;background:var(--srf,#161616);border:1px solid var(--ln,#2e2c30);border-radius:9px;color:var(--fog,#f1f1f1);padding:8px 9px;font:500 13px/1.3 'Inter',system-ui,sans-serif}
+  #aiKeysPop input:focus,#aiKeysPop select:focus{outline:none;border-color:var(--acc,#ff4c24)}
+  #aiKeysPop .lperr{color:var(--acc-ink,#ff7a52);font-size:11.5px;margin:6px 0 0;display:none}
+  #aiKeysPop .lprow{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+  #aiKeysPop button{font:600 12px/1 'Inter',system-ui,sans-serif;border-radius:9px;padding:7px 11px;cursor:pointer;border:1px solid var(--btn-ln,#504e54);background:transparent;color:var(--tx,#c9c7cc)}
+  #aiKeysPop button.lpsave{background:var(--fog,#f1f1f1);color:#161616;border-color:var(--fog,#f1f1f1)}
+  #aiKeysPop button.lpdel{margin-left:auto;color:var(--acc-ink,#ff7a52);border-color:var(--btn-ln,#504e54)}
+  #aiKeysPop .akhint{color:var(--mut,#a2a2a2);font-size:11.5px;line-height:1.45;margin:8px 0 0}
   /* ✦ inline AI editor — floating trigger (fab) + popup, same dark-token recipe as #linkPop */
   #aiFab{position:fixed;z-index:9998;display:none;width:32px;height:32px;border-radius:50%;background:var(--card2,#232325);border:1px solid var(--btn-ln,#504e54);color:var(--acc,#ff7a52);font-size:15px;line-height:30px;text-align:center;cursor:pointer;user-select:none}
   #aiFab:hover{border-color:var(--acc,#ff7a52)}
@@ -296,8 +309,8 @@
       <div class="banner"><b>Just upload your résumé.</b> PDF or text — whatever you have. It becomes your <b>master</b>; every job you paste then rebuilds it into a tailored, ATS-clean version. No fields, no sign-up, no AI keys.</div>
       <div class="drop">
         <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⬆ UPLOAD ]</div>
-        <div style="margin:7px 0"><b>Upload your résumé</b> (PDF or TXT)</div>
-        <input type="file" id="mFileIn" accept=".pdf,.txt" data-chg="resumeFile" style="max-width:320px;margin:0 auto">
+        <div style="margin:7px 0"><b>Upload your résumé</b> (PDF, TXT or LaTeX .tex)</div>
+        <input type="file" id="mFileIn" accept=".pdf,.txt,.tex" data-chg="resumeFile" style="max-width:320px;margin:0 auto">
         <div class="hint" id="imMsg" style="margin-top:9px"></div>
       </div>
       <label class="fld" style="margin-top:11px">…or paste your résumé text, then “Set as master”</label>
@@ -360,7 +373,7 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" data-act="aiHumanizeResume">✦ Humanize</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
+        <div class="row"><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" data-act="aiHumanizeResume">✦ Humanize</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="resumeDoc"></div>
       <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div>
@@ -452,6 +465,8 @@ window.__act({
   aiImproveAll:function(){ if(window.aiImproveAll)window.aiImproveAll(); },
   aiHumanizeResume:function(){ if(window.aiHumanizeResume)window.aiHumanizeResume(); },
   aiHumanizeCover:function(){ if(window.aiHumanizeCover)window.aiHumanizeCover(); },
+  aiTailorJD:function(){ if(window.aiTailorJD)window.aiTailorJD(); },
+  downloadTex:function(){ downloadTex(); }, copyTex:function(el){ copyTex(el); },
 });
 /* ===== shared refinement helpers (name casing · URL safety · company/domain · cover sanitize) ===== */
 function capWord(w){ return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w; }
@@ -513,12 +528,149 @@ function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
 function deLig(s){ return String(s==null?"":s).replace(/ﬀ/g,"ff").replace(/ﬁ/g,"fi").replace(/ﬂ/g,"fl").replace(/ﬃ/g,"ffi").replace(/ﬄ/g,"ffl").replace(/[-]/g,"").replace(/[￼�]/g," ").replace(/[​-‏‪-‮⁠﻿­]/g,""); }
 function tidy(s){ return deLig(s).replace(/[–—]/g,"-").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,"...").replace(/ /g," ").replace(/\s+/g," ").trim(); }
 
+/* ===== LaTeX master (.tex) — the Overleaf workflow =====
+   The raw .tex stays VERBATIM in M.raw (cloud sync unchanged); every consumer of résumé TEXT goes
+   through masterText(), which converts LaTeX → parser-friendly plain text on the fly. texToText
+   NEVER throws — any line it can't understand passes through as plain text. The tailored export
+   (spliceTex) re-writes ONLY the summary paragraph and changed \item bodies back into the original
+   file — item count/order untouched, preamble byte-identical — ready to compile in Overleaf. */
+function isTex(s){ return /\\documentclass|\\begin\{document\}/.test(String(s||"")); }
+function masterText(){ return isTex(M.raw)?texToText(M.raw):M.raw; }
+window.__masterText=function(){ return masterText(); };
+/* depth-counting brace reader ({…} args are NEVER regex-parsed — nesting breaks that). i = index of the first "{". */
+function texReadArgs(s,i,max){ const args=[];
+  while(args.length<(max||9)&&i<s.length){
+    while(i<s.length&&/\s/.test(s[i]))i++;
+    if(s[i]!=="{")break;
+    let d=0,j=i;
+    for(;j<s.length;j++){ const c=s[j]; if(c==="\\"){ j++; continue; } if(c==="{")d++; else if(c==="}"){ d--; if(!d)break; } }
+    if(d)break;                                                     /* imbalance → stop; caller degrades to pass-through */
+    args.push(s.slice(i+1,j)); i=j+1; }
+  return {args:args,end:i}; }
+/* visible part of a line: cut at the first unescaped % (so \% survives, commented-out sections die) */
+function texVis(line){ let o=""; for(let i=0;i<line.length;i++){ const c=line[i];
+  if(c==="\\"){ o+=c+(line[i+1]||""); i++; continue; } if(c==="%")break; o+=c; } return o; }
+/* inline LaTeX → text: wrappers unwrap, \href{u}{t} → "t (u)" (the parser's url regexes recover it),
+   accents recompose, -- → – (so "May 2025 -- May 2026" matches RANGE), TeX quotes → ASCII (which also
+   neutralizes the OT1 backtick-recomposer hazard in parseResume) */
+function texInline(s){ s=String(s||"");
+  s=s.replace(/\\\\\s*(\[[^\]]*\])?/g,"\n");
+  for(let g=0;g<6;g++){ const b4=s;                                 /* nested wrappers unwrap inside-out */
+    s=s.replace(/\\href\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,"$2 ($1)");
+    s=s.replace(/\\(?:textbf|textit|emph|texttt|textsc|textrm|textsf|textnormal|underline|uline|mbox|bm|text)\s*\{([^{}]*)\}/g,"$1");
+    if(s===b4)break; }
+  s=s.replace(/\\url\s*\{([^{}]*)\}/g,"$1");
+  s=s.replace(/\\(['`"^~])\s*\{?([A-Za-z])\}?/g,function(m,a,ch){ const A={"'":"́","`":"̀",'"':"̈","^":"̂","~":"̃"}; try{ return (ch+A[a]).normalize("NFC"); }catch(e){ return ch; } });
+  s=s.replace(/\\(?:dsep|textbullet|cdot|bullet|textbar|hsep|sep)\b\s*/g," · ");
+  s=s.replace(/(^|[^\\])~/g,"$1 ");
+  s=s.replace(/\\([&%$#_])/g,"$1");
+  s=s.replace(/---/g,"—").replace(/--/g,"–");
+  s=s.replace(/``|''/g,'"').replace(/`/g,"'");
+  s=s.replace(/\\[A-Za-z]+\*?\s*\{\s*-?[\d.]+\s*(?:pt|em|ex|cm|mm|in|bp|sp)\s*\}/g," ");
+  s=s.replace(/\\([{}])|\\[A-Za-z]+\*?|[{}]/g,function(m,e){ return e||(m.charAt(0)==="\\"?" ":""); });
+  return s.replace(/[ \t]{2,}/g," ").trim(); }
+function texToText(src){ try{
+  let s=String(src||"").replace(/\r\n?/g,"\n");
+  const b0=s.indexOf("\\begin{document}"), b1=s.indexOf("\\end{document}");
+  if(b0>=0)s=s.slice(b0+16, b1>b0?b1:s.length);
+  const DROP=/^\\(?:documentclass|usepackage|vspace|hspace|smallskip|medskip|bigskip|newpage|clearpage|pagebreak|nopagebreak|centering|raggedright|raggedleft|noindent|par\b|hrule|hfill|vfill|setlength|addtolength|titlespacing|titleformat|pagestyle|thispagestyle|fontsize|selectfont|footnotesize|scriptsize|normalsize|small\b|large|Large|LARGE|huge|Huge|makecvtitle|maketitle|begin|end|renewcommand|newcommand|providecommand|definecolor|pagecolor|color\b|columnbreak|linespread|setmainfont|input|include)/;
+  const out=[];
+  for(const rawLine of s.split("\n")){
+    const line=texVis(rawLine).trim();
+    if(!line){ out.push(""); continue; }
+    if(DROP.test(line))continue;
+    let m;
+    if((m=line.match(/^\\(?:sub)?section\*?\s*\{/))){ const r=texReadArgs(line,m[0].length-1,1);
+      out.push(""); out.push(texInline(r.args[0]||"")); continue; }
+    if((m=line.match(/^\\entry\s*\{/))){ const a=texReadArgs(line,m[0].length-1,4).args.map(texInline);   /* \entry{ORG}{LOC}{ROLE}{DATES} */
+      const head=[a[2],a[0]].filter(Boolean).join(" — "), rest=[a[1],a[3]].filter(Boolean).join(" · ");
+      out.push(rest?head+" · "+rest:head); continue; }
+    if((m=line.match(/^\\project\s*\{/))){ const a=texReadArgs(line,m[0].length-1,3).args.map(texInline); /* \project{NAME}{LINK}{TECH} */
+      out.push(a.filter(Boolean).join(" | ")); continue; }
+    if((m=line.match(/^\\education\s*\{/))){ const a=texReadArgs(line,m[0].length-1,5).args.map(texInline); /* \education{INST}{LOC}{DEGREE}{DATES}{CGPA?} */
+      out.push([a[0],a[3]].filter(Boolean).join(" "));                    /* two-line shape the parser already reads */
+      const l2=[a[2],a[4]].filter(Boolean).join(" · ")+(a[1]?" · "+a[1]:""); if(l2)out.push(l2); continue; }
+    if((m=line.match(/^\\item\b\s*(?:\[[^\]]*\]\s*)?/))){ out.push("• "+texInline(line.slice(m[0].length))); continue; }
+    if((m=line.match(/^\\[A-Za-z]+\*?\s*\{/))&&!/^\\(?:href|url|textbf|textit|emph|texttt|textsc|mbox|text)\b/.test(line)){ const r=texReadArgs(line,m[0].length-1,9); /* unknown macro */
+      const rest=texInline(line.slice(r.end));
+      if(r.args.length>=2){ out.push((r.args.map(texInline).filter(Boolean).join(" · ")+" "+rest).trim()); continue; }
+      const one=texInline(r.args[0]||"");
+      if(one&&!/^-?[\d.]+\s*(?:pt|em|ex|cm|mm|in|bp|sp)$/.test(one))out.push((one+" "+rest).trim());
+      continue; }
+    out.push(texInline(line)); }
+  return out.join("\n").replace(/\n{3,}/g,"\n\n").trim();
+}catch(e){ return String(src||""); } }
+/* ---- tailored .tex export: splice ONLY the summary + changed \item bodies back into the raw file ---- */
+function escapeTex(s){ return String(s==null?"":s).replace(/[\\&%$#_{}~^]/g,function(c){
+  return c==="\\"?"\\textbackslash{}":c==="~"?"\\textasciitilde{}":c==="^"?"\\textasciicircum{}":"\\"+c; }); }
+function texCommentSpans(raw){ const s=String(raw||""),spans=[];
+  for(let i=0;i<s.length;i++){ const c=s[i]; if(c==="\\"){ i++; continue; }
+    if(c==="%"){ let j=s.indexOf("\n",i); if(j<0)j=s.length; spans.push([i,j]); i=j; } }
+  return spans; }
+function texInComment(spans,i){ for(const sp of spans)if(i>=sp[0]&&i<sp[1])return true; return false; }
+/* every \item OUTSIDE comments: body span (to the next \item / \end{itemize}) + a content key for matching */
+function texItems(raw){ const s=String(raw||""),spans=texCommentSpans(s),marks=[],stops=[];
+  let re=/\\item\b/g,m; while((m=re.exec(s)))if(!texInComment(spans,m.index))marks.push(m.index);
+  re=/\\end\{(?:itemize|enumerate)\}/g; while((m=re.exec(s)))if(!texInComment(spans,m.index))stops.push(m.index);
+  return marks.map((at,i)=>{ let a=at+5,b=(i+1<marks.length)?marks[i+1]:s.length;
+    for(const st of stops){ if(st>a&&st<b){ b=st; break; } }
+    while(a<b&&/\s/.test(s[a]))a++; while(b>a&&/\s/.test(s[b-1]))b--;
+    const body=s.slice(a,b).split("\n").map(texVis).join("\n");
+    return {start:a,end:b,key:tidy(texInline(body)).toLowerCase()}; }); }
+/* byte range of the summary paragraph: content lines between the Summary \section and the next \section */
+function texSummaryRange(raw){ const s=String(raw||""),spans=texCommentSpans(s);
+  let re=/\\section\*?\s*\{/g,m,at=-1,next=s.length;
+  while((m=re.exec(s))){ if(texInComment(spans,m.index))continue;
+    if(at<0){ const r=texReadArgs(s,m.index+m[0].length-1,1); if(/summary|profile|objective|about/i.test(r.args[0]||""))at=r.end; }
+    else { next=m.index; break; } }
+  if(at<0)return null;
+  let a=-1,b=-1,i=at;
+  while(i<next){ let j=s.indexOf("\n",i); if(j<0||j>next)j=next;
+    const vis=texVis(s.slice(i,j)).trim();
+    if(vis&&!/^\\(?!textbf|textit|emph|href|texttt|url)/.test(vis)){ if(a<0)a=i; b=j; }
+    i=j+1; }
+  return a<0?null:{start:a,end:b}; }
+/* wrap JD-matched skills in \textbf{} — longest term first, never inside an existing brace group */
+function boldJdSkills(s){ s=String(s==null?"":s);
+  const terms=(CUR&&CUR.buckets?((CUR.buckets.reqHave||[]).concat(CUR.buckets.prefHave||[])):[])
+    .map(t=>String(t||"").trim()).filter(t=>t.length>1).sort((a,b)=>b.length-a.length);
+  terms.forEach(t=>{ const e=t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    s=s.replace(new RegExp("(^|[^\\w\\\\{])("+e+")(?![\\w}])","gi"),"$1\\textbf{$2}"); });
+  return s; }
+/* invariants: \item count/order untouched · outside-span bytes identical · spliceTex(raw,{}) === raw */
+function spliceTex(rawTex,opt){ opt=opt||{}; const s=String(rawTex||""); let edits=[];
+  try{
+    if(opt.summary&&String(opt.summary).trim()){ const r=texSummaryRange(s); if(r)edits.push({start:r.start,end:r.end,text:boldJdSkills(escapeTex(opt.summary))}); }
+    const bm=opt.bulletMap||{};
+    if(Object.keys(bm).length){ const used={};
+      texItems(s).forEach(it=>{ const nw=bm[it.key];                /* keys consumed once, document order */
+        if(typeof nw==="string"&&nw&&!used[it.key]){ used[it.key]=1; edits.push({start:it.start,end:it.end,text:boldJdSkills(escapeTex(nw))}); } }); }
+  }catch(e){ return s; }
+  if(!edits.length)return s;
+  edits.sort((a,b)=>b.start-a.start);
+  let out=s,lastStart=1/0;
+  edits.forEach(e=>{ if(e.end>lastStart||e.start>=e.end)return; out=out.slice(0,e.start)+e.text+out.slice(e.end); lastStart=e.start; });
+  return out; }
+/* the map is rebuilt on demand from CUR.cv0 ↔ CUR.cvBase (positional identity — applies never reorder).
+   Honest by design: bullets that analyze() split or capped away no longer match an \item key and stay
+   original in the .tex; DOM-only manual edits never reach it (same asymmetry as the summary pull-back). */
+function buildTailoredTex(){ if(!CUR||!isTex(M.raw))return null;
+  const base=CUR.cv0||{},cur=CUR.cvBase||CUR.cv||{},bm={};
+  const collect=(b0,b1)=>{ (b0||[]).forEach((orig,j)=>{ const nw=(b1||[])[j];
+    if(typeof nw==="string"&&nw&&typeof orig==="string"&&orig&&nw!==orig)bm[tidy(orig).toLowerCase()]=nw; }); };
+  ((base.experience)||[]).forEach((e,i)=>{ const c=((cur.experience)||[])[i]; if(c)collect(e.bullets,c.bullets); });
+  ((base.projects)||[]).forEach((p,i)=>{ const c=((cur.projects)||[])[i]; if(c)collect(p.bullets,c.bullets); });
+  return spliceTex(M.raw,{summary:String((cur.summary!=null?cur.summary:(CUR.cv&&CUR.cv.summary))||""),bulletMap:bm}); }
+function downloadTex(){ const t=buildTailoredTex(); if(!t){ alert("Run the analysis first — the tailored .tex needs a LaTeX master."); return; }
+  const b=new Blob([t],{type:"application/x-tex"}),u=URL.createObjectURL(b),x=document.createElement("a"); x.href=u; x.download=fnameFor("resumeDoc")+".tex"; x.click(); URL.revokeObjectURL(u); }
+function copyTex(btn){ const t=buildTailoredTex(); if(!t)return; cpWrite(btn,t,"LaTeX copied ✓"); }
+
 /* ===== master (just the uploaded résumé text) ===== */
 const MKEY="apply_master_v3"; let M={raw:"",name:""};
 function loadMaster(){ try{M=Object.assign({raw:"",name:""},JSON.parse(localStorage.getItem(MKEY)||"{}"));}catch(e){M={raw:"",name:""};} }
 function persist(){ try{localStorage.setItem(MKEY,JSON.stringify(M));}catch(e){} }
 function masterReady(){ return !!(M.raw && M.raw.trim().length>40); }
-function setMaster(text){ M.raw=deLig(String(text||"").replace(/\r/g,"")).trim(); const p=parseResume(M.raw); M.name=(p&&p.name)||"Resume"; persist(); renderMasterUI(); updateState(); }
+function setMaster(text){ M.raw=deLig(String(text||"").replace(/\r/g,"")).trim(); const p=parseResume(masterText()); M.name=(p&&p.name)||"Resume"; persist(); renderMasterUI(); updateState(); }
 async function onResumeFile(input){ const f=input.files&&input.files[0]; if(!f)return; flash("imMsg","Reading "+f.name+"…",8000);
   try{ let t=/\.pdf$/i.test(f.name)?await extractPdfText(f):await f.text(); if(t.trim().length<40){flash("imMsg","That file looks empty — try another or paste the text.",6000);return;} setMaster(t); flash("imMsg","✓ Master set from "+f.name,4000); tab("mr"); }
   catch(e){ flash("imMsg","Couldn't read that file — paste the text below instead.",6000); }
@@ -531,7 +683,7 @@ function loadSample(){ setMaster(SAMPLE_RAW); flash("mMsg","Sample résumé load
 function renderMasterUI(){ const ready=masterReady();
   document.getElementById("mEmpty").style.display=ready?"none":"block";
   document.getElementById("mSet").style.display=ready?"block":"none";
-  if(ready){ const p=parseResume(M.raw); document.getElementById("mMeta").textContent="· "+(p?p.name:"")+" · "+M.raw.length+" chars"; document.getElementById("mPreview").textContent=M.raw.slice(0,800)+(M.raw.length>800?" …":""); }
+  if(ready){ const shown=masterText(); const p=parseResume(shown); document.getElementById("mMeta").textContent="· "+(p?p.name:"")+" · "+M.raw.length+" chars"+(isTex(M.raw)?" · LaTeX source kept":""); document.getElementById("mPreview").textContent=shown.slice(0,800)+(shown.length>800?" …":""); }
 }
 /* pdf.js gives TEXT only — the URLs behind "LinkedIn"/"GitHub"/project links live in LINK ANNOTATIONS.
    Without this they vanish on every upload (so a downloaded résumé re-uploaded loses all its links).
@@ -858,8 +1010,8 @@ function serialize(cv){ const sk=(cv.skills||[]).map(g=>g.group+" "+(g.items||[]
   const pj=(cv.projects||[]).map(p=>p.name+" "+p.tech+" "+(p.bullets||[]).join(" ")).join(" ");
   return [cv.summary,sk,ex,pj,(cv.education||[]).map(e=>e.raw||(e.institution+" "+e.degree)).join(" "),(cv.certifications||[]).join(" ")].join(" "); }
 function zoneOf(cv){ return (cv.summary||"")+" "+(cv.skills||[]).map(g=>(g.items||[]).join(" ")).join(" "); }
-function analyze(company,role,jd){ const parsed=parseResume(M.raw); if(!parsed)return null;
-  const jt=jdTokens(jd); const buckets=bucketSkills(jd,M.raw);
+function analyze(company,role,jd){ const parsed=parseResume(masterText()); if(!parsed)return null;
+  const jt=jdTokens(jd); const buckets=bucketSkills(jd,masterText());
   const need={years:reqYears(jd),rank:Math.max(rankOf((jd.split(/[.\n]/)[0]||"")),rankOf(jd.slice(0,400)),rankOf(role||""))};
   const have={years:candidateYears(parsed.experience),rank:rankOf((parsed.experience[0]||{}).role||role||"")};
   const struct=structureScore(parsed);
@@ -988,7 +1140,8 @@ function resumeDocHTML(cv){
   if(cv.publications&&cv.publications.length)h+='<h4>Publications</h4><ul>'+cv.publications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   return h; }
 function renderResume(){ document.getElementById("cvEmpty").style.display="none"; document.getElementById("cvBody").style.display="block";
-  const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit"; }
+  const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit";
+  const tex=isTex(M.raw); ["texDlBtn","texCpBtn"].forEach(id=>{ const t=document.getElementById(id); if(t)t.style.display=tex?"":"none"; }); }
 function renderCover(){ document.getElementById("clEmpty").style.display="none"; document.getElementById("clBody").style.display="block";
   const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   const d=document.getElementById("coverDoc"); d.innerHTML='<p>'+esc(today)+'</p><p>'+esc(CUR.cover).replace(/\n+/g,"</p><p>")+'</p>'; d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtnCl"); if(b)b.textContent="✎ Edit"; }
@@ -1233,7 +1386,20 @@ function finalizeOnePage(cv0){ const cv=JSON.parse(JSON.stringify(cv0)); let g=0
     if(pop(cv.experience,1)||pop(cv.projects,1))continue;
     break; }
   return cv; }
-function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWeight(cv)); const c=[];
+/* JD-matched skills → bold runs inside PDF bullets (recruiter-skim pop; the on-screen doc stays plain
+   text so aiMap/edit pull-back keep working). Returns the string untouched when nothing matches. */
+function boldRuns(s,terms){ s=String(s==null?"":s); if(!terms||!terms.length)return s;
+  const es=terms.map(t=>String(t||"").trim()).filter(t=>t.length>1).sort((a,b)=>b.length-a.length)
+    .map(t=>(/^\w/.test(t)?"\\b":"")+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+(/\w$/.test(t)?"\\b":""));
+  if(!es.length)return s;
+  const re=new RegExp("(?:"+es.join("|")+")","gi");
+  const out=[]; let last=0,m;
+  while((m=re.exec(s))){ if(m.index>last)out.push(s.slice(last,m.index)); out.push({text:m[0],bold:true}); last=m.index+m[0].length; }
+  if(!out.length)return s;
+  if(last<s.length)out.push(s.slice(last));
+  return out; }
+function jdTerms(){ return (CUR&&CUR.buckets)?((CUR.buckets.reqHave||[]).concat(CUR.buckets.prefHave||[])):[]; }
+function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWeight(cv)); const c=[]; const bterms=jdTerms();
   const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
     c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.7,lineColor:"#c4cdda"}],margin:[0,0,0,4]}); };
   c.push({text:cv.name||"Your Name",bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"});
@@ -1247,10 +1413,10 @@ function resumeDocDef(cv0){ const cv=finalizeOnePage(cv0); const F=baseFont(cvWe
   if(cv.experience&&cv.experience.length){ sec("Experience"); cv.experience.forEach(e=>{
     c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#444",fontSize:F-1,margin:[0,0,0,1]});
-    if((e.bullets||[]).length)c.push({ul:e.bullets,margin:[3,1,0,3],markerColor:"#888"}); }); }
+    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#888"}); }); }
   if(cv.projects&&cv.projects.length){ sec("Projects"); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
     c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
-    if((p.bullets||[]).length)c.push({ul:p.bullets,margin:[3,0,0,3],markerColor:"#888"}); }); }
+    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#888"}); }); }
   if(cv.education&&cv.education.length){ sec("Education"); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
@@ -1464,7 +1630,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var box=$("nacct"); if(!box)return;
     if(AUTH_USER){
       var em=AUTH_USER.email||"account";
-      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="authSignOut">Sign out</button>';
+      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="aiKeys" title="Optional: use your own OpenAI key for the ✦ AI buttons">⚙ AI</button><button class="sm ghost" data-act="authSignOut">Sign out</button>';
     } else { box.innerHTML=""; }
   }
   function setAuthed(on){
@@ -1604,10 +1770,10 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     summary:((cv&&cv.summary)||"").slice(0,600),skills:((cv&&cv.skills)||[]).flatMap(function(g){return g.items||[]}).slice(0,30),
     missing:((CUR&&CUR.buckets&&CUR.buckets.reqMiss)||[]).slice(0,8),years:(CUR&&CUR.have&&CUR.have.years)||0,
     exp:((cv&&cv.experience)||[]).slice(0,3).map(function(e){return {role:e.role||"",org:e.org||"",dates:e.dates||""};})}; }
-  function collectBullets(cv){ var bl=[];
+  function collectBullets(cv,max){ var bl=[];
     ((cv&&cv.experience)||[]).forEach(function(e,i){(e.bullets||[]).forEach(function(t,j){bl.push({id:"e"+i+":"+j,text:t});});});
     ((cv&&cv.projects)||[]).forEach(function(p,i){(p.bullets||[]).forEach(function(t,j){bl.push({id:"p"+i+":"+j,text:t});});});
-    return bl.slice(0,12); }
+    return bl.slice(0,max||12); }
   function aiMsg(id,html){ var m=$(id); if(!m)return; m.style.display=html?"block":"none"; m.innerHTML=html||""; }
   window.__aiReset=function(){ if(window.__aiPopClose)window.__aiPopClose(); };
   /* résumé changed → a previously humanized letter has been rebuilt deterministically; tell the user once */
@@ -1720,6 +1886,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     else if(c.kind==="cover"){ body.mode="rewrite"; body.section="cover-para"; body.text=c.text; }
     else if(c.kind==="item"){ body.mode="rewrite"; body.section="item"; body.text=c.text; }
     else { body.mode="rewrite"; body.section="bullet"; body.id=c.id; body.text=c.text; }
+    var bk=byokAttach(body);
     _aiBusy=true; var seq=++_aiSeq; var d=null,eMsg=null;
     if(window.__AI_FAKE_EDIT){ d=window.__AI_FAKE_EDIT; }
     else{ try{ var r=await SB.functions.invoke("ai",{body:body});
@@ -1727,6 +1894,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
           eMsg=(st===429)?"⏳ Daily AI limit reached — try again tomorrow.":(st===404)?"AI backend isn't deployed yet — manual editing keeps working.":"AI is unreachable right now — try again in a moment."; }
         else d=r.data||{};
       }catch(e){ eMsg="AI is unreachable right now — try again in a moment."; } }
+    var viaOai=byokSettle(bk,d);
     _aiBusy=false;
     if(seq!==_aiSeq||_aiCtx!==c)return;   /* stale response: popup was closed or retargeted while awaiting */
     if(eMsg){ res.innerHTML=""; er.textContent=eMsg; er.style.display="block"; return; }
@@ -1752,7 +1920,8 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     res.innerHTML='<div class="aicard" style="margin:9px 0 0"><div class="old">'+esc(c.text)+'</div><div class="new">'+esc(nw)+'</div>'+
       '<div class="aieval"><span class="ev '+(ev.faith>=90?"good":"warn")+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+
       (ev.rel!=null?'<span class="ev '+(ev.rel>=50?"good":"warn")+'">jd match '+ev.rel+'%</span>':'')+'</div>'+
-      '<div class="lprow" style="margin-top:9px"><button class="go" data-act="aiPopApply">✓ Apply</button><button data-act="aiPopCopy">Copy</button><button data-act="aiPopGo" data-hum="'+(humanize?1:0)+'">↻ Try again</button></div></div>';
+      '<div class="lprow" style="margin-top:9px"><button class="go" data-act="aiPopApply">✓ Apply</button><button data-act="aiPopCopy">Copy</button><button data-act="aiPopGo" data-hum="'+(humanize?1:0)+'">↻ Try again</button></div>'+
+      (byokNote(bk,viaOai)?'<div class="hint" style="margin-top:6px">'+esc(byokNote(bk,viaOai).replace(/^ · /,""))+'</div>':'')+'</div>';
     /* the result card grows the popup past its open-time clamp — re-clamp so ✓ Apply stays reachable in short panels */
     try{ var pb=_aiPop.getBoundingClientRect(); if(pb.bottom>innerHeight-8)_aiPop.style.top=Math.max(10,innerHeight-8-pb.height)+"px"; }catch(e){} };
   window.aiPopApply=function(){ var a=AI_LAST; if(!a||!a.ctx)return; var c=a.ctx,nw=a.text;
@@ -1790,11 +1959,13 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(!CUR){ aiMsg("aiCvMsg","Run the analysis first."); return; }
     var doc=document.getElementById("resumeDoc");
     if(doc&&doc.dataset&&doc.dataset.dirty==="1"){ aiMsg("aiCvMsg","Finish manual editing first (✓ Done) — a batch AI pass would overwrite your changes."); return; }
-    var run0=CUR, cv=CUR.cvBase||CUR.cv, bl=collectBullets(cv);
+    var run0=CUR, cv=CUR.cvBase||CUR.cv, bl=collectBullets(cv,mode==="tailor"?999:12);
     var body;
     if(mode==="review")body=Object.assign({mode:"review",critique:true,bullets:bl},aiGround(cv));
+    else if(mode==="tailor")body=Object.assign({mode:"tailor",master:String((window.__masterText&&window.__masterText())||"").slice(0,12000),bullets:bl},aiGround(cv));
     else body=Object.assign({mode:"humanize",texts:[{id:"sum",text:cv.summary||""}].concat(bl.slice(0,7)).filter(function(t){return t.text;})},aiGround(cv));
-    aiMsg("aiCvMsg",'<span class="spin"></span>'+(mode==="review"?"AI is enriching your bullets against this JD, then critiquing itself… (~8s)":"AI is rewording your résumé in a human voice — every fact and number stays…"));
+    var bk=byokAttach(body);
+    aiMsg("aiCvMsg",'<span class="spin"></span>'+(mode==="review"?"AI is enriching your bullets against this JD, then critiquing itself… (~8s)":mode==="tailor"?"AI is tailoring your whole résumé to this JD in one pass — summary + bullets, every fact locked…":"AI is rewording your résumé in a human voice — every fact and number stays…"));
     var d=null;
     if(window.__AI_FAKE){ d=window.__AI_FAKE; }
     else{ if(!SB||!AUTH_USER){ aiMsg("aiCvMsg","Sign in to use AI editing."); return; }
@@ -1803,17 +1974,19 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
           aiMsg("aiCvMsg",(st===429)?"⏳ Daily AI limit reached — try again tomorrow. Deterministic tailoring keeps working.":(st===404)?"AI backend isn't deployed yet — deterministic tailoring still has you covered.":"AI is unreachable right now — try again in a moment."); return; }
         d=r.data||{};
       }catch(e){ aiMsg("aiCvMsg","AI is unreachable right now — try again in a moment."); return; } }
+    var viaOai=byokSettle(bk,d);
     /* the await freed the event loop — re-check the world before touching anything */
     if(CUR!==run0){ aiMsg("aiCvMsg","That AI pass expired — a new analysis ran while it was working. Nothing was changed."); return; }
     var doc2=document.getElementById("resumeDoc");
     if(doc2&&doc2.dataset&&doc2.dataset.dirty==="1"){ aiMsg("aiCvMsg","You started manual edits while AI was working — nothing was applied, so they stay safe."); return; }
-    if(mode!=="review"&&!window.__AI_FAKE&&(!d||d._v!==2)){ aiMsg("aiCvMsg","Humanize needs the latest AI backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
+    if(mode!=="review"&&!window.__AI_FAKE&&(!d||d._v!==2)){ aiMsg("aiCvMsg","This AI pass needs the latest backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
+    if(mode==="tailor"&&!window.__AI_FAKE&&d._mode!=="tailor"){ aiMsg("aiCvMsg","✦ Tailor to JD needs the newest AI backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
     var byId={}; bl.forEach(function(b){byId[b.id]=b.text;});
     var cand=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(x){return x&&byId[x.id];});
     var rws=cand.map(function(x){return {id:x.id,text:deSlop(String(x.text||"").trim())};})
-                .filter(function(x){return validRewrite(byId[x.id],x.text)&&slopFree(x.text,byId[x.id]);}).slice(0,12);
+                .filter(function(x){return validRewrite(byId[x.id],x.text)&&slopFree(x.text,byId[x.id]);}).slice(0,mode==="tailor"?60:12);
     var sumNew="",sc=sumContext();
-    if(mode==="review"&&typeof d.summary==="string")sumNew=deSlop(d.summary.trim());
+    if(mode!=="humanize"&&typeof d.summary==="string")sumNew=deSlop(d.summary.trim());
     if(mode==="humanize"){ var s0=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(x){return x&&x.id==="sum";})[0];
       if(s0)sumNew=deSlop(String(s0.text||"").trim()); rws=rws.filter(function(x){return x.id!=="sum";}); }
     var sumOK=!!(sumNew&&slopFree(sumNew,sc.src)&&validSummary(sc.src,sumNew,sc.years,sc.role,sc.realTitle));
@@ -1826,12 +1999,13 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
     AI_AFTER=JSON.stringify(CUR.cvBase); AI_UNDO_FORCE=0;
     var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,3);
-    aiMsg("aiCvMsg",'✦ Applied '+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
-      (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+
+    aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
+      (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai))+
       ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+
       (tips.length?'<div style="margin-top:6px">'+tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("")+'</div>':"")); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
+  window.aiTailorJD=function(){ aiBulk("tailor"); };
   window.aiUndoAll=function(){ if(!AI_UNDO||!CUR)return;
     if(AI_UNDO_RUN!==CUR){ aiMsg("aiCvMsg","That undo expired — a new analysis was run since."); AI_UNDO=null; return; }
     if(AI_AFTER&&JSON.stringify(CUR.cvBase)!==AI_AFTER&&!AI_UNDO_FORCE){ AI_UNDO_FORCE=1;
@@ -1849,14 +2023,17 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var prose=cut>=0?cover.slice(0,cut):cover, sig=cut>=0?cover.slice(cut):"";
     var cv=CUR.cvBase||CUR.cv;
     aiMsg("aiClMsg",'<span class="spin"></span>AI is rewording the letter in a human voice — your facts, numbers and signature stay…');
-    var d=null;
+    var d=null,bk="";
     if(window.__AI_FAKE_COVER){ d=window.__AI_FAKE_COVER; }
     else{ if(!SB||!AUTH_USER){ aiMsg("aiClMsg","Sign in to use AI editing."); return; }
-      try{ var r=await SB.functions.invoke("ai",{body:Object.assign({mode:"cover",cover:prose.slice(0,2600),tone:"balanced"},aiGround(cv))});
+      var body=Object.assign({mode:"cover",cover:prose.slice(0,2600),tone:"balanced"},aiGround(cv));
+      bk=byokAttach(body);
+      try{ var r=await SB.functions.invoke("ai",{body:body});
         if(r.error){ var st=r.error.context&&r.error.context.status;
           aiMsg("aiClMsg",(st===429)?"⏳ Daily AI limit reached — try again tomorrow.":(st===404)?"AI backend isn't deployed yet — the deterministic letter stands.":"AI is unreachable right now — try again in a moment."); return; }
         d=r.data||{};
       }catch(e){ aiMsg("aiClMsg","AI is unreachable right now — try again in a moment."); return; } }
+    var viaOai=byokSettle(bk,d);
     /* the await freed the event loop — never write a Company-A letter into a Company-B analysis */
     if(CUR!==run0){ aiMsg("aiClMsg","That Humanize expired — a new analysis ran while it was working. Nothing was changed."); return; }
     var cd2=document.getElementById("coverDoc");
@@ -1869,7 +2046,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     AI_UNDO_COVER=cover; AI_UNDO_COVER_RUN=CUR;
     CUR.cover=sanitizeCover(nw)+sig;
     try{ renderCover(); }catch(e){}
-    aiMsg("aiClMsg",'✦ Letter humanized — facts and signature untouched. <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
+    aiMsg("aiClMsg",'✦ Letter humanized — facts and signature untouched.'+esc(byokNote(bk,viaOai))+' <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
   window.aiUndoCover=function(){ if(!AI_UNDO_COVER||!CUR)return;
     if(AI_UNDO_COVER_RUN!==CUR){ aiMsg("aiClMsg","That undo expired — a new analysis was run since."); AI_UNDO_COVER=null; return; }
     CUR.cover=AI_UNDO_COVER; AI_UNDO_COVER=null; try{ renderCover(); }catch(e){} aiMsg("aiClMsg","↩ Reverted to the previous letter."); };
@@ -1911,6 +2088,62 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
       const d=r.data||{}; seeded+=(d.seeded||0); total=d.total||total; console.log("  seeded "+seeded+"/"+total+(d.failed?(" ("+d.failed+" failed in batch)"):"")); if(d.next==null)break; off=d.next; }
     console.log("✅ KB seed done: "+seeded+"/"+total); return {seeded:seeded,total:total}; };
 
+  /* ---- BYOK (bring-your-own OpenAI key) — device-local, NEVER synced, self-capped 10/day ----
+     The key rides in the request BODY (the edge fn's CORS Allow-Headers is a closed set — a custom
+     header would fail preflight); a stale backend ignores the unknown field and answers via Groq.
+     Counter semantics: byokAttach only CHECKS the cap; the use is charged in byokSettle and only
+     when the response proves the key answered (_byok:true) — so early-return paths never leak a
+     charge, at the cost of a benign race two parallel calls wide (matches the app's sync posture). */
+  var OAIK="apply_oaikey_v1", BYOKCT="apply_byokct_v1", BYOK_DAILY=10;
+  function byokGet(){ try{ var o=JSON.parse(localStorage.getItem(OAIK)||"null"); if(!o||typeof o.key!=="string")return null;
+    var k=o.key.replace(/\s+/g,""); if(!/^sk-[\w-]{20,}/.test(k))return null; return {key:k,model:String(o.model||"gpt-5-mini")}; }catch(e){ return null; } }
+  function byokDay(){ return new Date().toISOString().slice(0,10); }
+  function byokCt(){ try{ var c=JSON.parse(localStorage.getItem(BYOKCT)||"null")||{}; return c.day===byokDay()?{day:c.day,n:Math.max(0,+c.n||0)}:{day:byokDay(),n:0}; }catch(e){ return {day:byokDay(),n:0}; } }
+  function byokSpend(d){ var c=byokCt(); c.n=Math.max(0,c.n+d); try{ localStorage.setItem(BYOKCT,JSON.stringify(c)); }catch(e){} return c.n; }
+  function byokLeft(){ return Math.max(0,BYOK_DAILY-byokCt().n); }
+  function byokCapMsg(){ return " · your OpenAI key hit its "+BYOK_DAILY+"/day self-cap, so this ran on the built-in AI"; }
+  /* attach to an outgoing body → "" (no key) | "on" (attached) | "cap" (key saved but self-cap hit) */
+  function byokAttach(body){ var k=byokGet(); if(!k)return "";
+    if(byokLeft()<=0)return "cap";
+    body.byok={provider:"openai",key:k.key,model:k.model}; return "on"; }
+  /* after the response: charge only when the caller's key actually answered */
+  function byokSettle(state,d){ if(state!=="on"||!d||d._byok!==true)return false; byokSpend(1); return true; }
+  function byokNote(state,viaOai){ return viaOai?" · ✦ via your OpenAI key":state==="cap"?byokCapMsg():state==="on"?" · your OpenAI key wasn't used (check ⚙ AI; the backend may need a re-paste) — this ran on the built-in AI":""; }
+
+  /* ---- ⚙ AI settings popup (key + model; key is never echoed back) ---- */
+  var _aiKeys=null;
+  function aiKeysPopEl(){ if(_aiKeys)return _aiKeys;
+    var p=document.createElement("div"); p.id="aiKeysPop";
+    p.innerHTML='<p class="lpt"><span>⚙ AI settings</span><span class="x" data-act="aiKeysClose">✕</span></p>'+
+      '<label>OpenAI API key — optional</label>'+
+      '<input id="akKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…">'+
+      '<label>Model</label>'+
+      '<select id="akModel">'+["gpt-5-mini","gpt-5","gpt-4.1","gpt-4.1-mini","gpt-4o","gpt-4o-mini"].map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join("")+'</select>'+
+      '<p class="akhint" id="akLeft"></p>'+
+      '<p class="akhint">Stays on this device only — never synced, wiped on sign-out. Billed to your OpenAI account; self-capped at '+BYOK_DAILY+' uses/day. If your key fails, the built-in free AI answers instead.</p>'+
+      '<p class="lperr" id="akErr"></p>'+
+      '<div class="lprow"><button class="lpsave" data-act="aiKeysSave">Save</button><button data-act="aiKeysClose">Close</button><button class="lpdel" data-act="aiKeysClear">Remove key</button></div>';
+    document.body.appendChild(p); _aiKeys=p;
+    document.addEventListener("mousedown",function(e){ if(_aiKeys&&_aiKeys.style.display==="block"&&!_aiKeys.contains(e.target))_aiKeys.style.display="none"; });
+    return p; }
+  function aiKeysStatus(){ var k=byokGet(),inp=$("akKey"),sel=$("akModel"),l=$("akLeft");
+    if(inp){ inp.value=""; inp.placeholder=k?"•••• saved — paste a new key to replace":"sk-…"; }
+    if(sel&&k)sel.value=k.model;
+    if(l)l.textContent=k?("Key saved · "+byokCt().n+" of "+BYOK_DAILY+" uses today · ✦ buttons route through it automatically."):"No key saved — ✦ buttons use the built-in free AI."; }
+  window.aiKeysOpen=function(el){ var p=aiKeysPopEl(); aiKeysStatus(); var er=$("akErr"); if(er)er.style.display="none";
+    p.style.display="block";
+    var r=(el&&el.getBoundingClientRect)?el.getBoundingClientRect():{right:window.innerWidth-10,bottom:56};
+    var pw=p.offsetWidth||340;
+    p.style.left=Math.max(10,Math.min(r.right-pw,window.innerWidth-pw-10))+"px";
+    p.style.top=Math.max(10,Math.min(r.bottom+8,window.innerHeight-160))+"px"; };
+  window.aiKeysSave=function(){ var er=$("akErr"); if(er)er.style.display="none";
+    var raw=(($("akKey")||{}).value||"").replace(/\s+/g,""), model=(($("akModel")||{}).value)||"gpt-5-mini", cur=byokGet();
+    if(!raw&&cur){ try{ localStorage.setItem(OAIK,JSON.stringify({key:cur.key,model:model})); }catch(e){} aiKeysStatus(); return; }   /* model-only update */
+    if(!/^sk-[\w-]{20,}/.test(raw)){ if(er){ er.textContent="That doesn't look like an OpenAI key (sk-…)."; er.style.display="block"; } return; }
+    try{ localStorage.setItem(OAIK,JSON.stringify({key:raw,model:model})); }catch(e){}
+    aiKeysStatus(); };
+  window.aiKeysClear=function(){ try{ localStorage.removeItem(OAIK); localStorage.removeItem(BYOKCT); }catch(e){} aiKeysStatus(); };
+
   /* CSP-safe action registry for this block's controls (dispatcher lives in the logic block) */
   if(window.__act)window.__act({
     authSubmit:function(){ window.authSubmit(); }, authToggle:function(){ window.authToggleMode(); },
@@ -1919,6 +2152,8 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     aiPopGo:function(el){ window.aiPopGo(el.dataset.hum==="1"); }, aiPopApply:function(){ window.aiPopApply(); }, aiPopCopy:function(el){ window.aiPopCopy(el); },
     aiUndoAll:function(){ window.aiUndoAll(); }, aiUndoCover:function(){ window.aiUndoCover(); },
     outContacts:function(){ window.outContacts(); },
+    aiKeys:function(el){ window.aiKeysOpen(el); }, aiKeysClose:function(){ if(_aiKeys)_aiKeys.style.display="none"; },
+    aiKeysSave:function(){ window.aiKeysSave(); }, aiKeysClear:function(){ window.aiKeysClear(); },
   });
 
   renderForm();
@@ -1928,7 +2163,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     SB.auth.onAuthStateChange(function(event,session){
       AUTH_USER = session ? session.user : null; SESS = session || null;
       /* sign-out wipes this device's local copy so the next account starts clean, then reloads to a fresh gate */
-      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); localStorage.removeItem(DKEY); }catch(e){} location.reload(); return; }
+      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); localStorage.removeItem(DKEY); localStorage.removeItem(OAIK); localStorage.removeItem(BYOKCT); }catch(e){} location.reload(); return; }
       setAuthed(!!AUTH_USER);
       /* Supabase re-fires SIGNED_IN on every tab refocus — pull + welcome-scroll only ONCE per page load,
          so returning to the tab leaves the user exactly where they were */
