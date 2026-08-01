@@ -150,6 +150,11 @@
   .ko.bad{background:rgba(255,76,36,.14)}
   .ok5{color:var(--hd)}
   .drop{border:1.5px dashed var(--ash);border-radius:var(--r);padding:26px;text-align:center;background:var(--card2)}
+  .mgrid{display:grid;grid-template-columns:1fr 40px 1fr;gap:10px;align-items:stretch}
+  .mgrid .drop{display:flex;flex-direction:column;justify-content:flex-start;margin:0}
+  .mgrid .mpaste textarea{flex:1;min-height:120px;text-align:left}
+  .mor{display:flex;align-items:center;justify-content:center;font:600 11px var(--mono);letter-spacing:.18em;color:var(--mut);text-transform:uppercase}
+  @media(max-width:840px){.mgrid{grid-template-columns:1fr}.mor{padding:2px 0}}
   .mono{white-space:pre-wrap;font:500 12px/1.5 var(--mono);background:var(--card);border:1px solid var(--ln);border-radius:var(--r);padding:11px;color:var(--tx);max-height:260px;overflow:auto}
   .runlog{min-height:170px}
   .runline{padding:3px 0;color:var(--fnt);transition:color .3s}.runline.done{color:var(--tx)}.runline.now{color:var(--acc)}
@@ -197,6 +202,7 @@
   .doc a{color:#1b59b3}
   .doc h3.n{font-size:21pt;margin:0;font-weight:800;letter-spacing:.3px;color:#0e1320;text-align:center}
   .doc .ti{font-size:10.8pt;font-weight:600;color:#1b59b3;margin-top:1px;text-align:center}
+  .doc .clhead{font-weight:700}
   .doc .ct{font-size:9pt;color:#444;margin-top:5px;text-align:center}
   .doc h4{font-size:10pt;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:#0e1320;border-bottom:1.4px solid #c4cdda;padding-bottom:2px;margin:14px 0 6px}
   .doc .role{display:flex;justify-content:space-between;gap:10px;font-size:10.4pt;margin-top:8px}
@@ -308,16 +314,22 @@
   <section class="step" id="pane-mr"><div class="wm reveal" aria-hidden="true">Master</div><div class="panel reveal">
     <div class="seclabel">⓪ · Master résumé</div>
     <div id="mEmpty">
-      <div class="banner"><b>Just upload your résumé.</b> PDF or text — whatever you have. It becomes your <b>master</b>; every job you paste then rebuilds it into a tailored, ATS-clean version. No fields, no sign-up, no AI keys.</div>
-      <div class="drop">
-        <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⬆ UPLOAD ]</div>
-        <div style="margin:7px 0"><b>Upload your résumé</b> (PDF, TXT or LaTeX .tex)</div>
-        <input type="file" id="mFileIn" accept=".pdf,.txt,.tex" data-chg="resumeFile" style="max-width:320px;margin:0 auto">
-        <div class="hint" id="imMsg" style="margin-top:9px"></div>
+      <div class="banner"><b>Upload your résumé once — or paste its source.</b> Either becomes your <b>master</b>; every job you paste then rebuilds it into a tailored, ATS-clean version. A LaTeX master is kept verbatim — tailored bullets splice back into your .tex and compile in Overleaf. No fields, no AI keys.</div>
+      <div class="mgrid">
+        <div class="drop">
+          <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⬆ UPLOAD A FILE ]</div>
+          <div style="margin:7px 0"><b>Upload your résumé</b><br><span class="hint">PDF · TXT · LaTeX .tex (from Overleaf)</span></div>
+          <input type="file" id="mFileIn" accept=".pdf,.txt,.tex" data-chg="resumeFile" style="max-width:320px;margin:0 auto">
+        </div>
+        <div class="mor">or</div>
+        <div class="drop mpaste">
+          <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⌨ PASTE THE SOURCE ]</div>
+          <div style="margin:7px 0"><b>Paste your résumé</b><br><span class="hint">plain text · full LaTeX source (Overleaf → Menu → Source) · Markdown</span></div>
+          <textarea id="mPaste" class="short" placeholder="Paste the full text of your résumé — or your entire LaTeX source…"></textarea>
+          <div class="row" style="margin-top:8px;justify-content:center"><button class="sm" data-act="setMasterFromPaste">Set as master</button><button class="sm ghost" data-act="loadSample">Load a sample</button></div>
+        </div>
       </div>
-      <label class="fld" style="margin-top:11px">…or paste your résumé text, then “Set as master”</label>
-      <textarea id="mPaste" class="short" placeholder="Paste the full text of your résumé…"></textarea>
-      <div class="row" style="margin-top:8px"><button class="sm" data-act="setMasterFromPaste">Set as master</button><button class="sm ghost" data-act="loadSample">Load a sample</button></div>
+      <div class="hint" id="imMsg" style="margin-top:9px"></div>
     </div>
     <div id="mSet" style="display:none">
       <div class="box ok">
@@ -377,7 +389,7 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed" style="width:auto;padding:7px 9px;font-size:10.5px"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll">✦ Improve bullets</button><button class="sm ghost" id="aiHumBtn" data-act="aiHumanizeResume">✦ Humanize</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
+        <div class="row"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed" style="width:auto;padding:7px 9px;font-size:10.5px"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve bullets</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="resumeDoc"></div>
@@ -401,10 +413,10 @@
     <div id="clEmpty" class="empty">Run analysis to generate a matching cover letter.</div>
     <div id="clBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Cover letter</div>
-        <div class="row"><button class="sm ghost" id="aiHumClBtn" data-act="aiHumanizeCover">✦ Humanize</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc">Copy</button></div></div>
+        <div class="row"><button class="sm ghost" id="aiHumClBtn" data-act="aiHumanizeCover" title="AI rewrites the letter into the proven 5-part structure (role+company → employer evidence → projects → why this company → close) using only your facts">✦ AI letter</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc">Copy</button></div></div>
       <div class="hint" id="aiClMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="coverDoc"></div>
-      <div class="hint" style="margin-top:7px">The letter follows your résumé live — accepted keywords, AI rewrites and summary edits flow into it. <b>✦ Humanize</b> rewrites the prose in a natural voice (your facts and numbers stay untouched); while editing, click any paragraph for the <b>✦ AI edit</b> popup.</div>
+      <div class="hint" style="margin-top:7px">The letter follows your résumé live — accepted keywords, AI rewrites and summary edits flow into it. <b>✦ AI letter</b> rewrites it into the proven 5-part structure (your facts and numbers stay untouched); while editing, click any paragraph for the <b>✦ AI edit</b> popup.</div>
     </div>
   </div></section>
 
@@ -586,6 +598,8 @@ function texInline(s){ s=String(s||"");
   s=s.replace(/---/g,"—").replace(/--/g,"–");
   s=s.replace(/``|''/g,'"').replace(/`/g,"'");
   s=s.replace(/\\[A-Za-z]+\*?\s*\{\s*-?[\d.]+\s*(?:pt|em|ex|cm|mm|in|bp|sp)\s*\}/g," ");
+  s=s.replace(/\\fontsize\s*\{[^{}]*\}\s*\{[^{}]*\}/g," ");                        /* {25}{28} residue would leak digits */
+  s=s.replace(/\\(?:color|textcolor|pagecolor|colorbox|rowcolor|cellcolor)\s*\{[^{}]*\}/g," ");   /* {ink}/{role} residue would leak palette names */
   s=s.replace(/\\([{}])|\\[A-Za-z]+\*?|[{}]/g,function(m,e){ return e||(m.charAt(0)==="\\"?" ":""); });
   return s.replace(/[ \t]{2,}/g," ").trim(); }
 function texToText(src){ try{
@@ -784,7 +798,7 @@ function setMasterView(which){ which=which==="ats"?"ats":"raw"; M._view=which;
   [["mvRaw","raw"],["mvAts","ats"]].forEach(([id,v])=>{ const b=document.getElementById(id); if(b)b.classList.toggle("primary",v===which); }); }
 function renderAtsView(p){ if(!p)return '<div class="hint">Nothing parsed yet — the master looks empty or unreadable.</div>';
   const chip=(label,val)=>val?'<span class="kchip have">'+esc(label)+": "+esc(String(val).slice(0,60))+'</span>':'<span class="kchip miss">'+esc(label)+': ✗ not found</span>';
-  let h='<div class="box"><h5>// Contact</h5>'+["name","email","phone","location","linkedin","github"].map(k=>chip(k,p[k])).join(" ")+'</div>';
+  let h='<div class="box"><h5>// Contact</h5>'+["name","headline","email","phone","location","linkedin","github"].map(k=>chip(k,p[k])).join(" ")+'</div>';
   h+='<div class="box"><h5>// Experience · '+(p.experience||[]).length+' roles</h5>'+((p.experience||[]).length?(p.experience||[]).map(e=>'<div class="hint" style="margin:3px 0">'+esc(e.role||"")+(e.role?" · ":"")+esc(e.org||"")+" · "+(e.dates?esc(e.dates):'<span class="kchip miss">✗ no dates</span>')+" · "+((e.bullets||[]).length)+" bullets</div>").join(""):'<span class="kchip miss">✗ no roles found</span>')+'</div>';
   h+='<div class="box"><h5>// Skills · '+(p.skills||[]).length+' groups</h5>'+((p.skills||[]).length?(p.skills||[]).map(g=>'<div class="hint" style="margin:3px 0"><b>'+esc(g.group)+'</b> · '+(g.items||[]).length+' items</div>').join(""):'<span class="kchip miss">✗ none found — an ATS sees no skills section</span>')+'</div>';
   const cnt=(label,arr,sample)=>'<div class="box"><h5>// '+label+' · '+(arr||[]).length+'</h5>'+((arr||[]).length?'<div class="hint">'+esc(String(sample||"").slice(0,110))+'</div>':'<span class="kchip miss">✗ none found</span>')+'</div>';
@@ -886,6 +900,15 @@ function parseSkills(s){ s=String(s||""); const lines=s.split(/\n+/).map(x=>x.tr
 function expHeaderStrong(l){ if(!l)return false; if(RANGE.test(l))return true; if(TITLE_KW.test(l)&&l.length<110)return true; if(/\s(?:[–—]|\||@|\bat\b)\s/i.test(l)&&/[A-Z]/.test(l)&&l.length<110)return true; return false; }
 const LOCRE=/^[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2}$/;
 const LOCEND=/^(.*?)[ ,]+([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2})\s*$/;
+/* 3-part "City, State, Country" (Gurgaon, Haryana, India) — exact-shape twins of LOCRE/LOCEND.
+   LOCEND3's prefix is GREEDY so the shortest 3-part tail wins (org keeps "ZS Associates", not "ZS"). */
+const LOCRE3=/^[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2}$/;
+const LOCEND3=/^(.*)[ ,]+([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2},\s*[A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){0,2})\s*$/;
+const CAMPUS_RE=/^(?:universit|institut|college|school|department|technolog|academy|faculty)/i;
+/* greedy LOCEND3 can bite a multi-word city in half ("HCL Technologies New" + "Delhi, …") — shift a
+   dangling direction/city-prefix word from the org back onto the location. Shared by splitHeader + orgFirstMerge. */
+function locShift(org,loc){ const dw=org.match(/\s(New|Navi|Greater|North|South|East|West|Old|San|Los|Las|Port|Fort|Mount|Saint|St\.?|Sri|Nueva|Nova)$/i);
+  return dw?[org.slice(0,dw.index),org.slice(dw.index+1)+" "+loc]:[org,loc]; }
 /* separator residue killer: re-uploading a generated PDF used to leave the render's " · " inside org/degree,
    and every upload→generate cycle ADDED one more dot ("ZS Associates · · ·"). Collapse runs, strip edges. */
 function cleanSep(s){ s=String(s||"").replace(/[·•]\s*(?=[·•])/g,"");
@@ -894,9 +917,37 @@ function cleanSep(s){ s=String(s||"").replace(/[·•]\s*(?=[·•])/g,"");
 function splitHeader(h){ h=h.replace(RANGE,"").replace(/(?:\s*[·•]){2,}/g," · ").replace(/\s{2,}/g," ").trim().replace(/[|,]+$/,"").trim();
   let parts=h.split(/\s+(?:[–—|·•]|@|\bat\b)\s+/i).map(x=>cleanSep(tidy(x))).filter(Boolean);
   const role=parts.shift()||""; let org="",location="";
-  if(parts.length){ const lm=parts[0].match(LOCEND); if(lm){ org=lm[1].trim(); location=lm[2].trim(); } else org=parts[0]; }
-  for(let i=1;i<parts.length;i++){ const p=parts[i]; if(!p)continue; if(!location&&LOCRE.test(p))location=p; else if(!LOCRE.test(p))org=org?org+" - "+p:p; }
+  if(parts.length){ const l3=parts[0].match(LOCEND3); const lm=(l3&&!CAMPUS_RE.test(l3[2]))?l3:parts[0].match(LOCEND);
+    if(lm){ org=lm[1].trim(); location=lm[2].trim(); if(lm===l3){ const s=locShift(org,location); org=s[0]; location=s[1]; } } else org=parts[0]; }
+  for(let i=1;i<parts.length;i++){ const p=parts[i]; if(!p)continue; const isLoc=LOCRE.test(p)||LOCRE3.test(p); if(!location&&isLoc)location=p; else if(!isLoc)org=org?org+" - "+p:p; }
   return {role:cleanSep(role).slice(0,90),org:cleanSep(org).slice(0,90),location:cleanSep(location)}; }
+/* org-first two-line entries ("ZS Associates Gurgaon, Haryana, India" ↵ "Decision Analytics Associate May 2025 – May 2026")
+   — the layout the owner's LaTeX template compiles to (org+location line, then role+dates line). Fuse the pair into
+   ONE role-first header BEFORE entry detection, so role/org stop swapping and the org line stops becoming a stray
+   bullet of the previous role. Guards keep it off role-first shapes: the org half must have no dates, no ·/•/|
+   separator (those are already-structured sub-lines), no sentence ending, no TITLE_KW role word — and must either
+   end in a location ("City, Country" / "City, State, Country") or be a short unpunctuated name whose partner line
+   carries a real role keyword. */
+function orgFirstMerge(ls){ const out=[];
+  for(let i=0;i<ls.length;i++){ const a=ls[i], b=ls[i+1];
+    /* context guard: a wrapped-bullet CONTINUATION (previous line hangs without terminal punctuation)
+       is never an org line — without this, "…10M rows daily using" ↵ "Spark and Kafka" ↵ "Role dates"
+       stole the tech tail as the next entry's org AND truncated the bullet */
+    const prevOk=(i===0)||/[.!?…]["')\]]*\s*$/.test(ls[i-1]);
+    if(prevOk&&b&&!ENTRY_BULLET.test(a)&&!ENTRY_BULLET.test(b)&&!RANGE.test(a)&&RANGE.test(b)&&b.length<=110){
+      const ac=a.trim();
+      const res=b.replace(RANGE,"").replace(/[·•|,()–—-]+/g," ").replace(/\s{2,}/g," ").trim();
+      const roleish=!!res&&res.length<=60&&!/[.!?]$/.test(res)&&/^[A-ZÀ-Þ(]/.test(res);
+      const clean=ac.length>=2&&ac.length<=80&&!/[.!?:]$/.test(ac)&&/^[A-ZÀ-Þ(]/.test(ac)&&!/[·•|]|\s[–—]\s|@/.test(ac)&&!TITLE_KW.test(ac);
+      const l3=clean?ac.match(LOCEND3):null;   /* 3-part only — "Org City, Country" is ambiguous ("Acme Corp New York, USA"), leave it to the old path */
+      const hasLoc=!!(l3&&l3[1].trim()&&!CAMPUS_RE.test(l3[2]));
+      const orgish=clean&&(hasLoc||(ac.split(/\s+/).length<=4&&!/,/.test(ac)));
+      if(roleish&&orgish&&(hasLoc||TITLE_KW.test(res))){
+        let hd=ac;
+        if(hasLoc){ const s=locShift(l3[1].trim().replace(/[,\s]+$/,""),l3[2].trim()); hd=s[0]+" · "+s[1]; }
+        out.push(b.trim()+" — "+hd); i++; continue; } }
+    out.push(a); }
+  return out; }
 function parseExpLines(lines){ const out=[]; let cur=null;
   for(const raw of lines){ const hadMarker=ENTRY_BULLET.test(raw); const l=raw.replace(ENTRY_BULLET,"").trim(); if(!l)continue;
     const dm=l.match(RANGE);
@@ -909,7 +960,7 @@ function parseExpLines(lines){ const out=[]; let cur=null;
     else { cur={header:l,dates:dm?normRange(dm[0]):"",bullets:[]}; out.push(cur); } }
   return out.map(e=>{ const hp=splitHeader(e.header); return {role:hp.role,org:hp.org,location:hp.location,dates:e.dates,bullets:e.bullets.filter(b=>b.length>2).slice(0,12)}; }).filter(e=>e.role||e.org||e.bullets.length).slice(0,14); }
 function parseExp(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.trim()).filter(Boolean);
-  if(_ls.length>=2){ const r=parseExpLines(_ls); if(r.length)return r; }
+  if(_ls.length>=2){ const r=parseExpLines(orgFirstMerge(_ls)); if(r.length)return r; }
   s=s.replace(/\s+/g," ").trim(); if(!s)return[];
   const drP=new RegExp("((?:"+MONTHS+"\\s*)?\\d{4})\\s*[\\u2013\\u2014-]\\s*((?:"+MONTHS+"\\s*)?(?:\\d{4}|present|current|now))","gi");
   s=s.replace(drP,(a,b,c)=>b.trim()+"~"+c.trim());
@@ -947,10 +998,40 @@ function parseProjHead(head){ let desc="",name=head,rest=""; const bar=head.inde
   name=name.replace(/\s*\(([^)]*(?:19|20)\d{2}[^)]*)\)\s*$/,"").replace(/[\s–—-]+$/,"").trim(); name=tidy(name.replace(/^[^A-Za-z0-9]+/,"")).slice(0,80);
   let link="",label="",tech=[]; rest.split("|").map(x=>x.trim()).filter(Boolean).forEach(x=>{ const lb=projLinkBits(x); if(lb){ if(!link)link=lb.link; if(!label)label=lb.label; if(lb.tech)tech.push(lb.tech); } else if(/^github$/i.test(x)){ if(!link)link="__profile__"; } else if(/^(link|demo|live|code|repo)$/i.test(x)){} else tech.push(x); });
   return {name,tech:tidy(tech.join(", ")),link,label,desc:desc?tidy(desc):""}; }
+/* real-PDF project heads (the owner's LaTeX template compiles to these):
+   "Apply Copilot Live Demo (https://…)" — name + renamed anchor + recovered url on ONE line, no "|";
+   "Cold Email Generator" followed by a bare tech-stack line ("Python, OpenAI API, NLP").
+   Without these, the whole line used to become the project NAME (url and all), the stack line fused into the
+   first bullet, and later projects collapsed into bullets of the first. */
+function projUrlHead(s){ if(/\|/.test(s)||s.length>120||/[.!?]$/.test(s))return null;
+  if(!/https?:\/\/|(?:^|[\s(])github\.com\//i.test(s))return null;
+  const bare=s.replace(/\(?\s*(?:https?:\/\/|github\.com\/)[^\s)]*\)?/ig," ").replace(/\s{2,}/g," ").trim();
+  if(!bare||bare.split(/\s+/).length>10||!/^[A-ZÀ-Þ0-9]/.test(bare))return null;
+  if(/^(?:github|live|demo|link|code|repo|view|visit|website)(?:\s+(?:github|live|demo|link|code|repo|view|visit|website))*$/i.test(bare))return null;   /* "GitHub (url)" alone = an anchor, not a project */
+  const lb=projLinkBits(s); if(!lb||!lb.link)return null;
+  /* name + anchor label come from the url-stripped ORIGINAL line, so a two-word anchor ("Live Demo")
+     survives whole instead of losing the token projLinkBits already consumed */
+  let name=bare, label="";
+  const t=name.match(/((?:\s+(?:github|live|demo|link|code|repo|view|visit|website))+)\s*$/i);
+  if(t){ label=t[1].trim(); name=name.slice(0,t.index); }
+  name=tidy(name).replace(/[|·•,:\s-]+$/,"").trim(); if(name.length<2)return null;
+  return {name:name.slice(0,80),link:lb.link,label:label||lb.label||""}; }
+function techStackLine(s){ if(!s||s.length>140||/[.!?]$/.test(s))return false;
+  if(/(?:^|\s)(?:were|was|is|are|used|using|which|that|this|the|for|with|from|into|by)(?:\s|$)/i.test(s))return false;   /* prose, not a stack list ("of" allowed: Internet of Things) */
+  const seps=(s.match(/[•·]/g)||[]).length, commas=(s.match(/,/g)||[]).length;
+  return (seps>=2||commas>=2)&&!RANGE.test(s)&&!/https?:\/\//i.test(s); }
+function projNameLine(s){ return s.length>=3&&s.length<=60&&!/[.!?:,]$/.test(s)&&/^[A-ZÀ-Þ0-9]/.test(s)&&s.split(/\s+/).length<=8&&!/[|·•,]|https?:\/\//i.test(s)&&!RANGE.test(s); }
 function parseProjects(s){ s=String(s||""); const _ls=s.split(/\n+/).map(x=>x.trim()).filter(Boolean);
   if(_ls.length>=2){ const out=[]; let cur=null;
-    for(const raw of _ls){ const stripped=raw.replace(ENTRY_BULLET,"").trim(); if(!stripped)continue;
+    for(let _i=0;_i<_ls.length;_i++){ const raw=_ls[_i]; const hadMk=ENTRY_BULLET.test(raw); const stripped=raw.replace(ENTRY_BULLET,"").trim(); if(!stripped)continue;
+      /* a wrapped-bullet CONTINUATION (current bullet hangs without terminal punctuation) is never a new head */
+      const prevDone=!cur||!cur.bullets.length||/[.!?…]["')\]]*\s*$/.test(cur.bullets[cur.bullets.length-1]);
+      const uh=(hadMk||!prevDone)?null:projUrlHead(stripped);
+      if(uh){ cur={name:uh.name,tech:"",link:uh.link,linkLabel:uh.label||"",bullets:[]}; out.push(cur); continue; }
       if(projHeadLine(stripped)){ const h=parseProjHead(stripped); cur={name:h.name,tech:h.tech,link:h.link,linkLabel:h.label||"",bullets:[]}; if(h.desc)cur.bullets.push(h.desc); out.push(cur); }
+      else if(!hadMk&&prevDone&&projNameLine(stripped)&&_i+1<_ls.length&&!ENTRY_BULLET.test(_ls[_i+1])&&techStackLine(_ls[_i+1].trim())){
+        cur={name:tidy(stripped).slice(0,80),tech:tidy(_ls[_i+1].trim()),link:"",linkLabel:"",bullets:[]}; out.push(cur); _i++; }
+      else if(cur&&!hadMk&&!cur.tech&&!cur.bullets.length&&techStackLine(stripped)){ cur.tech=tidy(stripped); }
       else if(cur){ const lb=cur.bullets.length-1; if(lb>=0&&(/^[a-z(]/.test(stripped)||!/[.!?)]$/.test(cur.bullets[lb])))cur.bullets[lb]=(cur.bullets[lb]+" "+tidy(stripped)).trim(); else cur.bullets.push(tidy(stripped)); }
       else { cur={name:tidy(stripped).slice(0,80),tech:"",link:"",bullets:[]}; out.push(cur); } }
     const r=out.map(p=>({name:p.name,tech:p.tech,link:p.link,linkLabel:p.linkLabel||"",bullets:p.bullets.filter(b=>b.length>5).slice(0,5)})).filter(p=>p.name); if(r.length)return r.slice(0,6); }
@@ -1031,7 +1112,8 @@ function parseResume(raw){ let t=deLig(String(raw||"")).replace(/\r\n?/g,"\n").r
     const nl=t.indexOf("\n",m.index); const lineEnd=nl<0?t.length:nl;
     const prefix=t.slice(lineStart,m.index), line=t.slice(lineStart,lineEnd);
     const qualified=prefix!==""&&/^[A-Za-z&\/ ]{1,24}$/.test(prefix)&&prefix.trim().split(/\s+/).length<=2&&
-      line.length<=40&&!/[.;!?,]/.test(line)&&hdrCased(line);
+      line.length<=40&&!/[.;!?,]/.test(line)&&!/\d/.test(line)&&hdrCased(line)&&
+      lineEnd-(m.index+m[0].length)<=2;   /* keyword must END the line — 'National Merit Scholarship Recipient' is an item, not a header */
     if(prefix!==""&&!qualified)continue;
     if(lineEnd-lineStart>60){
       if(prefix!==""||key==="languages")continue;               /* 'Languages & Querying: …' is a skills label, never a glued section */
@@ -1039,13 +1121,17 @@ function parseResume(raw){ let t=deLig(String(raw||"")).replace(/\r\n?/g,"\n").r
       const res=t.slice(m.index+m[0].length,lineEnd);
       if(/^\s+[a-zà-ÿ]/.test(res))continue;                     /* lowercase continuation ⇒ mid-sentence */
       const sep=(res.match(/^[\s:|·•\-–—]+/)||[""])[0].length;
-      anchored.push({key,start:lineStart,end:m.index+m[0].length+sep}); continue; }
+      anchored.push({key,start:lineStart,end:m.index+m[0].length+sep,lab:t.slice(lineStart,m.index+m[0].length)}); continue; }
     if(key==="languages"&&lineEnd-(m.index+m[0].length)>2)continue;
     const end=(nl>=0&&lineEnd-(m.index+m[0].length)<=30)?lineEnd:m.index+m[0].length;
-    anchored.push({key,start:lineStart,end}); } });
+    anchored.push({key,start:lineStart,end,lab:t.slice(lineStart,end)}); } });
   /* flattened-text fallback: 'languages' is skipped (it's almost always a 'Languages:' skills label mid-line) */
-  let found; if(anchored.length>=2){ found=anchored; } else { found=[]; SECT.forEach(([key,re])=>{ if(key==="languages")return; const m=re.exec(t); if(m)found.push({key,start:m.index,end:m.index+m[0].length}); }); }
+  let found; if(anchored.length>=2){ found=anchored; } else { found=[]; SECT.forEach(([key,re])=>{ if(key==="languages")return; const m=re.exec(t); if(m)found.push({key,start:m.index,end:m.index+m[0].length,lab:m[0]}); }); }
   found.sort((a,b)=>a.start-b.start);
+  /* the master's OWN section headings ("Professional Summary", "Core Competencies", "Featured Projects") —
+     preserved so the generated résumé mirrors the candidate's template instead of flattening to stock labels */
+  const headings={}; found.forEach(f=>{ if(!f.lab)return; const L=cleanSep(tidy(f.lab)).replace(/[:.]+$/,"").trim();
+    if(!headings[f.key]&&L.length>=3&&L.length<=40&&/^[A-Za-zÀ-ÿ&\/ ,'’-]+$/.test(L))headings[f.key]=L; });
   const sect={}; for(let i=0;i<found.length;i++){ const cur=found[i],nxt=found[i+1]; const piece=t.slice(cur.end,nxt?nxt.start:t.length).trim(); if(piece)sect[cur.key]=sect[cur.key]?sect[cur.key]+"\n"+piece:piece; }
   const contact=found.length?t.slice(0,found[0].start):t;
   let name=cleanName(contact);
@@ -1061,10 +1147,22 @@ function parseResume(raw){ let t=deLig(String(raw||"")).replace(/\r\n?/g,"\n").r
     const ctx=contact.slice(Math.max(0,lm.index-40),lm.index+lm[0].length+12);
     if(/\b(universit|institut|college|department|school|technolog|academy|faculty)/i.test(ctx))continue;   /* campus address ≠ candidate city */
     location=lm[1].replace(/\s+/g," ").trim(); break; } }
+  /* the candidate's own headline — the domains/title line right under the name ("Business Analytics |
+     Decision Analytics | Product Analytics"). Contact-block only; contact/location/prose lines can't match. */
+  let headline="";
+  { const cls=contact.split("\n").map(x=>x.trim()).filter(Boolean);
+    let ni=0; if(name){ const NU=name.toUpperCase(); const f=cls.findIndex(l=>l.toUpperCase().indexOf(NU)>=0); if(f>=0)ni=f; }
+    const hl=cls[ni+1]||"";
+    if(hl.length>=3&&hl.length<=90&&hl.split(/\s+/).length<=12
+       &&!/[@]|https?:|linkedin|github|www\.|\d{4,}/i.test(hl)
+       &&!LOCRE.test(hl)&&!LOCRE3.test(hl)&&!LOCEND.test(hl)&&!LOCEND3.test(hl)   /* "San Francisco Bay Area, California" ends in a location — not a headline */
+       &&!hl.split(/\s*[|·•]\s*/).some(x=>LOCRE.test(x)||LOCRE3.test(x))          /* "New Delhi, India | Open to Remote" is a contact line */
+       &&!/[.!?]$/.test(hl)&&!NOT_NAME.test(hl)
+       &&/^[A-Za-zÀ-ÿ0-9&\/|·•,+#()'’\s.-]+$/.test(hl))headline=cleanSep(tidy(hl)).slice(0,90); }
   const skills=parseSkills(denoise(sect.skills||""));
   if(sect.languages){ const items=denoise(sect.languages).split(/\n|,|·|\|/).map(x=>tidy(x.replace(/[●○◐◑•▪‣]/g,"")).replace(/\s*\(.*?\)\s*/g," ").trim()).filter(x=>x&&x.length>=2&&x.length<=40&&!/\d{3,}/.test(x)).slice(0,6);
     if(items.length)skills.push({group:"Languages",items}); }
-  return { name, email, phone, location, linkedin, github, website:"",
+  return { name, email, phone, location, linkedin, github, website:"", headline, headings,
     summary:tidy(denoise(sect.summary||"")).slice(0,650),
     skills, experience:parseExp(denoise(sect.experience||"")),
     projects:parseProjects(denoise(sect.projects||"")), education:parseEdu(denoise(sect.education||"")),
@@ -1159,7 +1257,7 @@ function analyze(company,role,jd){ const parsed=parseResume(masterText()); if(!p
   const orig=scoreArrangement(buckets,need,have,struct,zoneOf(parsed));
   const tail=scoreArrangement(buckets,need,have,structureScore(cv),zoneOf(cv));
   if(tail.score<orig.score)tail.score=orig.score;
-  return {company,role,cv,parsed,buckets,need,have,orig,tail,recs:detRecs(buckets),cover:detCover(company,role,cv)}; }   /* v6: `parsed` powers the content-loss ribbon */
+  return {company,role,cv,parsed,buckets,need,have,orig,tail,recs:detRecs(buckets),cover:detCover(company,role,cv,buckets)}; }   /* v6: `parsed` powers the content-loss ribbon */
 function detRecs(b){ const r=[];
   b.reqMiss.slice(0,10).forEach(k=>r.push({t:"Required in the JD: “"+k+"” — add it only if you genuinely have it.",add:[k]}));
   b.prefMiss.slice(0,8).forEach(k=>r.push({t:"Preferred / nice-to-have: “"+k+"” — add if true.",add:[k]}));
@@ -1175,10 +1273,10 @@ function firstPerson(s){ s=String(s||"").trim();
 /* Deterministic cover letter — reads like a person wrote it, uses ONLY facts parsed from the candidate.
    Four short paragraphs (intro · evidence · second strength · close) + a title-cased signature with a
    dynamic contact block (present fields only). No AI, no invented facts, no annotation/markdown artifacts. */
-function detCover(c,r,cv){ cv=cv||{};
+function detCover(c,r,cv,bk){ cv=cv||{};
   const company=normCompany(c); const hasCo=!!company&&company!=="the company";
   /* clean role: drop [brackets], a trailing "role", and a leading article; empty/placeholder → no role name */
-  let rt=String(r||"").replace(/\[.*?\]/g,"").replace(/\s+role\s*$/i,"").replace(/^\s*(the|an?)\s+/i,"").trim();
+  let rt=String(r||"").replace(/\[.*?\]/g,"").replace(/\s+(?:role|position|opening|vacancy)\s*$/i,"").replace(/^\s*(the|an?)\s+/i,"").trim();
   if(/^the role$/i.test(String(r||"").trim()))rt="";
   const nm=titleCaseName((cv.name)||M.name||"");
   const rec=(cv.experience||[])[0]||null;
@@ -1191,7 +1289,11 @@ function detCover(c,r,cv){ cv=cv||{};
   const quant=(allB.filter(b=>/\d/.test(b)).sort((a,b)=>b.length-a.length)[0])||allB[0]||"";
   const proj=(cv.projects||[])[0]||null;
 
-  const p1="Dear Hiring Team,\n\nI'm writing to apply for "+(rt?"the "+rt+" position":"this position")+(hasCo?" at "+company:"")+". I'm "+(realTitle?"a "+realTitle:"a professional")+(org?" at "+org:"")+(yrs?" with "+yrs+"experience":"")+", and the work this role centers on is the work I do every day"+(skillPhrase?", most of all "+skillPhrase:"")+".";
+  /* gold-standard shape (the owner's proven ChatGPT letter): "Application for <role>" headline ·
+     "Dear Hiring Manager," · intro · evidence · projects · why-THIS-company in the JD's own keywords · close.
+     Every claim still comes only from parsed candidate data + the JD buckets — nothing invented. */
+  const head=rt?("Application for the "+rt+" position"+(hasCo?" at "+company:"")+"\n\n"):"";
+  const p1="Dear Hiring Manager,\n\nI'm writing to apply for "+(rt?"the "+rt+" position":"this position")+(hasCo?" at "+company:"")+". I'm "+(realTitle?"a "+realTitle:"a professional")+(org?" at "+org:"")+(yrs?" with "+yrs+"experience":"")+", and the work this role centers on is the work I do every day"+(skillPhrase?", most of all "+skillPhrase:"")+".";
 
   /* p2 mirrors the candidate's CURRENT summary (minus the identity/objective sentences p1 already covers),
      so summary tweaks — accepted tips, AI rewrites, manual edits — flow straight into the letter.
@@ -1209,6 +1311,11 @@ function detCover(c,r,cv){ cv=cv||{};
     ? "\n\nOutside my day-to-day role I also built "+proj.name+(proj.tech?", using "+proj.tech:"")+", which meant owning a problem end to end — from the first idea through to something that actually works. I like taking that kind of full responsibility, and I ramp quickly when a new tool or domain is involved."
     : "\n\nI tend to take full ownership of a problem end to end and ramp quickly on new tools and domains, which lets me start contributing early instead of after a long spin-up.";
 
+  /* why-THIS-company, in the JD's own keyword language — only skills the candidate GENUINELY has (reqHave/prefHave) */
+  const kws=(bk?(bk.reqHave||[]).concat(bk.prefHave||[]):[]).slice(0,3);
+  const pWhy="\n\n"+(kws.length
+    ?"What draws me to "+(hasCo?company:"this role")+" is its focus on "+(kws.length>1?kws.slice(0,-1).join(", ")+" and "+kws[kws.length-1]:kws[0])+" — exactly the work I enjoy most, and the area where I can contribute from day one."
+    :"What draws me to "+(hasCo?company:"this role")+" is the chance to do this kind of work where it directly shapes decisions, and to grow with the problems the team owns.");
   const p4="\n\nI'd welcome the chance to talk through how I could help "+(hasCo?company:"your team")+" and where I'd add the most value. Thank you for your time and consideration.";
 
   const contactLines=[[cv.phone,cv.email].filter(Boolean).join(" · "),
@@ -1216,7 +1323,7 @@ function detCover(c,r,cv){ cv=cv||{};
   /* signature/contact block is built from REAL parsed fields — NOT run through sanitizeCover, so emails/URLs
      with "_"/"#" and real names like "Nan"/"Null" are never corrupted. Only the prose (p1-p4) is scrubbed. */
   const sig=["Best regards,",nm].filter(Boolean).concat(contactLines).join("\n");
-  return sanitizeCover(p1+p2+p3+p4)+"\n\n"+sig; }
+  return sanitizeCover(head+p1+p2+p3+pWhy+p4)+"\n\n"+sig; }
 
 /* ===== generate (staged) ===== */
 let CUR=null;
@@ -1255,22 +1362,37 @@ function contactHTML(cv){ const p=[];
   return p.join(" · ")+(l.length?'<br>'+l.join(" · "):""); }
 function projLabel(p,u){ return p.linkLabel||(/github\.(com|io)/i.test(u||"")?"GitHub":"Link"); }
 function projLink(p){ if(!p.link)return""; const u=p.link==="__profile__"?(CUR&&CUR.cv&&CUR.cv.github?urlify(CUR.cv.github):""):p.link; return u?' · <a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(projLabel(p,u))+'</a>':""; }
+/* canonical section key from a rendered heading label — the master's own labels ("Professional Summary",
+   "Featured Projects") render verbatim, so every H4-text consumer (aiMap, edit pull-back) matches by MEANING */
+function secKey(t){ t=String(t||"").toLowerCase();
+  if(/project/.test(t))return"projects";
+  if(/summary|profile|objective|about/.test(t))return"summary";
+  if(/experience|employment|work history|career history|appointment/.test(t))return"experience";
+  if(/certification|certificate|licen[cs]e/.test(t))return"certifications";
+  if(/publication|paper|patent/.test(t))return"publications";
+  if(/achievement|award|honou?r|accomplishment|leadership|volunteer|activit/.test(t))return"achievements";
+  if(/skill|competenc|expertise|stack/.test(t))return"skills";
+  if(/education|academic|qualification/.test(t))return"education";
+  return t.trim(); }
+/* heading label to render: the master's own if captured and sane, else the stock default */
+function hdLab(cv,key,def){ const H=(cv&&cv.headings)||{}; const L=H[key]; return (L&&L.length>=3&&L.length<=40)?L:def; }
 function resumeDocHTML(cv){
   let h='<h3 class="n">'+esc(cv.name||"Your Name")+'</h3>';
-  /* header is name + contacts only ("just the name") — the target role still appears in the summary's first line */
+  /* header = name + the candidate's OWN headline (their domains line, from the master — never the JD role) */
+  if(cv.headline)h+='<div class="ti">'+esc(cv.headline)+'</div>';
   const ct=contactHTML(cv); if(ct)h+='<div class="ct">'+ct+'</div>';
-  if(cv.summary)h+='<h4>Summary</h4><p>'+esc(cv.summary)+'</p>';
-  if(cv.skills&&cv.skills.length)h+='<h4>Skills</h4>'+cv.skills.map(g=>'<p><span class="rh">'+esc(g.group)+':</span> '+(g.items||[]).map(esc).join(", ")+'</p>').join("");
-  if(cv.experience&&cv.experience.length)h+='<h4>Experience</h4>'+cv.experience.map(e=>{ const bl=(e.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join(""); const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · ");
+  if(cv.summary)h+='<h4 data-sec="summary">'+esc(hdLab(cv,"summary","Summary"))+'</h4><p>'+esc(cv.summary)+'</p>';
+  if(cv.skills&&cv.skills.length)h+='<h4 data-sec="skills">'+esc(hdLab(cv,"skills","Skills"))+'</h4>'+cv.skills.map(g=>'<p><span class="rh">'+esc(g.group)+':</span> '+(g.items||[]).map(esc).join(", ")+'</p>').join("");
+  if(cv.experience&&cv.experience.length)h+='<h4 data-sec="experience">'+esc(hdLab(cv,"experience","Experience"))+'</h4>'+cv.experience.map(e=>{ const bl=(e.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join(""); const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · ");
     return '<div class="role"><span class="rh">'+esc(e.role||e.org)+'</span><span class="r">'+esc(e.dates||"")+'</span></div>'+((sub&&e.role)?'<div class="sub2"><span>'+esc(sub)+'</span></div>':"")+(bl?"<ul>"+bl+"</ul>":""); }).join("");
-  if(cv.projects&&cv.projects.length)h+='<h4>Projects</h4>'+cv.projects.map(p=>{ const bl=(p.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join("");
+  if(cv.projects&&cv.projects.length)h+='<h4 data-sec="projects">'+esc(hdLab(cv,"projects","Projects"))+'</h4>'+cv.projects.map(p=>{ const bl=(p.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join("");
     return '<div class="pj"><span class="rh">'+esc(p.name)+'</span>'+(p.tech?' <span class="tech">| '+esc(p.tech)+'</span>':"")+projLink(p)+'</div>'+(bl?"<ul>"+bl+"</ul>":""); }).join("");
-  if(cv.education&&cv.education.length)h+='<h4>Education</h4>'+cv.education.map(e=>{ if(e.raw)return '<p>'+esc(e.raw)+'</p>';
+  if(cv.education&&cv.education.length)h+='<h4 data-sec="education">'+esc(hdLab(cv,"education","Education"))+'</h4>'+cv.education.map(e=>{ if(e.raw)return '<p>'+esc(e.raw)+'</p>';
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
     return '<div class="role"><span class="rh">'+esc(e.institution)+'</span><span class="r">'+esc(e.dates||"")+'</span></div>'+((deg||e.location)?'<div class="sub2"><span>'+esc(deg)+'</span><span class="r">'+esc(e.location||"")+'</span></div>':""); }).join("");
-  if(cv.certifications&&cv.certifications.length)h+='<h4>Certifications</h4><ul>'+cv.certifications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
-  if(cv.achievements&&cv.achievements.length)h+='<h4>Achievements</h4><ul>'+cv.achievements.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
-  if(cv.publications&&cv.publications.length)h+='<h4>Publications</h4><ul>'+cv.publications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
+  if(cv.certifications&&cv.certifications.length)h+='<h4 data-sec="certifications">'+esc(hdLab(cv,"certs","Certifications"))+'</h4><ul>'+cv.certifications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
+  if(cv.achievements&&cv.achievements.length)h+='<h4 data-sec="achievements">'+esc(hdLab(cv,"achievements","Achievements"))+'</h4><ul>'+cv.achievements.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
+  if(cv.publications&&cv.publications.length)h+='<h4 data-sec="publications">'+esc(hdLab(cv,"publications","Publications"))+'</h4><ul>'+cv.publications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   return h; }
 function renderResume(){ document.getElementById("cvEmpty").style.display="none"; document.getElementById("cvBody").style.display="block";
   const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit";
@@ -1284,7 +1406,9 @@ function renderResume(){ document.getElementById("cvEmpty").style.display="none"
   if(window.__texStudioSync)window.__texStudioSync(); }
 function renderCover(){ document.getElementById("clEmpty").style.display="none"; document.getElementById("clBody").style.display="block";
   const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
-  const d=document.getElementById("coverDoc"); d.innerHTML='<p>'+esc(today)+'</p><p>'+esc(CUR.cover).replace(/\n+/g,"</p><p>")+'</p>'; d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtnCl"); if(b)b.textContent="✎ Edit"; }
+  const d=document.getElementById("coverDoc"); let ch='<p>'+esc(today)+'</p><p>'+esc(CUR.cover).replace(/\n+/g,"</p><p>")+'</p>';
+  ch=ch.replace('<p>Application for ','<p class="clhead">Application for ');   /* bold the gold headline on screen like the PDF */
+  d.innerHTML=ch; d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtnCl"); if(b)b.textContent="✎ Edit"; }
 function bar(lab,v){ return '<div class="brow"><div class="lab"><span>'+lab+'</span><span>'+Math.round(v*100)+'%</span></div><div class="meter"><i style="width:'+Math.round(v*100)+'%"></i></div></div>'; }
 function renderKW(){ const o=CUR.orig,t=CUR.tail,b=CUR.buckets;
   document.getElementById("scoreOrig").textContent=o.score; document.getElementById("scoreTail").textContent=t.score;
@@ -1323,7 +1447,7 @@ function acceptTip(i){ if(!CUR)return; const tip=(CUR.recs||[])[i]; if(!tip||!ti
    at analyze() time). A hand-edited (dirty) coverDoc is never re-rendered — CUR.cover still updates so
    the non-edited PDF path stays honest. */
 function syncDerived(){ if(!CUR)return;
-  CUR.cover=detCover(CUR.company,CUR.role,CUR.cv||CUR.cvBase);
+  CUR.cover=detCover(CUR.company,CUR.role,CUR.cv||CUR.cvBase,CUR.buckets);
   const cd=document.getElementById("coverDoc"), cb=document.getElementById("clBody");
   if(!(cd&&cd.dataset&&cd.dataset.dirty==="1")&&cb&&cb.style.display!=="none")renderCover();
   const ob=document.getElementById("outBody"); if(ob&&ob.style.display!=="none")renderOutreach();
@@ -1356,7 +1480,7 @@ function toggleEdit(id,btn){ const d=document.getElementById(id); const on=d.con
     /* leaving edit mode: pull an edited Summary back into the model so the score, PDF and cover letter
        stay in step with what the user actually wrote (other manual edits stay DOM-only by design). */
     if(id==="resumeDoc"&&d.dataset&&d.dataset.dirty==="1"&&CUR){
-      const hs=Array.prototype.slice.call(d.querySelectorAll("h4")).find(h=>/^summary$/i.test((h.textContent||"").trim()));
+      const hs=Array.prototype.slice.call(d.querySelectorAll("h4")).find(h=>((h.dataset&&h.dataset.sec)||secKey(h.textContent))==="summary");
       let p=hs&&hs.nextElementSibling; const parts=[];   /* an Enter-split summary spans several <p>s — take them all */
       while(p&&p.tagName==="P"){ parts.push(p.innerText||p.textContent||""); p=p.nextElementSibling; }
       const txt=parts.length?tidy(parts.join(" ")):"";
@@ -1508,7 +1632,7 @@ function fnameFor(which){ const who=String((CUR&&CUR.cv&&CUR.cv.name)||M.name||"
 const PDF_BLUE="#1b59b3", PDF_INK="#16181d", PDF_GRAY="#555", PDF_HEAD="#0e1320", CW_PT=527;
 function jr(runs,sep){ runs=runs.filter(Boolean); const o=[]; runs.forEach((r,i)=>{ if(i)o.push(sep); o.push(r); }); return o; }
 function lnk(text,url){ return url?{text:text,link:url,color:PDF_BLUE}:text; }
-function cvWeight(cv){ let n=(cv.summary||"").length; (cv.skills||[]).forEach(g=>n+=g.group.length+(g.items||[]).join(", ").length+4);
+function cvWeight(cv){ let n=(cv.summary||"").length+(cv.headline?cv.headline.length+20:0); (cv.skills||[]).forEach(g=>n+=g.group.length+(g.items||[]).join(", ").length+4);
   (cv.experience||[]).forEach(e=>{n+=46;(e.bullets||[]).forEach(b=>n+=b.length+6);}); (cv.projects||[]).forEach(p=>{n+=24+(p.tech||"").length;(p.bullets||[]).forEach(b=>n+=b.length+6);});
   (cv.education||[]).forEach(()=>n+=70); n+=(cv.certifications||[]).join(" ").length+(cv.achievements||[]).join(" ").length+(cv.publications||[]).join(" ").length; return n; }
 function baseFont(w){ return w<1500?10.4:w<2200?9.6:w<2900?9:w<3500?8.5:w<4200?8:7.6; }
@@ -1556,30 +1680,32 @@ function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); cons
   const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
     c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.7,lineColor:"#c4cdda"}],margin:[0,0,0,4]}); };
   c.push({text:cv.name||"Your Name",bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"});
-  /* no role headline under the name ("just the name") — the role keyword stays in the summary's first sentence */
+  /* the candidate's OWN headline from the master (their domains line) — never the JD/target role;
+     the target role keyword still lives only in the summary's last sentence */
+  if(cv.headline)c.push({text:cv.headline,bold:true,fontSize:F+0.5,color:PDF_BLUE,margin:[0,1,0,0],alignment:"center"});
   const c1=[]; if(cv.location)c1.push(cv.location); if(cv.phone)c1.push(lnk(cv.phone,"tel:"+cv.phone.replace(/[^+0-9]/g,""))); if(cv.email)c1.push(lnk(cv.email,"mailto:"+cv.email));
   const c2=[]; if(cv.linkedin)c2.push(lnk("LinkedIn",urlify(cv.linkedin))); if(cv.github)c2.push(lnk("GitHub",urlify(cv.github))); if(cv.website)c2.push(lnk("Portfolio",urlify(cv.website)));
   let contact=jr(c1," · "); if(c2.length){ contact.push("\n"); contact=contact.concat(jr(c2," · ")); }
   if(contact.length)c.push({text:contact,fontSize:F-1.4,color:PDF_GRAY,margin:[0,3,0,1],alignment:"center"});
-  if(cv.summary){ sec("Summary"); c.push({text:cv.summary,margin:[0,0,0,1]}); }
-  if(cv.skills&&cv.skills.length){ sec("Skills"); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:PDF_HEAD},(g.items||[]).join(", ")],margin:[0,0.6,0,0.6]})); }
-  if(cv.experience&&cv.experience.length){ sec("Experience"); cv.experience.forEach(e=>{
+  if(cv.summary){ sec(hdLab(cv,"summary","Summary")); c.push({text:cv.summary,margin:[0,0,0,1]}); }
+  if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:PDF_HEAD},(g.items||[]).join(", ")],margin:[0,0.6,0,0.6]})); }
+  if(cv.experience&&cv.experience.length){ sec(hdLab(cv,"experience","Experience")); cv.experience.forEach(e=>{
     c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#444",fontSize:F-1,margin:[0,0,0,1]});
     if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#888"}); }); }
-  if(cv.projects&&cv.projects.length){ sec("Projects"); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
+  if(cv.projects&&cv.projects.length){ sec(hdLab(cv,"projects","Projects")); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
     c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
     if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#888"}); }); }
-  if(cv.education&&cv.education.length){ sec("Education"); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
+  if(cv.education&&cv.education.length){ sec(hdLab(cv,"education","Education")); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
     if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:"#333"}},{width:"auto",text:e.location||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}]}); }); }
-  if(cv.certifications&&cv.certifications.length){ sec("Certifications"); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#888"}); }
-  if(cv.achievements&&cv.achievements.length){ sec("Achievements"); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#888"}); }
-  if(cv.publications&&cv.publications.length){ sec("Publications"); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:"#888"}); }
+  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#888"}); }
+  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#888"}); }
+  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:"#888"}); }
   return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:PDF_INK,lineHeight:1.12}, content:c }; }
 function coverDocDef(cv,cover){ const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
-  const paras=String(cover||"").split(/\n+/).map(p=>({text:p,margin:[0,0,0,8]}));
+  const paras=String(cover||"").split(/\n+/).map((p,i)=>(i===0&&/^Application for /.test(p))?{text:p,bold:true,margin:[0,0,0,8]}:{text:p,margin:[0,0,0,8]});
   return { pageSize:"A4", pageMargins:[48,46,48,46], defaultStyle:{fontSize:10.6,color:PDF_INK,lineHeight:1.32}, content:[{text:today,margin:[0,0,0,12],color:PDF_GRAY}].concat(paras) }; }
 /* edited-DOM → pdfmake (WYSIWYG so manual edits land in the PDF, links preserved) */
 function domRuns(el){ const a=[]; el.childNodes.forEach(n=>{ if(n.nodeType===3){ const tx=n.nodeValue.replace(/\s+/g," "); if(tx.trim())a.push(tx); }
@@ -1955,7 +2081,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
       if(/^best regards,?$/i.test(ntx))return {kind:"fact"};
       if(sigAt>=0&&paras.slice(sigAt).some(function(pl){return pl.trim()&&pl.trim()===ntx;}))return {kind:"fact"};
       return {kind:"cover",idx:i,el:node,text:node.innerText||node.textContent||""}; }
-    var sec=null,n=node; while(n){ if(n.nodeType===1&&n.tagName==="H4"){ sec=(n.textContent||"").trim().toLowerCase(); break; } n=n.previousElementSibling; }
+    var sec=null,n=node; while(n){ if(n.nodeType===1&&n.tagName==="H4"){ sec=(n.dataset&&n.dataset.sec)||secKey(n.textContent); break; } n=n.previousElementSibling; }   /* data-sec = the TRUE section key (compound master labels re-derive wrong); secKey only as legacy fallback */
     if(!sec)return null;
     if(sec==="summary"&&node.tagName==="P")return {kind:"summary",el:node,text:node.innerText||node.textContent||""};
     if(sec==="experience"||sec==="projects"){
@@ -2176,11 +2302,10 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(sumOK)CUR.cvBase.summary=sumNew;
     try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
     AI_AFTER=JSON.stringify(CUR.cvBase); AI_UNDO_FORCE=0;
-    var tips=(Array.isArray(d.tips)?d.tips:[]).map(function(t){return typeof t==="string"?t:(t&&t.t)||"";}).filter(Boolean).slice(0,3);
+    /* owner call: no coaching-tip lines above the résumé — the document itself is the result; tips live in ① */
     aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
       (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai))+
-      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+
-      (tips.length?'<div style="margin-top:6px">'+tips.map(function(t){return '<div class="aitip">'+esc(t)+'</div>';}).join("")+'</div>':"")); }
+      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
   window.aiTailorJD=function(){ aiBulk("tailor"); };
@@ -2199,8 +2324,12 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var run0=CUR;
     var cover=String(CUR.cover); var cut=cover.indexOf("\n\nBest regards,");
     var prose=cut>=0?cover.slice(0,cut):cover, sig=cut>=0?cover.slice(cut):"";
+    /* the "Application for …" headline + greeting are structure, not prose — keep them out of the AI
+       payload (the agent is told "no salutation") and re-attach them on apply */
+    var pre=""; var pm=prose.match(/^(?:Application for [^\n]*\n+)?(?:Dear [^\n]*\n+)?/);
+    if(pm&&pm[0]){ pre=pm[0]; prose=prose.slice(pm[0].length); }
     var cv=CUR.cvBase||CUR.cv;
-    aiMsg("aiClMsg",'<span class="spin"></span>AI is rewording the letter in a human voice — your facts, numbers and signature stay…');
+    aiMsg("aiClMsg",'<span class="spin"></span>AI is rewriting the letter into the proven 5-part structure — your facts, numbers and signature stay…');
     var d=null,bk="";
     if(window.__AI_FAKE_COVER){ d=window.__AI_FAKE_COVER; }
     else{ if(!SB||!AUTH_USER){ aiMsg("aiClMsg","Sign in to use AI editing."); return; }
@@ -2217,14 +2346,15 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var cd2=document.getElementById("coverDoc");
     if(cd2&&cd2.dataset&&cd2.dataset.dirty==="1"){ aiMsg("aiClMsg","You started manual edits while AI was working — nothing was applied, so they stay safe."); return; }
     var nw=(typeof d.cover==="string")?deSlop(d.cover.trim()):"";
+    nw=nw.replace(/^(?:Application for [^\n]*\n+)?(?:Dear [^\n]*\n+)?/,"").trim();   /* a disobedient model's own salutation would DOUBLE the re-attached pre */
     if(!nw){ aiMsg("aiClMsg",(d&&d._v===2)?"The server-side truthfulness guard rejected the AI version — the deterministic letter stands.":"The AI backend returned an unexpected shape — it may need a re-deploy. The deterministic letter stands."); return; }
-    var sc=sumContext(); var allowed=digitRuns(sc.src+" "+prose+" "+String(Math.round(sc.years*10)/10));
+    var sc=sumContext(); var allowed=digitRuns(sc.src+" "+pre+" "+prose+" "+String(Math.round(sc.years*10)/10));   /* pre stays part of the visible letter — its digits (role "SDE 2", "Next24Tech") are legit */
     if(!slopFree(nw,sc.src+" "+prose)||nw.length<200||nw.length>2600||!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;})){
       aiMsg("aiClMsg","The guardrail rejected the AI version (changed numbers or slop wording) — the deterministic letter stands."); return; }
     AI_UNDO_COVER=cover; AI_UNDO_COVER_RUN=CUR;
-    CUR.cover=sanitizeCover(nw)+sig;
+    CUR.cover=pre+sanitizeCover(nw)+sig;
     try{ renderCover(); }catch(e){}
-    aiMsg("aiClMsg",'✦ Letter humanized — facts and signature untouched.'+esc(byokNote(bk,viaOai))+' <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
+    aiMsg("aiClMsg",'✦ Letter rewritten — facts and signature untouched.'+esc(byokNote(bk,viaOai))+' <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
   window.aiUndoCover=function(){ if(!AI_UNDO_COVER||!CUR)return;
     if(AI_UNDO_COVER_RUN!==CUR){ aiMsg("aiClMsg","That undo expired — a new analysis was run since."); AI_UNDO_COVER=null; return; }
     CUR.cover=AI_UNDO_COVER; AI_UNDO_COVER=null; try{ renderCover(); }catch(e){} aiMsg("aiClMsg","↩ Reverted to the previous letter."); };
