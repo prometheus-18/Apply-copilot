@@ -199,21 +199,24 @@
   }
   /* ===== résumé paper — light, clean, ATS-friendly (must stay white & print clean) ===== */
   .doc{position:relative;z-index:2;background:#fff;border:1px solid #d6dde8;border-radius:8px;padding:30px 34px;color:#16181d;font-family:"Calibri","Carlito","Segoe UI",Arial,sans-serif;font-size:10.3pt;line-height:1.34}
-  .doc a{color:#1b59b3}
-  .doc h3.n{font-size:21pt;margin:0;font-weight:800;letter-spacing:.3px;color:#0e1320;text-align:center}
-  .doc .ti{font-size:10.8pt;font-weight:600;color:#1b59b3;margin-top:1px;text-align:center}
+  .doc a{color:#2f5d8a}
+  .doc h3.n{font-size:21pt;margin:0;font-weight:800;letter-spacing:.3px;color:#16233a;text-align:center}
+  .doc .ti{font-size:10.8pt;font-weight:600;color:#2f5d8a;margin-top:1px;text-align:center}
   .doc .clhead{font-weight:700}
+  .doc li::marker{color:#2f5d8a}
+  .cvsplit{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
+  @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texStudio{margin-top:0} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} }
   .doc .ct{font-size:9pt;color:#444;margin-top:5px;text-align:center}
-  .doc h4{font-size:10pt;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:#0e1320;border-bottom:1.4px solid #c4cdda;padding-bottom:2px;margin:14px 0 6px}
+  .doc h4{font-size:10pt;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:#16233a;border-bottom:1.4px solid #2f5d8a;padding-bottom:2px;margin:14px 0 6px}
   .doc .role{display:flex;justify-content:space-between;gap:10px;font-size:10.4pt;margin-top:8px}
-  .doc .role .r{color:#555;font-size:9pt;white-space:nowrap}
-  .doc .rh{font-weight:700;color:#0e1320}
-  .doc .sub2{display:flex;justify-content:space-between;gap:10px;font-size:9.6pt;color:#333;font-style:italic;margin-top:1px}
-  .doc .sub2 .r{font-style:normal;color:#555}
+  .doc .role .r{color:#5a626b;font-size:9pt;white-space:nowrap}
+  .doc .rh{font-weight:700;color:#16233a}
+  .doc .sub2{display:flex;justify-content:space-between;gap:10px;font-size:9.6pt;color:#2b333d;font-style:italic;margin-top:1px}
+  .doc .sub2 .r{font-style:normal;color:#5a626b}
   .doc .pj{margin-top:8px}.doc .pj .tech{color:#555;font-size:9pt;font-style:italic}
   .doc ul{margin:3px 0 4px 16px;padding:0}.doc li{margin:2.5px 0}.doc p{margin:3px 0}
   .doc.edit{outline:2px dashed #b9c6dd;outline-offset:3px}
-  .doc.edit a{cursor:pointer;text-decoration:underline dotted #1b59b3 1.5px;text-underline-offset:2px}
+  .doc.edit a{cursor:pointer;text-decoration:underline dotted #2f5d8a 1.5px;text-underline-offset:2px}
   .doc.edit a:hover{background:#eaf1fb;border-radius:3px}
   #linkPop{position:fixed;z-index:9999;display:none;width:320px;max-width:92vw;background:var(--card2,#232325);color:var(--tx,#c9c7cc);border:1px solid var(--ln,#2e2c30);border-radius:var(--r,14.4px);padding:14px 14px 12px;font-family:'Inter',system-ui,sans-serif}
   #linkPop .lpt{font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut,#a2a2a2);margin:0 0 8px}
@@ -258,7 +261,7 @@
   .aitone{display:inline-block;padding:5px 10px;border:1px solid var(--btn-ln,#504e54);border-radius:999px;font:600 10px/1 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;margin:0 6px 8px 0;color:var(--mut,#a2a2a2);user-select:none}
   .aitone.on{color:var(--hd,#fff);border-color:var(--acc,#ff7a52);background:var(--acc-soft,rgba(255,100,54,.09))}
   #printArea{display:none}
-  @media print{ body{background:#fff} #space,#space3d,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#1b59b3;text-decoration:none} }
+  @media print{ body{background:#fff} #space,#space3d,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#2f5d8a;text-decoration:none} }
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} .reveal{opacity:1;transform:none} .chip .dot{animation:none} }
 </style>
 </head>
@@ -392,11 +395,12 @@
         <div class="row"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed" style="width:auto;padding:7px 9px;font-size:10.5px"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve bullets</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
-      <div class="doc" id="resumeDoc"></div>
-      <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div>
+      <div class="cvsplit" id="cvSplit">
+      <div style="min-width:0"><div class="doc" id="resumeDoc"></div>
+      <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div></div>
       <details class="box" id="texStudio" style="display:none;margin-top:12px">
         <summary style="cursor:pointer;font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)">⌘ LaTeX Studio — edit &amp; compile your tailored .tex</summary>
-        <div class="hint" style="margin:9px 0 7px">Your original <b>.tex</b> with the tailored summary and changed bullets spliced in. Edit freely; select one \item body (or the summary paragraph) and hit <b>✦ AI edit selection</b> to rewrite just that span; then compile in Overleaf and download the PDF there. Saved on this device, for this job only.</div>
+        <div class="hint" style="margin:9px 0 7px">Your original <b>.tex</b> with the tailored summary and changed bullets spliced in — open it to work <b>side by side</b> with the résumé preview on wide screens. Edit freely; select one \item body (or the summary paragraph) and hit <b>✦ AI edit selection</b> to rewrite just that span; then compile in Overleaf and download the PDF there. Saved on this device, for this job only.</div>
         <textarea id="texEd" spellcheck="false" data-lenis-prevent placeholder="Run the analysis to build your tailored .tex…"></textarea>
         <div class="row" style="justify-content:space-between;margin-top:8px;gap:8px;flex-wrap:wrap">
           <span class="hint" id="texCount">—</span>
@@ -404,6 +408,7 @@
         </div>
         <div class="hint" id="texMsg" style="margin-top:7px"></div>
       </details>
+      </div>
     </div>
   </div></section>
 
@@ -597,6 +602,7 @@ function texInline(s){ s=String(s||"");
   s=s.replace(/\\([&%$#_])/g,"$1");
   s=s.replace(/---/g,"—").replace(/--/g,"–");
   s=s.replace(/``|''/g,'"').replace(/`/g,"'");
+  s=s.replace(/â€¢|â¢/g,"•").replace(/â€™/g,"'").replace(/â€œ/g,'"');   /* mojibake repair: UTF-8 bullets/quotes read back as Latin-1/cp1252 in the user's .tex */
   s=s.replace(/\\[A-Za-z]+\*?\s*\{\s*-?[\d.]+\s*(?:pt|em|ex|cm|mm|in|bp|sp)\s*\}/g," ");
   s=s.replace(/\\fontsize\s*\{[^{}]*\}\s*\{[^{}]*\}/g," ");                        /* {25}{28} residue would leak digits */
   s=s.replace(/\\(?:color|textcolor|pagecolor|colorbox|rowcolor|cellcolor)\s*\{[^{}]*\}/g," ");   /* {ink}/{role} residue would leak palette names */
@@ -786,7 +792,9 @@ function renderMasterUI(){ const ready=masterReady();
   document.getElementById("mEmpty").style.display=ready?"none":"block";
   document.getElementById("mSet").style.display=ready?"block":"none";
   if(ready){ const shown=masterText(); const p=parseResume(shown); M._p=p;   /* cached for the ATS view — no second parse on toggle */
-    document.getElementById("mMeta").textContent="· "+(p?p.name:"")+" · "+M.raw.length+" chars"+(isTex(M.raw)?" · LaTeX source kept":"");
+    /* for .tex masters show the VISIBLE résumé text length — raw length counts preamble/macros/comments
+       and made a .tex upload look "bigger" than the same résumé's PDF (owner confusion, 13k vs 6k) */
+    document.getElementById("mMeta").textContent="· "+(p?p.name:"")+" · "+(isTex(M.raw)?(masterText().length+" chars of résumé text · LaTeX source kept ("+M.raw.length+" raw)"):(M.raw.length+" chars"));
     document.getElementById("mPreview").textContent=shown.slice(0,800)+(shown.length>800?" …":"");
     setMasterView(M._view||"raw"); }
 }
@@ -987,10 +995,13 @@ function projLinkBits(x){ const m=x.match(/https?:\/\/[^\s|,)]+/i)||x.match(/\bg
   const link=urlify(m[0]); const at=x.indexOf(m[0]);
   let pre=x.slice(0,at).replace(/[(\s]+$/,""), post=x.slice(at+m[0].length).replace(/^[)\s]+/,"");
   let label="";
-  const t=pre.match(/([A-Za-z][\w+.&-]{1,17})$/);                      /* the anchor word sits right before the URL */
-  if(t){ const tok=t[1], sep=/[·•]\s*$/.test(pre.slice(0,t.index));    /* ·-separated from the tech list? */
-    if(/^(github|link|demo|live|code|repo)$/i.test(tok)){ pre=pre.slice(0,t.index); }
-    else if(sep||/link|app|site|live|demo|store|page|portfolio|web|hub/i.test(tok)){ label=tok; pre=pre.slice(0,t.index); } }
+  /* consume the whole trailing anchor RUN ("Live Demo", "View Code") — a single-token take used to leave
+     "Live" behind, which leaked into the tech list ("| Live, React • …") */
+  for(let g=0;g<3;g++){ const p2=pre.replace(/\s+$/,""); const t=p2.match(/([A-Za-z][\w+.&-]{1,17})$/); if(!t)break;
+    const tok=t[1], sep=/[·•]\s*$/.test(p2.slice(0,t.index));          /* ·-separated from the tech list? */
+    if(/^(github|link|demo|live|code|repo|view|visit)$/i.test(tok)){ label=label?tok+" "+label:tok; pre=p2.slice(0,t.index); continue; }
+    if(sep||/link|app|site|live|demo|store|page|portfolio|web|hub/i.test(tok)){ label=label?tok+" "+label:tok; pre=p2.slice(0,t.index); }
+    break; }
   const tech=[pre,post].map(s=>s.replace(/^[(),·•|\s]+|[(),·•|\s]+$/g,"").trim()).filter(Boolean).join(", ");
   return {link,label,tech}; }
 function parseProjHead(head){ let desc="",name=head,rest=""; const bar=head.indexOf("|");
@@ -1220,6 +1231,21 @@ function scoreArrangement(buckets,need,have,structure,zone){
 function jdTokens(jd){ return new Set((jd||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]); }
 function bulletScore(b,jt){ const w=(b||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; let s=0; w.forEach(x=>{if(jt.has(x))s++;}); if(/\d|%|\$|₹/.test(b))s+=2; return s; }
 function jdHas(item,jt){ const w=(item||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; return w.some(x=>jt.has(x))?1:0; }
+/* gold skills pass (deterministic, owner's recruiter prompt): mirror the JD's exact spelling variant,
+   merge case-duplicates, reorder GROUPS by JD priority (items are already JD-first). NEVER adds a skill,
+   never drops one, never renames beyond regional spelling — no oversell by construction. */
+const SPELL_PAIRS=[["visualisation","visualization"],["modelling","modeling"],["optimisation","optimization"],["organisation","organization"],["analyse","analyze"],["behavioural","behavioral"],["synchronisation","synchronization"],["personalised","personalized"],["standardisation","standardization"]];
+function jdSpell(item,J){ let s=String(item||"");
+  SPELL_PAIRS.forEach(pair=>{ const a=pair[0],b=pair[1],hasA=J.indexOf(a)>=0,hasB=J.indexOf(b)>=0;
+    const swap=(from,to)=>{ s=s.replace(new RegExp(from,"ig"),m=>/^[A-Z]/.test(m)?to.charAt(0).toUpperCase()+to.slice(1):to); };
+    if(hasB&&!hasA)swap(a,b); else if(hasA&&!hasB)swap(b,a); });
+  return s; }
+function goldSkills(groups,jd,jt){ const J=String(jd||"").toLowerCase();
+  return (groups||[]).map((g,gi)=>{ const seen=new Set(),items=[];
+    (g.items||[]).forEach(it=>{ const v=jdSpell(it,J),k=v.toLowerCase().replace(/\s+/g," ").trim(); if(k&&!seen.has(k)){seen.add(k);items.push(v);} });
+    const rel=(items.length?items.reduce((s,it)=>s+jdHas(it,jt),0)/items.length:0)+0.5*jdHas(g.group,jt);
+    return {g:Object.assign({},g,{items}),rel,gi}; })
+  .sort((a,b)=>b.rel-a.rel||a.gi-b.gi).map(x=>x.g); }
 function fmtYears(y){ y=Math.round((+y||0)*10)/10; if(y<1)return ""; return (y%1===0?String(y):y.toFixed(1))+" year"+(y>1?"s":"")+" of "; }
 /* summary agent (deterministic base): identity = the candidate's REAL latest title — NEVER the JD role
    (that would claim a job they haven't held); years = the exact interval-merged figure (1.9 stays "1.9",
@@ -1252,7 +1278,7 @@ function analyze(company,role,jd){ const parsed=parseResume(masterText()); if(!p
      (quantified ones float up via bulletScore's digit bonus) and the caps keep the most JD-relevant ones */
   cv.experience=(cv.experience||[]).map(e=>{ const sc=normBullets(e.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.map(x=>x.b).slice(0,8)}; });
   cv.projects=(cv.projects||[]).slice(0,6).map(p=>{ const sc=normBullets(p.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...p,bullets:sc.map(x=>x.b).slice(0,5)}; });
-  cv.skills=(cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHas(b,jt)-jdHas(a,jt))}));
+  cv.skills=goldSkills((cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHas(b,jt)-jdHas(a,jt))})),jd,jt);
   cv.summary=tailoredSummary(parsed,cv.title,company,allHave,have.years);
   const orig=scoreArrangement(buckets,need,have,struct,zoneOf(parsed));
   const tail=scoreArrangement(buckets,need,have,structureScore(cv),zoneOf(cv));
@@ -1360,7 +1386,13 @@ function contactHTML(cv){ const p=[];
   if(cv.email)p.push('<a href="mailto:'+esc(cv.email)+'">'+esc(cv.email)+'</a>');
   const l=[]; if(cv.linkedin)l.push('<a href="'+esc(urlify(cv.linkedin))+'" target="_blank" rel="noopener">LinkedIn</a>'); if(cv.github)l.push('<a href="'+esc(urlify(cv.github))+'" target="_blank" rel="noopener">GitHub</a>'); if(cv.website)l.push('<a href="'+esc(urlify(cv.website))+'" target="_blank" rel="noopener">Portfolio</a>');
   return p.join(" · ")+(l.length?'<br>'+l.join(" · "):""); }
-function projLabel(p,u){ return p.linkLabel||(/github\.(com|io)/i.test(u||"")?"GitHub":"Link"); }
+/* honest anchor labels: the candidate's own label wins; otherwise say what the link IS —
+   a repo ("GitHub"), a bare profile ("GitHub Profile"), a hosted app ("Live Demo") or a site ("Website") */
+function projLabel(p,u){ if(p.linkLabel)return p.linkLabel; u=String(u||"");
+  if(/github\.com\/[^\/\s?#]+\/[^\/\s?#]+/i.test(u))return"GitHub";
+  if(/github\.com\/[^\/\s?#]+\/?(?:[?#].*)?$/i.test(u))return"GitHub Profile";
+  if(/\.github\.io|vercel\.app|netlify\.app|pages\.dev|herokuapp\.com|streamlit\.app|onrender\.com/i.test(u))return"Live Demo";
+  return /^https?:/i.test(u)?"Website":"Link"; }
 function projLink(p){ if(!p.link)return""; const u=p.link==="__profile__"?(CUR&&CUR.cv&&CUR.cv.github?urlify(CUR.cv.github):""):p.link; return u?' · <a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(projLabel(p,u))+'</a>':""; }
 /* canonical section key from a rendered heading label — the master's own labels ("Professional Summary",
    "Featured Projects") render verbatim, so every H4-text consumer (aiMap, edit pull-back) matches by MEANING */
@@ -1629,7 +1661,7 @@ function copyTrk(btn){ const cols=["Date","Company","Role","Stage","Next","Notes
 
 /* ===== export: real vector PDF via pdfmake (clickable links + selectable text, no watermark) ===== */
 function fnameFor(which){ const who=String((CUR&&CUR.cv&&CUR.cv.name)||M.name||"Resume").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim()||"Resume"; return who+(which==="coverDoc"?" Cover Letter":" Resume"); }
-const PDF_BLUE="#1b59b3", PDF_INK="#16181d", PDF_GRAY="#555", PDF_HEAD="#0e1320", CW_PT=527;
+const PDF_BLUE="#2f5d8a", PDF_INK="#1a1f27", PDF_GRAY="#5a626b", PDF_HEAD="#16233a", CW_PT=527;
 function jr(runs,sep){ runs=runs.filter(Boolean); const o=[]; runs.forEach((r,i)=>{ if(i)o.push(sep); o.push(r); }); return o; }
 function lnk(text,url){ return url?{text:text,link:url,color:PDF_BLUE}:text; }
 function cvWeight(cv){ let n=(cv.summary||"").length+(cv.headline?cv.headline.length+20:0); (cv.skills||[]).forEach(g=>n+=g.group.length+(g.items||[]).join(", ").length+4);
@@ -1678,7 +1710,7 @@ function boldRuns(s,terms){ s=String(s==null?"":s); if(!terms||!terms.length)ret
 function jdTerms(){ return (CUR&&CUR.buckets)?((CUR.buckets.reqHave||[]).concat(CUR.buckets.prefHave||[])):[]; }
 function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[]; const bterms=jdTerms();
   const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
-    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.7,lineColor:"#c4cdda"}],margin:[0,0,0,4]}); };
+    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:1.1,lineColor:"#2f5d8a"}],margin:[0,0,0,4]}); };
   c.push({text:cv.name||"Your Name",bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"});
   /* the candidate's OWN headline from the master (their domains line) — never the JD/target role;
      the target role keyword still lives only in the summary's last sentence */
@@ -1691,18 +1723,18 @@ function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); cons
   if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:PDF_HEAD},(g.items||[]).join(", ")],margin:[0,0.6,0,0.6]})); }
   if(cv.experience&&cv.experience.length){ sec(hdLab(cv,"experience","Experience")); cv.experience.forEach(e=>{
     c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
-    const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#444",fontSize:F-1,margin:[0,0,0,1]});
-    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#888"}); }); }
+    const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#2b333d",fontSize:F-1,margin:[0,0,0,1]});
+    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#2f5d8a"}); }); }
   if(cv.projects&&cv.projects.length){ sec(hdLab(cv,"projects","Projects")); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
     c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
-    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#888"}); }); }
+    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#2f5d8a"}); }); }
   if(cv.education&&cv.education.length){ sec(hdLab(cv,"education","Education")); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
-    if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:"#333"}},{width:"auto",text:e.location||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}]}); }); }
-  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#888"}); }
-  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#888"}); }
-  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:"#888"}); }
+    if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:"#2b333d"}},{width:"auto",text:e.location||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}]}); }); }
+  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#2f5d8a"}); }
+  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#2f5d8a"}); }
+  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:"#2f5d8a"}); }
   return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:PDF_INK,lineHeight:1.12}, content:c }; }
 function coverDocDef(cv,cover){ const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   const paras=String(cover||"").split(/\n+/).map((p,i)=>(i===0&&/^Application for /.test(p))?{text:p,bold:true,margin:[0,0,0,8]}:{text:p,margin:[0,0,0,8]});
@@ -1721,10 +1753,10 @@ function domToDocDef(node,isCover){
     if(el.tagName==="H3"){ c.push({text:el.textContent,bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"}); }
     else if(cl.contains("ti")){ c.push({text:el.textContent,bold:true,fontSize:F+0.5,color:PDF_BLUE,margin:[0,1,0,0],alignment:"center"}); }
     else if(cl.contains("ct")){ c.push({text:domRuns(el),fontSize:F-1.4,color:PDF_GRAY,margin:[0,3,0,1],alignment:"center"}); }
-    else if(el.tagName==="H4"){ c.push({text:el.textContent.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]}); c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.7,lineColor:"#c4cdda"}],margin:[0,0,0,4]}); }
+    else if(el.tagName==="H4"){ c.push({text:el.textContent.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]}); c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:1.1,lineColor:"#2f5d8a"}],margin:[0,0,0,4]}); }
     else if(cl.contains("role")||cl.contains("sub2")){ const sp=el.children; const left=sp[0]?domRuns(sp[0]):[el.textContent]; const right=sp[1]?sp[1].textContent:""; c.push({columns:[{width:"*",text:left},{width:"auto",text:right,alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,cl.contains("role")?3:0,0,0]}); }
     else if(cl.contains("pj")){ c.push({text:domRuns(el),margin:[0,3,0,1]}); }
-    else if(el.tagName==="UL"){ const items=[...el.children].map(li=>li.textContent.trim()).filter(Boolean); if(items.length)c.push({ul:items,margin:[3,0,0,3],markerColor:"#888"}); }
+    else if(el.tagName==="UL"){ const items=[...el.children].map(li=>li.textContent.trim()).filter(Boolean); if(items.length)c.push({ul:items,margin:[3,0,0,3],markerColor:"#2f5d8a"}); }
     else if(el.tagName==="P"){ c.push({text:domRuns(el),margin:[0,1,0,1]}); }
   });
   return {pageSize:"A4",pageMargins:[34,32,34,32],defaultStyle:{fontSize:F,color:PDF_INK,lineHeight:1.12},content:c.length?c:[{text:node.innerText||""}]}; }
