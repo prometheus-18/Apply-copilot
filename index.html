@@ -2449,7 +2449,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
      stale list would quietly pin the user to a model they didn't choose. Blank ⇒ the server default. */
   var OAIK="apply_oaikey_v1", BYOKCT="apply_byokct_v1", BYOK_DAILY=10;
   var BYOK_PROV={
-    gemini:{label:"Google Gemini — free, strongest writing",hint:"AIza…",def:"gemini-2.5-flash",url:"https://aistudio.google.com/apikey",site:"aistudio.google.com"},   /* flash: free AI Studio keys usually have NO 2.5-pro API quota (429) */
+    gemini:{label:"Google Gemini — free, strongest writing",hint:"AQ.… or AIza…",def:"gemini-flash-latest",url:"https://aistudio.google.com/apikey",site:"aistudio.google.com"},   /* -latest ALIAS: versioned ids (gemini-2.5-*) get retired for new keys (Google 404s them); the alias always tracks the newest flash */
     github:{label:"GitHub Models — free (GPT-4.1, o-series)",hint:"github_pat_… or ghp_…",def:"openai/gpt-4.1",url:"https://github.com/settings/personal-access-tokens",site:"github.com · needs the models permission"},
     openrouter:{label:"OpenRouter — free models",hint:"sk-or-…",def:"deepseek/deepseek-r1:free",url:"https://openrouter.ai/keys",site:"openrouter.ai"},
     cerebras:{label:"Cerebras — free, very fast",hint:"csk-…",def:"llama-3.3-70b",url:"https://cloud.cerebras.ai",site:"cloud.cerebras.ai"},
@@ -2475,7 +2475,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   function byokSettle(state,d){ if(state!=="on"||!d||d._byok!==true)return false; byokSpend(1); return true; }
   function byokNote(state,viaOai,d){ if(viaOai)return " · ✦ via your own key"; if(state==="cap")return byokCapMsg(); if(state!=="on")return "";
     var er=d&&typeof d._byokErr==="string"?d._byokErr.replace(/[^\w ./-]/g,"").trim().slice(0,40):"";
-    if(er)return " · your own key failed upstream ("+er+")"+(/gemini 4\d\d/.test(er)?" — free Gemini keys usually can't call gemini-2.5-pro: set MODEL to gemini-2.5-flash in ⚙ AI":"")+" — this ran on the built-in AI";
+    if(er)return " · your own key failed upstream ("+er+")"+(/gemini 40[34]/.test(er)?" — that model id is retired for your key: CLEAR the MODEL field in ⚙ AI (blank = the recommended default, which auto-tracks Google's newest)":/gemini 429/.test(er)?" — that model has no free quota on your key or you hit the per-minute limit: clear the MODEL field in ⚙ AI or wait a minute":"")+" — this ran on the built-in AI";
     return " · your own key wasn't used (check ⚙ AI; the backend may need a re-paste) — this ran on the built-in AI"; }
 
   /* ---- ⚙ AI settings popup (key + model; key is never echoed back) ---- */
