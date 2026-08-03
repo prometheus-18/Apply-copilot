@@ -146,6 +146,8 @@
   .aieval .ev.warn{color:var(--acc);border-color:#4a3f3a}
   .aitip{margin:6px 0;font-size:12.5px;color:var(--tx)}
   .aitip::before{content:"✦ ";color:var(--acc)}
+  #akSign{margin-left:4px;font-size:9px;vertical-align:1px;color:#7dc98f}
+  #akSign.warn{color:var(--acc,#ff7a52)}
   .ko{border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc);border-radius:var(--r);padding:10px 13px;margin:10px 0;font-size:12px}
   .ko.bad{background:rgba(255,76,36,.14)}
   .ok5{color:var(--hd)}
@@ -392,7 +394,7 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed" style="width:auto;padding:7px 9px;font-size:10.5px"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve bullets</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
+        <div class="row"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed" style="width:auto;padding:7px 9px;font-size:10.5px"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve bullets</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="aiAuditBtn" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="cvsplit" id="cvSplit">
@@ -1949,7 +1951,8 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var box=$("nacct"); if(!box)return;
     if(AUTH_USER){
       var em=AUTH_USER.email||"account";
-      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="aiKeys" title="Optional: route the ✦ AI buttons through your own (free) provider key">⚙ AI</button><button class="sm ghost" data-act="authSignOut">Sign out</button>';
+      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="aiKeys" title="Optional: route the ✦ AI buttons through your own (free) provider key">⚙ AI<span id="akSign"></span></button><button class="sm ghost" data-act="authSignOut">Sign out</button>';
+      try{ byokSign(); }catch(e){}
     } else { box.innerHTML=""; }
   }
   function setAuthed(on){
@@ -2351,6 +2354,40 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
   window.aiTailorJD=function(){ aiBulk("tailor"); };
+
+  /* ---- 🔬 Audit — three reviewer lenses in ONE pass; critique only, never touches the document ----
+     Generate → Critique → Explain: scores per lens, missing signals marked supported / NOT-in-your-master
+     (the honest line other tools skip), per-bullet fixes referencing the same ids aiMap uses. */
+  window.aiAudit=async function(){ if(!CUR){ aiMsg("aiCvMsg","Run the analysis first."); return; }
+    var cv=CUR.cvBase||CUR.cv, run0=CUR, d=null, bk="";
+    var bl=collectBullets(cv,999);
+    var gen="SUMMARY:\n"+(cv.summary||"")+"\n\nSKILLS:\n"+((cv.skills||[]).map(function(g){return g.group+": "+(g.items||[]).join(", ");}).join("\n"))+"\n\nBULLETS (id + text):\n"+bl.map(function(x){return "["+x.id+"] "+x.text;}).join("\n");
+    aiMsg("aiCvMsg",'<span class="spin"></span>Three AI reviewers are auditing the generated résumé against this JD — ATS, recruiter, hiring manager…');
+    if(window.__AI_FAKE_AUDIT){ d=window.__AI_FAKE_AUDIT; }
+    else{ if(!SB||!AUTH_USER){ aiMsg("aiCvMsg","Sign in to use AI features."); return; }
+      var body=Object.assign({mode:"audit",master:String(window.__masterText()).slice(0,8000),gen:gen.slice(0,7000)},aiGround(cv));
+      bk=byokAttach(body);
+      try{ var r=await SB.functions.invoke("ai",{body:body});
+        if(r.error){ var st=r.error.context&&r.error.context.status;
+          aiMsg("aiCvMsg",(st===429)?"⏳ You have used today's AI actions — add your own free key in ⚙ AI, or try again tomorrow.":(st===404)?"AI backend is not deployed yet — the deterministic engine stands.":"AI is unreachable right now — try again in a moment."); return; }
+        d=r.data||{};
+      }catch(e){ aiMsg("aiCvMsg","AI is unreachable right now — try again in a moment."); return; } }
+    var viaOai=byokSettle(bk,d);
+    if(CUR!==run0){ aiMsg("aiCvMsg","That audit expired — a new analysis ran while it was working."); return; }
+    if(d._v!==2||d._mode!=="audit"){ aiMsg("aiCvMsg","🔬 Audit needs the newest AI backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
+    var sc=function(x){ return Math.max(0,Math.min(100,Math.round(+(((x||{}).score))||0))); };
+    var idLabel=function(id){ var m=String(id||"").match(/^([ep])(\d+):(\d+)$/); if(!m)return /summary/i.test(String(id||""))?"Summary":String(id||"");
+      var i=+m[2],j=+m[3]; if(m[1]==="e"){ var e=(cv.experience||[])[i]||{}; return (e.org||e.role||("Role "+(i+1)))+" · bullet "+(j+1); }
+      var p2=(cv.projects||[])[i]||{}; return (p2.name||("Project "+(i+1)))+" · bullet "+(j+1); };
+    var lens=function(name,o){ o=o||{}; return '<div style="margin:5px 0 2px"><b>'+name+" "+sc(o)+"/100</b></div>"+((o.notes||[]).slice(0,4).map(function(n){return '<div class="hint" style="margin:2px 0 2px 10px">· '+esc(String(n))+'</div>';}).join("")); };
+    var miss=(d.missing||[]).slice(0,8).map(function(m){ m=m||{}; return '<span class="kchip '+(m.supported?"have":"miss")+'" title="'+esc(String(m.where||""))+'">'+esc(String(m.signal||""))+(m.supported?" · your master covers this":" · NOT in your master — never invent it")+'</span>'; }).join(" ");
+    var str=(d.strengths||[]).slice(0,6).map(function(s){ return '<span class="kchip pref">'+esc(String(s))+'</span>'; }).join(" ");
+    var acts=(d.actions||[]).slice(0,6).map(function(a){ a=a||{}; return '<div class="hint" style="margin:3px 0">→ <b>'+esc(idLabel(a.id))+':</b> '+esc(String(a.fix||""))+'</div>'; }).join("");
+    aiMsg("aiCvMsg",'🔬 <b>Audit — '+sc(d)+'/100</b> · critique only, nothing was changed'+esc(byokNote(bk,viaOai,d))+
+      lens("ATS",d.ats)+lens("Recruiter",d.recruiter)+lens("Hiring manager",d.hiring)+
+      (miss?'<div style="margin:7px 0 2px"><b>Missing hiring signals</b><br>'+miss+'</div>':"")+
+      (str?'<div style="margin:7px 0 2px"><b>Strengths</b> '+str+'</div>':"")+
+      (acts?'<div style="margin:7px 0 2px"><b>Suggested fixes</b> — apply with ✦ Tailor to JD or ✎ Edit + ✦ AI edit:'+acts+'</div>':"")); };
   window.aiUndoAll=function(){ if(!AI_UNDO||!CUR)return;
     if(AI_UNDO_RUN!==CUR){ aiMsg("aiCvMsg","That undo expired — a new analysis was run since."); AI_UNDO=null; return; }
     if(AI_AFTER&&JSON.stringify(CUR.cvBase)!==AI_AFTER&&!AI_UNDO_FORCE){ AI_UNDO_FORCE=1;
@@ -2471,11 +2508,24 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   function byokAttach(body){ var k=byokGet(); if(!k)return "";
     if(byokLeft()<=0)return "cap";
     body.byok={provider:k.provider,key:k.key,model:k.model}; return "on"; }
-  /* after the response: charge only when the caller's key actually answered */
-  function byokSettle(state,d){ if(state!=="on"||!d||d._byok!==true)return false; byokSpend(1); return true; }
+  /* key-health cache (device-local like the key itself): {ok,n,last,at} — drives the ⚙ AI nav sign */
+  var BYOKCHK="apply_byokchk_v1";
+  function byokChk(){ try{ return JSON.parse(localStorage.getItem(BYOKCHK)||"null")||{}; }catch(e){ return {}; } }
+  function byokChkSet(patch){ var o=byokChk(); for(var kk in patch)o[kk]=patch[kk]; try{ localStorage.setItem(BYOKCHK,JSON.stringify(o)); }catch(e){} try{ byokSign(); }catch(e){} return o; }
+  /* the SIGN: ● = your key is active (last run went through it / verified) · ⚠ = key saved but the last run fell back */
+  function byokSign(){ var s=document.getElementById("akSign"); if(!s)return; var k=byokGet();
+    if(!k){ s.textContent=""; s.className=""; s.title=""; return; }
+    var c=byokChk(), warn=c.last==="fallback";
+    s.textContent=warn?"⚠":"●"; s.className=warn?"warn":"";
+    s.title=warn?"Key saved, but the last AI run fell back to the built-in — open ⚙ AI and hit Test key"
+      :("Your "+((BYOK_PROV[k.provider]||{}).label||k.provider)+" key is active"+(c.n?" · "+c.n+" chat models available":"")+" — ✦ runs route through it"); }
+  /* after the response: charge only when the caller's key actually answered; record the routing for the sign;
+     self-heal a retired/unknown saved model (40x can never succeed again — re-bake the recommended default).
+     ⚠ MUST stay ONE line ([22] scrapes it single-line); side-effects typeof-guarded (absent in the test sandbox). */
+  function byokSettle(state,d){ var ok=state==="on"&&!!d&&d._byok===true; if(state==="on"&&typeof byokChkSet==="function"){ byokChkSet({last:ok?"own":"fallback"}); if(!ok&&d&&typeof d._byokErr==="string"&&/40[34]/.test(d._byokErr)){ var hk=byokGet(); if(hk&&hk.model!==BYOK_PROV[hk.provider].def){ try{ localStorage.setItem(OAIK,JSON.stringify({provider:hk.provider,key:hk.key,model:BYOK_PROV[hk.provider].def})); }catch(e){} } } } if(!ok)return false; byokSpend(1); return true; }
   function byokNote(state,viaOai,d){ if(viaOai)return " · ✦ via your own key"; if(state==="cap")return byokCapMsg(); if(state!=="on")return "";
     var er=d&&typeof d._byokErr==="string"?d._byokErr.replace(/[^\w ./-]/g,"").trim().slice(0,40):"";
-    if(er)return " · your own key failed upstream ("+er+")"+(/gemini 40[34]/.test(er)?" — that model id is retired for your key: CLEAR the MODEL field in ⚙ AI (blank = the recommended default, which auto-tracks Google's newest)":/gemini 429/.test(er)?" — that model has no free quota on your key or you hit the per-minute limit: clear the MODEL field in ⚙ AI or wait a minute":"")+" — this ran on the built-in AI";
+    if(er)return " · your own key failed upstream ("+er+")"+(/40[34]/.test(er)?" — that model id isn't available to your key, so MODEL was reset to the recommended default: just run it again":/429/.test(er)?" — no quota for that model or you hit the per-minute limit: wait a minute or clear MODEL in ⚙ AI":"")+" — this ran on the built-in AI";
     return " · your own key wasn't used (check ⚙ AI; the backend may need a re-paste) — this ran on the built-in AI"; }
 
   /* ---- ⚙ AI settings popup (key + model; key is never echoed back) ---- */
@@ -2491,9 +2541,10 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
       '<label>Model — blank uses the recommended default</label>'+
       '<input id="akModel" type="text" autocomplete="off" spellcheck="false" placeholder="default">'+
       '<p class="akhint" id="akLeft"></p>'+
+      '<p class="akhint" id="akChk"></p>'+
       '<p class="akhint">Stays on this device only — never synced, wiped on sign-out. Billed to your own account; self-capped at '+BYOK_DAILY+' uses/day. If your key fails or hits its cap, the shared built-in AI answers instead (20 actions/day per account).</p>'+
       '<p class="lperr" id="akErr"></p>'+
-      '<div class="lprow"><button class="lpsave" data-act="aiKeysSave">Save</button><button data-act="aiKeysClose">Close</button><button class="lpdel" data-act="aiKeysClear">Remove key</button></div>';
+      '<div class="lprow"><button class="lpsave" data-act="aiKeysSave">Save</button><button data-act="aiKeysTest" title="Ask the provider which models this key can actually call">Test key</button><button data-act="aiKeysClose">Close</button><button class="lpdel" data-act="aiKeysClear">Remove key</button></div>';
     document.body.appendChild(p); _aiKeys=p;
     document.addEventListener("mousedown",function(e){ if(_aiKeys&&_aiKeys.style.display==="block"&&!_aiKeys.contains(e.target))_aiKeys.style.display="none"; });
     return p; }
@@ -2518,11 +2569,31 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   window.aiKeysSave=function(){ var er=$("akErr"); if(er)er.style.display="none";
     var raw=(($("akKey")||{}).value||"").replace(/\s+/g,""), prov=byokProv((($("akProv")||{}).value)),
         model=((($("akModel")||{}).value)||"").trim()||BYOK_PROV[prov].def, cur=byokGet();
-    if(!raw&&cur){ try{ localStorage.setItem(OAIK,JSON.stringify({provider:prov,key:cur.key,model:model})); }catch(e){} aiKeysStatus(); return; }   /* provider/model-only update */
+    if(!raw&&cur){ try{ localStorage.setItem(OAIK,JSON.stringify({provider:prov,key:cur.key,model:model})); }catch(e){} aiKeysStatus(); try{ window.aiKeysTest(); }catch(e){} return; }   /* provider/model-only update */
     if(!/^[\w.\-]{16,400}$/.test(raw)){ if(er){ er.textContent="That doesn't look like an API key — paste the whole thing ("+BYOK_PROV[prov].hint+")."; er.style.display="block"; } return; }
     try{ localStorage.setItem(OAIK,JSON.stringify({provider:prov,key:raw,model:model})); }catch(e){}
-    aiKeysStatus(); };
-  window.aiKeysClear=function(){ try{ localStorage.removeItem(OAIK); localStorage.removeItem(BYOKCT); }catch(e){} aiKeysStatus(); };
+    aiKeysStatus(); try{ window.aiKeysTest(); }catch(e){} };   /* auto-verify on every save — the sign turns ● only on proof */
+  window.aiKeysClear=function(){ try{ localStorage.removeItem(OAIK); localStorage.removeItem(BYOKCT); localStorage.removeItem(BYOKCHK); }catch(e){} aiKeysStatus(); try{ byokSign(); }catch(e){} };
+  /* ---- live key check: ask the provider which models THIS key can call (all speak GET /models) ----
+     Proven necessity: Google retires versioned ids for new keys (gemini-2.5-* → 404) — a saved key can look
+     fine and still route nothing. CORS failures degrade honestly (the key is still tried server-side). */
+  var BYOK_MODELS={gemini:"https://generativelanguage.googleapis.com/v1beta/openai/models",openai:"https://api.openai.com/v1/models",groq:"https://api.groq.com/openai/v1/models",openrouter:"https://openrouter.ai/api/v1/models",cerebras:"https://api.cerebras.ai/v1/models",mistral:"https://api.mistral.ai/v1/models",github:"https://models.github.ai/inference/models"};
+  var BYOK_NONCHAT=/embed|imagen|veo|lyria|tts|image|audio|live|realtime|robotic|aqa|clip|translate|research|banana|computer-use|moderation|whisper|dall-e|guard/i;
+  window.aiKeysTest=async function(){ var out=$("akChk");
+    var prov=byokProv((($("akProv")||{}).value)), typed=(($("akKey")||{}).value||"").replace(/\s+/g,""), saved=byokGet();
+    var key=typed||((saved&&saved.provider===prov)?saved.key:"");
+    if(!key){ if(out)out.textContent="Paste a key first (or Save one), then Test."; return; }
+    if(out)out.textContent="Checking the key with "+((BYOK_PROV[prov]||{}).label||prov).split(" — ")[0]+"…";
+    var model=((($("akModel")||{}).value)||"").trim()||((saved&&saved.provider===prov&&saved.model)||BYOK_PROV[prov].def);
+    try{
+      var r=await fetch(BYOK_MODELS[prov],{headers:{Authorization:"Bearer "+key}});
+      if(!r.ok){ if(out)out.textContent=(r.status===401||r.status===403)?"✗ Key rejected ("+r.status+") — invalid, revoked, or its project lacks API access. Mint a fresh one.":"✗ The provider answered "+r.status+" — try again in a minute."; byokChkSet({ok:false,n:0}); return; }
+      var d=await r.json(); var ids=(Array.isArray(d.data)?d.data:[]).map(function(x){return String((x&&x.id)||"").replace(/^models\//,"");}).filter(Boolean);
+      var chat=ids.filter(function(x){return !BYOK_NONCHAT.test(x);});
+      var has=chat.indexOf(String(model).replace(/^models\//,""))>=0;
+      if(out)out.textContent="✓ Key valid · "+chat.length+" usable chat models (of "+ids.length+" total) · will use "+model+(has?"":" — ⚠ NOT in your key's list; clear MODEL to use the recommended default");
+      byokChkSet({ok:true,n:chat.length,at:Date.now()});
+    }catch(e){ if(out)out.textContent="Couldn't verify from this browser (network/CORS) — the key is still tried server-side on every ✦ run."; } };
 
   /* CSP-safe action registry for this block's controls (dispatcher lives in the logic block) */
   if(window.__act)window.__act({
@@ -2534,7 +2605,8 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     outContacts:function(){ window.outContacts(); },
     aiKeys:function(el){ window.aiKeysOpen(el); }, aiKeysClose:function(){ if(_aiKeys)_aiKeys.style.display="none"; },
     aiKeysSave:function(){ window.aiKeysSave(); }, aiKeysClear:function(){ window.aiKeysClear(); },
-    aiKeysProv:function(){ aiKeysProvUI(); },
+    aiKeysProv:function(){ aiKeysProvUI(); }, aiKeysTest:function(){ window.aiKeysTest(); },
+    aiAudit:function(){ if(window.aiAudit)window.aiAudit(); },
   });
 
   renderForm();
@@ -2544,7 +2616,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     SB.auth.onAuthStateChange(function(event,session){
       AUTH_USER = session ? session.user : null; SESS = session || null;
       /* sign-out wipes this device's local copy so the next account starts clean, then reloads to a fresh gate */
-      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); localStorage.removeItem(DKEY); localStorage.removeItem(OAIK); localStorage.removeItem(BYOKCT); localStorage.removeItem("apply_fit_v1"); localStorage.removeItem("apply_tex_draft_v1"); }catch(e){} location.reload(); return; }
+      if(event==="SIGNED_OUT"){ try{ localStorage.removeItem(MKEY); localStorage.removeItem(TK); localStorage.removeItem(DKEY); localStorage.removeItem(OAIK); localStorage.removeItem(BYOKCT); localStorage.removeItem(BYOKCHK); localStorage.removeItem("apply_fit_v1"); localStorage.removeItem("apply_tex_draft_v1"); }catch(e){} location.reload(); return; }
       setAuthed(!!AUTH_USER);
       /* Supabase re-fires SIGNED_IN on every tab refocus — pull + welcome-scroll only ONCE per page load,
          so returning to the tab leaves the user exactly where they were */
