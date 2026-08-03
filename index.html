@@ -2252,7 +2252,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
       '<div class="aieval"><span class="ev '+(ev.faith>=90?"good":"warn")+'"'+(ev.inv.length?' title="terms not in your original: '+esc(ev.inv.join(", "))+'"':'')+'>faithful '+ev.faith+'</span>'+
       (ev.rel!=null?'<span class="ev '+(ev.rel>=50?"good":"warn")+'">jd match '+ev.rel+'%</span>':'')+'</div>'+
       '<div class="lprow" style="margin-top:9px"><button class="go" data-act="aiPopApply">✓ Apply</button><button data-act="aiPopCopy">Copy</button><button data-act="aiPopGo" data-hum="'+(humanize?1:0)+'">↻ Try again</button></div>'+
-      (byokNote(bk,viaOai)?'<div class="hint" style="margin-top:6px">'+esc(byokNote(bk,viaOai).replace(/^ · /,""))+'</div>':'')+'</div>';
+      (byokNote(bk,viaOai,d)?'<div class="hint" style="margin-top:6px">'+esc(byokNote(bk,viaOai,d).replace(/^ · /,""))+'</div>':'')+'</div>';
     /* the result card grows the popup past its open-time clamp — re-clamp so ✓ Apply stays reachable in short panels */
     try{ var pb=_aiPop.getBoundingClientRect(); if(pb.bottom>innerHeight-8)_aiPop.style.top=Math.max(10,innerHeight-8-pb.height)+"px"; }catch(e){} };
   window.aiPopApply=function(){ var a=AI_LAST; if(!a||!a.ctx)return; var c=a.ctx,nw=a.text;
@@ -2346,7 +2346,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
        The one-line JD "read" stays: it shows WHAT the tailor aligned to (inferred domain + specialization). */
     var jdRead=(mode==="tailor"&&typeof d.read==="string"&&d.read.trim())?'<div class="aitip">Read the JD as: '+esc(d.read.trim().slice(0,140))+'</div>':"";
     aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
-      (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai))+
+      (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai,d))+
       ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+jdRead); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
@@ -2396,7 +2396,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     AI_UNDO_COVER=cover; AI_UNDO_COVER_RUN=CUR;
     CUR.cover=pre+sanitizeCover(nw)+sig;
     try{ renderCover(); }catch(e){}
-    aiMsg("aiClMsg",'✦ Letter rewritten — facts and signature untouched.'+esc(byokNote(bk,viaOai))+' <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
+    aiMsg("aiClMsg",'✦ Letter rewritten — facts and signature untouched.'+esc(byokNote(bk,viaOai,d))+' <button class="sm ghost" data-act="aiUndoCover">Undo</button>'); };
   window.aiUndoCover=function(){ if(!AI_UNDO_COVER||!CUR)return;
     if(AI_UNDO_COVER_RUN!==CUR){ aiMsg("aiClMsg","That undo expired — a new analysis was run since."); AI_UNDO_COVER=null; return; }
     CUR.cover=AI_UNDO_COVER; AI_UNDO_COVER=null; try{ renderCover(); }catch(e){} aiMsg("aiClMsg","↩ Reverted to the previous letter."); };
@@ -2449,7 +2449,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
      stale list would quietly pin the user to a model they didn't choose. Blank ⇒ the server default. */
   var OAIK="apply_oaikey_v1", BYOKCT="apply_byokct_v1", BYOK_DAILY=10;
   var BYOK_PROV={
-    gemini:{label:"Google Gemini — free, strongest writing",hint:"AIza…",def:"gemini-2.5-pro",url:"https://aistudio.google.com/apikey",site:"aistudio.google.com"},
+    gemini:{label:"Google Gemini — free, strongest writing",hint:"AIza…",def:"gemini-2.5-flash",url:"https://aistudio.google.com/apikey",site:"aistudio.google.com"},   /* flash: free AI Studio keys usually have NO 2.5-pro API quota (429) */
     github:{label:"GitHub Models — free (GPT-4.1, o-series)",hint:"github_pat_… or ghp_…",def:"openai/gpt-4.1",url:"https://github.com/settings/personal-access-tokens",site:"github.com · needs the models permission"},
     openrouter:{label:"OpenRouter — free models",hint:"sk-or-…",def:"deepseek/deepseek-r1:free",url:"https://openrouter.ai/keys",site:"openrouter.ai"},
     cerebras:{label:"Cerebras — free, very fast",hint:"csk-…",def:"llama-3.3-70b",url:"https://cloud.cerebras.ai",site:"cloud.cerebras.ai"},
@@ -2473,7 +2473,10 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     body.byok={provider:k.provider,key:k.key,model:k.model}; return "on"; }
   /* after the response: charge only when the caller's key actually answered */
   function byokSettle(state,d){ if(state!=="on"||!d||d._byok!==true)return false; byokSpend(1); return true; }
-  function byokNote(state,viaOai){ return viaOai?" · ✦ via your own key":state==="cap"?byokCapMsg():state==="on"?" · your own key wasn't used (check ⚙ AI; the backend may need a re-paste) — this ran on the built-in AI":""; }
+  function byokNote(state,viaOai,d){ if(viaOai)return " · ✦ via your own key"; if(state==="cap")return byokCapMsg(); if(state!=="on")return "";
+    var er=d&&typeof d._byokErr==="string"?d._byokErr.replace(/[^\w ./-]/g,"").trim().slice(0,40):"";
+    if(er)return " · your own key failed upstream ("+er+")"+(/gemini 4\d\d/.test(er)?" — free Gemini keys usually can't call gemini-2.5-pro: set MODEL to gemini-2.5-flash in ⚙ AI":"")+" — this ran on the built-in AI";
+    return " · your own key wasn't used (check ⚙ AI; the backend may need a re-paste) — this ran on the built-in AI"; }
 
   /* ---- ⚙ AI settings popup (key + model; key is never echoed back) ---- */
   var _aiKeys=null;
