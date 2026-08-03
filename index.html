@@ -1240,10 +1240,14 @@ function jdSpell(item,J){ let s=String(item||"");
     const swap=(from,to)=>{ s=s.replace(new RegExp(from,"ig"),m=>/^[A-Z]/.test(m)?to.charAt(0).toUpperCase()+to.slice(1):to); };
     if(hasB&&!hasA)swap(a,b); else if(hasA&&!hasB)swap(b,a); });
   return s; }
+/* group RANKING ignores generic filler tokens — "data"/"analysis" appear in every JD and let
+   Relevant Coursework outrank Programming for a Data Analyst JD (owner-reported). Distinctive terms only. */
+const SKILL_STOP=new Set(["data","business","analysis","analytics","management","development","skills","professional","relevant","tools","techniques","technologies","systems","experience","knowledge","strong","working","team","teams","ability","solutions"]);
+function jdHasStrict(item,jt){ const w=(item||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; return w.some(x=>jt.has(x)&&!SKILL_STOP.has(x))?1:0; }
 function goldSkills(groups,jd,jt){ const J=String(jd||"").toLowerCase();
   return (groups||[]).map((g,gi)=>{ const seen=new Set(),items=[];
     (g.items||[]).forEach(it=>{ const v=jdSpell(it,J),k=v.toLowerCase().replace(/\s+/g," ").trim(); if(k&&!seen.has(k)){seen.add(k);items.push(v);} });
-    const rel=(items.length?items.reduce((s,it)=>s+jdHas(it,jt),0)/items.length:0)+0.5*jdHas(g.group,jt);
+    const rel=(items.length?items.reduce((s,it)=>s+jdHasStrict(it,jt),0)/items.length:0)+0.5*jdHasStrict(g.group,jt);
     return {g:Object.assign({},g,{items}),rel,gi}; })
   .sort((a,b)=>b.rel-a.rel||a.gi-b.gi).map(x=>x.g); }
 function fmtYears(y){ y=Math.round((+y||0)*10)/10; if(y<1)return ""; return (y%1===0?String(y):y.toFixed(1))+" year"+(y>1?"s":"")+" of "; }
@@ -1277,7 +1281,11 @@ function analyze(company,role,jd){ const parsed=parseResume(masterText()); if(!p
   /* recruiter-style pointers: prose → concise bullets BEFORE scoring, so fragments rank individually
      (quantified ones float up via bulletScore's digit bonus) and the caps keep the most JD-relevant ones */
   cv.experience=(cv.experience||[]).map(e=>{ const sc=normBullets(e.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.map(x=>x.b).slice(0,8)}; });
-  cv.projects=(cv.projects||[]).slice(0,6).map(p=>{ const sc=normBullets(p.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...p,bullets:sc.map(x=>x.b).slice(0,5)}; });
+  cv.projects=(cv.projects||[]).slice(0,6).map(p=>{ const sc=normBullets(p.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...p,bullets:sc.map(x=>x.b).slice(0,5)}; })
+    /* whole-PROJECT order follows JD relevance too (analytics projects first for analytics roles) — runs
+       BEFORE the cvBase/cv0 snapshots so aiMap's positional p{i}:{j} ids stay consistent everywhere */
+    .map((p,pi)=>({p,pi,s:bulletScore(p.name+" "+(p.tech||""),jt)+(p.bullets||[]).reduce((a,b)=>a+bulletScore(b,jt),0)}))
+    .sort((a,b)=>b.s-a.s||a.pi-b.pi).map(x=>x.p);
   cv.skills=goldSkills((cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHas(b,jt)-jdHas(a,jt))})),jd,jt);
   cv.summary=tailoredSummary(parsed,cv.title,company,allHave,have.years);
   const orig=scoreArrangement(buckets,need,have,struct,zoneOf(parsed));
@@ -2334,10 +2342,12 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(sumOK)CUR.cvBase.summary=sumNew;
     try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
     AI_AFTER=JSON.stringify(CUR.cvBase); AI_UNDO_FORCE=0;
-    /* owner call: no coaching-tip lines above the résumé — the document itself is the result; tips live in ① */
+    /* owner call: no coaching-tip lines above the résumé — the document itself is the result; tips live in ①.
+       The one-line JD "read" stays: it shows WHAT the tailor aligned to (inferred domain + specialization). */
+    var jdRead=(mode==="tailor"&&typeof d.read==="string"&&d.read.trim())?'<div class="aitip">Read the JD as: '+esc(d.read.trim().slice(0,140))+'</div>':"";
     aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
       (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai))+
-      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'); }
+      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+jdRead); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
   window.aiTailorJD=function(){ aiBulk("tailor"); };
