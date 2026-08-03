@@ -27,7 +27,7 @@
     --obsidian:#161616;--graphite:#3c3a3e;--slate:#7b7a7c;--ash:#a2a2a2;--mist:#c9c7cc;--fog:#f1f1f1;--paper:#f8f8f8;--bone:#ffffff;--ember:#ff4c24;--tangerine:#ff6436;
     --r:14.4px;--mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;--disp:'Anton',Impact,'Arial Narrow',sans-serif;--sans:'Inter',system-ui,'Segoe UI',Arial,sans-serif;
     --srf:var(--obsidian);--card:#1d1d1f;--card2:#232325;--tx:var(--mist);--hd:var(--bone);--mut:var(--ash);--fnt:#6f6d72;
-    --ln:#2e2c30;--pln:var(--graphite);--btn-ln:#504e54;--ghost:#2e2c30;--acc:#ff7a52;--acc-soft:rgba(255,100,54,.09);
+    --ln:#2e2c30;--pln:var(--graphite);--btn-ln:#504e54;--ghost:#2e2c30;--acc:#ff7a52;--acc-soft:rgba(255,100,54,.09);--positive:#7ed6a1;--positive-soft:rgba(126,214,161,.11);--warning:#ffc06a;--warning-soft:rgba(255,192,106,.10);
     --chrome:linear-gradient(180deg,#ffffff 0%,#e9e7eb 26%,#b9b7bb 52%,#6e6c70 78%,#2e2c30 100%);}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -63,23 +63,31 @@
   .step>*{max-width:1140px;margin-left:auto;margin-right:auto}
   .wm{font:400 clamp(54px,9vw,118px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.01em;color:#42404a;margin:0 auto 16px;user-select:none}
   /* hero — chrome display type emerging from black-to-fog void */
-  .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(72px,11vh,110px) clamp(18px,4vw,48px) clamp(96px,16vh,150px);overflow:hidden}
+  .hero{position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(72px,11vh,110px) clamp(18px,4vw,48px) clamp(70px,10vh,110px);overflow:hidden}
   .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(58% 46% at 50% 36%,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
   .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:38vh;background:linear-gradient(180deg,rgba(22,22,22,0) 0%,rgba(110,108,112,.32) 50%,rgba(170,168,172,.38) 76%,rgba(13,13,15,0) 100%);pointer-events:none}
   .hero>*{position:relative;z-index:1}
   .kicker{font:600 11px var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--ash);margin-bottom:26px}
-  .hero h1{font:400 64px/.82 var(--disp);font-size:min(clamp(64px,21vw,320px),28vh);letter-spacing:-.015em;text-transform:uppercase;margin:0;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero h1{font:400 64px/.82 var(--disp);font-size:min(clamp(64px,18vw,276px),25vh);letter-spacing:-.015em;text-transform:uppercase;margin:0;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
   .hero h1 span{display:block}
-  .hdesc{position:absolute;right:clamp(18px,4vw,48px);bottom:34px;max-width:280px;text-align:right;font:500 14px/1.55 var(--sans);color:var(--fog)}
-  .scrollcue{position:absolute;left:0;right:0;bottom:26px;font:600 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ash);animation:bob 2.2s ease-in-out infinite}
+  .heroLead{max-width:510px;margin:22px auto 0;font:500 clamp(15px,1.5vw,17px)/1.55 var(--sans);color:var(--fog)}
+  .hdesc{max-width:490px;margin:18px auto 0;text-align:center;font:500 13px/1.55 var(--sans);color:var(--ash)}
+  .heroProof{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;max-width:520px;margin:16px auto 0}
+  .heroProof span{border:1px solid var(--ln);border-radius:999px;padding:5px 9px;font:600 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mut);background:rgba(35,35,37,.56)}
+  .journey{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:min(680px,100%);margin:32px auto 0;text-align:left}
+  .journeyStep{border:1px solid var(--ln);border-radius:12px;padding:11px 12px;background:rgba(29,29,31,.7)}
+  .journeyStep b{display:block;font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hd)}
+  .journeyStep span{display:block;margin-top:4px;font-size:11.5px;line-height:1.4;color:var(--mut)}
+  .journeyStep i{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;margin-right:6px;border-radius:50%;background:var(--acc-soft);color:var(--acc);font-style:normal}
+  .scrollcue{position:static;margin-top:24px;font:600 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ash);animation:bob 2.2s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(6px);opacity:1}}
-  @media(max-width:880px){ .hdesc{position:static;margin:22px auto 0;text-align:center;color:var(--ash)} .hero{padding-bottom:110px} }
+  @media(max-width:880px){ .hero{padding-bottom:72px} }
   .seclabel{font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.2em;color:var(--fog);margin:0 0 14px;display:flex;align-items:center;gap:8px}
   .seclabel::after{content:"";flex:1;height:1px;background:var(--ln)}
   /* ===== auth gate — app is hidden until signed in ===== */
-  .heroAuth{margin-top:38px;width:min(400px,100%)}
+  .heroAuth{margin-top:26px;width:min(400px,100%)}
   .heroAuth .authcard{text-align:left}
-  body.guest .heroCTA,body.guest .scrollcue{display:none}
+  body.guest .heroCTA,body.guest .journey,body.guest .scrollcue{display:none}
   body.authed .heroAuth{display:none}
   body.guest main.flow>section.step{display:none}
   body.guest footer,body.guest .nlinks{display:none}
@@ -94,6 +102,8 @@
   label.fld{display:block;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--mut);margin:12px 0 5px}
   input[type=text],input[type=file],input[type=password],input[type=email],textarea,select{width:100%;font:500 13px var(--sans);border:1px solid var(--pln);border-radius:var(--r);padding:10px 13px;background:var(--card2);color:var(--hd);transition:border-color .15s}
   input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,textarea:focus,select:focus{outline:none;border-color:var(--hd)}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+  input[type=text]:focus-visible,input[type=password]:focus-visible,input[type=email]:focus-visible,textarea:focus-visible,select:focus-visible{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
   input[type=file]{padding:9px;font-size:12px;font-family:var(--mono)}
   input::placeholder,textarea::placeholder{color:var(--fnt)}
   textarea{min-height:170px;resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.5;font-weight:400}
@@ -116,15 +126,17 @@
   /* output components */
   .kchip{display:inline-block;border-radius:var(--r);padding:3px 11px;font:500 12px var(--sans);margin:3px 4px 3px 0;border:1px solid transparent}
   .kchip.have{background:var(--hd);color:var(--srf);border-color:var(--hd)}
-  .kchip.miss{background:transparent;color:var(--acc);border-color:var(--acc)}
+  .kchip.miss{background:transparent;color:var(--warning);border-color:var(--warning)}
   .kchip.pref{background:transparent;color:var(--mut);border-color:var(--pln)}
   .score-big{font-family:var(--disp);font-size:64px;font-weight:400;line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,var(--hd),var(--mut));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .score-big.alt{background:linear-gradient(135deg,var(--tangerine),var(--ember));-webkit-background-clip:text;background-clip:text}
+  .score-big.alt{background:linear-gradient(135deg,#d7ffe6,var(--positive));-webkit-background-clip:text;background-clip:text}
   .scorecard{flex:1;min-width:180px;border:1px solid var(--pln);border-radius:var(--r);padding:16px 18px;background:var(--card2)}
+  .scorecard.current{background:linear-gradient(145deg,#272729,#202023)}
+  .scorecard.projected{border-color:rgba(126,214,161,.6);background:linear-gradient(145deg,rgba(126,214,161,.12),#202b24)}
   .label{font:600 9.5px var(--mono);text-transform:uppercase;letter-spacing:.16em;color:var(--mut)}
   .meter{height:6px;background:var(--ghost);border-radius:var(--r);overflow:hidden;margin:10px 0 2px;position:relative}
   .meter>i{display:block;height:100%;width:0;background:var(--hd);transition:width .7s cubic-bezier(.2,.7,.2,1)}
-  .meter.g>i{background:var(--ember)}
+  .meter.g>i{background:var(--positive)}
   .bd{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:12px 0}
   @media(max-width:520px){.bd{grid-template-columns:1fr}}
   .bd .brow{font-size:11.5px}
@@ -148,8 +160,8 @@
   .aitip::before{content:"✦ ";color:var(--acc)}
   #akSign{margin-left:4px;font-size:9px;vertical-align:1px;color:#7dc98f}
   #akSign.warn{color:var(--acc,#ff7a52)}
-  .ko{border:1px solid var(--acc);background:var(--acc-soft);color:var(--acc);border-radius:var(--r);padding:10px 13px;margin:10px 0;font-size:12px}
-  .ko.bad{background:rgba(255,76,36,.14)}
+  .ko{border:1px solid var(--warning);background:var(--warning-soft);color:var(--warning);border-radius:var(--r);padding:10px 13px;margin:10px 0;font-size:12px}
+  .ko.bad{background:rgba(255,126,82,.14);border-color:#ff936f;color:#ffad93}
   .ok5{color:var(--hd)}
   .drop{border:1.5px dashed var(--ash);border-radius:var(--r);padding:26px;text-align:center;background:var(--card2)}
   .mgrid{display:grid;grid-template-columns:1fr 40px 1fr;gap:10px;align-items:stretch}
@@ -168,6 +180,11 @@
   .empty{color:var(--mut);text-align:center;padding:30px;font-size:13px}
   .stmt{display:inline-block;padding:3px 10px;border-radius:var(--r);font:600 10.5px var(--mono);color:#fff}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  .doc-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;margin-bottom:10px}
+  .doc-context{padding-top:6px;color:var(--mut);font-size:12px}
+  .doc-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+  .actionCluster{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px;border:1px solid var(--ln);border-radius:11px;background:rgba(22,22,22,.45)}
+  .actionCluster button,.actionCluster select{margin:0}
   ::selection{background:var(--ember);color:#fff}
   ::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:#0d0d0f}
   ::-webkit-scrollbar-thumb{background:#3c3a3e;border:2px solid #0d0d0f;border-radius:6px}
@@ -198,6 +215,8 @@
     .nlinks a{white-space:nowrap;padding:7px 8px}
     .wm{font-size:clamp(38px,13vw,64px)}
     .hero h1{font-size:min(17vw,20vh)}
+    .heroLead{font-size:15px;margin-top:17px}.hdesc{font-size:12.5px}.heroProof{margin-top:13px}.journey{grid-template-columns:1fr;gap:6px;margin-top:22px}.journeyStep{padding:10px 11px}.scrollcue{margin-top:18px}
+    .doc-toolbar{grid-template-columns:1fr}.doc-context{padding-top:0}.doc-actions{justify-content:flex-start}.actionCluster{width:100%}.actionCluster button,.actionCluster select{flex:1 1 auto}
   }
   /* ===== résumé paper — light, clean, ATS-friendly (must stay white & print clean) ===== */
   .doc{position:relative;z-index:2;background:#fff;border:1px solid #d6dde8;border-radius:8px;padding:30px 34px;color:#16181d;font-family:"Calibri","Carlito","Segoe UI",Arial,sans-serif;font-size:10.3pt;line-height:1.34}
@@ -207,7 +226,7 @@
   .doc .clhead{font-weight:700}
   .doc li::marker{color:#2f5d8a}
   .cvsplit{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
-  @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texStudio{margin-top:0} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} }
+  @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texStudio{margin-top:0} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} .cvsplit.cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
   .doc .ct{font-size:9pt;color:#444;margin-top:5px;text-align:center}
   .doc h4{font-size:10pt;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:#16233a;border-bottom:1.4px solid #2f5d8a;padding-bottom:2px;margin:14px 0 6px}
   .doc .role{display:flex;justify-content:space-between;gap:10px;font-size:10.4pt;margin-top:8px}
@@ -273,17 +292,17 @@
 <div id="progress"></div>
 
 <nav class="nav">
-  <div class="nbrand" data-act="tab" data-arg="top">Apply Co·Pilot</div>
+  <div class="nbrand" role="button" tabindex="0" data-enter="tab" data-act="tab" data-arg="top">Apply Co·Pilot</div>
   <div class="nright">
     <div class="nlinks">
-      <a data-t="mr" data-act="tab" data-arg="mr">⓪ Master Résumé</a>
-      <a data-t="job" data-act="tab" data-arg="job">◆ Job Description</a>
-      <a data-t="kw" data-act="tab" data-arg="kw">① ATS Score</a>
-      <a data-t="cv" data-act="tab" data-arg="cv">② Custom Résumé</a>
-      <a data-t="cl" data-act="tab" data-arg="cl">③ Cover Letter</a>
-      <a data-t="out" data-act="tab" data-arg="out">④ LinkedIn Outreach</a>
-      <a data-t="trk" data-act="tab" data-arg="trk">⑤ Job Tracker</a>
-      <a data-t="find" data-act="tab" data-arg="find">⑥ Find Jobs</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="mr" data-act="tab" data-arg="mr">⓪ Master Résumé</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="job" data-act="tab" data-arg="job">◆ Job Description</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="kw" data-act="tab" data-arg="kw">① ATS Score</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="cv" data-act="tab" data-arg="cv">② Custom Résumé</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="cl" data-act="tab" data-arg="cl">③ Cover Letter</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="out" data-act="tab" data-arg="out">④ LinkedIn Outreach</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="trk" data-act="tab" data-arg="trk">⑤ Job Tracker</a>
+      <a role="button" tabindex="0" data-enter="tab" data-t="find" data-act="tab" data-arg="find">⑥ Find Jobs</a>
     </div>
     <div class="nacct" id="nacct"></div>
   </div>
@@ -294,24 +313,27 @@
   <section class="hero" id="pane-top">
     <div class="kicker">Résumé tailoring · ATS score · cover letters</div>
     <h1><span>Apply</span><span>Co·Pilot</span></h1>
+    <p class="heroLead">Turn one truthful résumé into a focused application package — with every score, edit, and claim easy to understand.</p>
 
     <!-- guest: inline account card (the app is gated behind this) -->
     <div class="heroAuth" id="heroAuth">
       <div class="authcard panel">
         <div class="seclabel" id="authTitle">Create your free account</div>
-        <label class="fld">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
-        <label class="fld">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="new-password" data-enter="authSubmit">
-        <div class="authmsg" id="authMsg"></div>
+        <label class="fld" for="authEmail">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email">
+        <label class="fld" for="authPass">Password</label><input type="password" id="authPass" placeholder="at least 6 characters" autocomplete="new-password" data-enter="authSubmit">
+        <div class="authmsg" id="authMsg" aria-live="polite"></div>
         <button class="primary" id="authGo" data-act="authSubmit" style="width:100%;margin-top:13px">Create account</button>
-        <div class="hint" style="margin-top:13px;text-align:center">Already have an account? <a id="authToggle" data-act="authToggle">Sign in →</a></div>
+        <div class="hint" style="margin-top:13px;text-align:center">Already have an account? <a id="authToggle" role="button" tabindex="0" data-enter="authToggle" data-act="authToggle">Sign in →</a></div>
         <div class="hint" id="authIntro" style="margin-top:9px;text-align:center">Free · your résumé &amp; tracker sync across all your devices.</div>
       </div>
     </div>
 
     <!-- signed in: CTA into the app -->
-    <div class="heroCTA row" style="justify-content:center;gap:10px;margin-top:42px"><button class="primary" data-act="tab" data-arg="mr">Get started ↓</button><button data-act="tab" data-arg="job">Paste a job</button></div>
+    <div class="heroCTA row" style="justify-content:center;gap:10px;margin-top:28px"><button class="primary" data-act="tab" data-arg="mr">Prepare my résumé ↓</button><button data-act="tab" data-arg="job">Analyze a job</button></div>
 
-    <div class="hdesc">Your résumé, tailored to any job. Upload once, paste a job description — get an honest ATS fit score, then a custom résumé &amp; cover letter as a real PDF with clickable links.</div>
+    <div class="journey" aria-label="Application workflow"><div class="journeyStep"><b><i>1</i>Prepare</b><span>Set one master résumé and see exactly what an ATS can read.</span></div><div class="journeyStep"><b><i>2</i>Analyze</b><span>Compare your current fit with a truthful, attainable result.</span></div><div class="journeyStep"><b><i>3</i>Apply</b><span>Review, export, reach out, and keep the next action visible.</span></div></div>
+    <div class="hdesc">Private to your account, synced across your devices, and AI-assisted only when you choose it. Every final résumé and cover letter remains yours to review before export.</div>
+    <div class="heroProof"><span>Truthful scoring</span><span>Human approval required</span><span>ATS-safe PDFs</span></div>
     <div class="scrollcue">scroll to begin ↓</div>
   </section>
 
@@ -319,22 +341,22 @@
   <section class="step" id="pane-mr"><div class="wm reveal" aria-hidden="true">Master</div><div class="panel reveal">
     <div class="seclabel">⓪ · Master résumé</div>
     <div id="mEmpty">
-      <div class="banner"><b>Upload your résumé once — or paste its source.</b> Either becomes your <b>master</b>; every job you paste then rebuilds it into a tailored, ATS-clean version. A LaTeX master is kept verbatim — tailored bullets splice back into your .tex and compile in Overleaf. No fields, no AI keys.</div>
+      <div class="banner"><b>Start with one source of truth.</b> Upload your résumé or paste its source once; every job then gets a tailored, ATS-clean version. A LaTeX master stays verbatim, so tailored bullets can splice back into your .tex for Overleaf. No extra forms or AI keys required.</div>
       <div class="mgrid">
         <div class="drop">
           <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⬆ UPLOAD A FILE ]</div>
           <div style="margin:7px 0"><b>Upload your résumé</b><br><span class="hint">PDF · TXT · LaTeX .tex (from Overleaf)</span></div>
-          <input type="file" id="mFileIn" accept=".pdf,.txt,.tex" data-chg="resumeFile" style="max-width:320px;margin:0 auto">
+          <input type="file" id="mFileIn" accept=".pdf,.txt,.tex" data-chg="resumeFile" aria-label="Upload your résumé file" style="max-width:320px;margin:0 auto">
         </div>
         <div class="mor">or</div>
         <div class="drop mpaste">
           <div style="font:600 12px var(--mono);letter-spacing:.18em">[ ⌨ PASTE THE SOURCE ]</div>
           <div style="margin:7px 0"><b>Paste your résumé</b><br><span class="hint">plain text · full LaTeX source (Overleaf → Menu → Source) · Markdown</span></div>
-          <textarea id="mPaste" class="short" placeholder="Paste the full text of your résumé — or your entire LaTeX source…"></textarea>
+          <label class="fld" for="mPaste">Résumé source</label><textarea id="mPaste" class="short" placeholder="Paste the full text of your résumé — or your entire LaTeX source…"></textarea>
           <div class="row" style="margin-top:8px;justify-content:center"><button class="sm" data-act="setMasterFromPaste">Set as master</button><button class="sm ghost" data-act="loadSample">Load a sample</button></div>
         </div>
       </div>
-      <div class="hint" id="imMsg" style="margin-top:9px"></div>
+      <div class="hint" id="imMsg" aria-live="polite" style="margin-top:9px"></div>
     </div>
     <div id="mSet" style="display:none">
       <div class="box ok">
@@ -345,20 +367,20 @@
         <div class="row" style="margin-top:10px"><button class="sm" data-act="replaceMaster">↻ Replace (upload new)</button><button class="sm ghost" data-act="clearMaster">✕ Clear</button><span class="hint" id="mMsg"></span></div>
       </div>
     </div>
-    <div class="hint" style="margin-top:8px">100% PRIVATE — everything stays on this device — your résumé, the tailored output, and your tracker live only in your browser.</div>
+    <div class="hint" style="margin-top:8px">Private to your account — your master résumé and tracker sync only across your signed-in devices. AI changes are always opt-in and remain yours to approve.</div>
   </div></section>
 
   <!-- JOB -->
   <section class="step" id="pane-job"><div class="wm reveal" aria-hidden="true">Target</div><div class="panel reveal">
     <div class="seclabel">◆ · Paste the job</div>
     <div class="frm">
-      <div><label class="fld">Company</label><input type="text" id="inCompany" placeholder="e.g. ProcDNA"></div>
-      <div><label class="fld">Role title</label><input type="text" id="inRole" placeholder="e.g. Analytics Engagement Lead"></div>
+      <div><label class="fld" for="inCompany">Company</label><input type="text" id="inCompany" placeholder="e.g. ProcDNA"></div>
+      <div><label class="fld" for="inRole">Role title</label><input type="text" id="inRole" placeholder="e.g. Analytics Engagement Lead"></div>
     </div>
-    <label class="fld">Job URL (optional · for the apply link)</label><input type="text" id="inUrl" placeholder="https://…">
-    <label class="fld">Full job description</label><textarea id="inJD" placeholder="Paste the entire JD here…"></textarea>
+    <label class="fld" for="inUrl">Job URL (optional · for the apply link)</label><input type="text" id="inUrl" placeholder="https://…">
+    <label class="fld" for="inJD">Full job description</label><textarea id="inJD" placeholder="Paste the entire JD here…"></textarea>
     <div class="row" style="margin-top:13px"><button id="goBtn" class="primary" data-act="run">▶ Run analysis &amp; tailor</button><button class="ghost sm" data-act="loadSampleJD">Sample JD</button></div>
-    <div class="hint" id="inMsg" style="margin-top:9px"></div>
+    <div class="hint" id="inMsg" aria-live="polite" style="margin-top:9px"></div>
   </div></section>
 
   <!-- FIT -->
@@ -368,13 +390,13 @@
     <div id="kwRun" style="display:none">
       <div class="box" style="margin-bottom:0">
         <h5><span>// Analysis in progress</span><span class="chip"><i class="dot"></i>Running</span></h5>
-        <div class="runlog mono" id="runLog"></div>
+        <div class="runlog mono" id="runLog" aria-live="polite"></div>
       </div>
     </div>
     <div id="kwBody" style="display:none">
       <div class="row" style="gap:14px;align-items:stretch">
-        <div class="scorecard"><div class="label">Original · current résumé</div><div class="score-big" id="scoreOrig">—</div><div class="meter"><i id="barOrig"></i></div></div>
-        <div class="scorecard"><div class="label">Projected · after tailoring</div><div class="score-big alt" id="scoreTail">—</div><div class="meter g"><i id="barTail"></i></div><div class="hint" id="scoreDelta" style="margin-top:4px"></div></div>
+        <div class="scorecard current"><div class="label">Original · current résumé</div><div class="score-big" id="scoreOrig">—</div><div class="meter"><i id="barOrig"></i></div></div>
+        <div class="scorecard projected"><div class="label">Projected · after tailoring</div><div class="score-big alt" id="scoreTail">—</div><div class="meter g"><i id="barTail"></i></div><div class="hint" id="scoreDelta" style="margin-top:4px"></div></div>
       </div>
       <div class="hint" id="scoreNote" style="margin-top:9px"></div>
       <div id="koBox"></div>
@@ -393,8 +415,8 @@
     <div class="seclabel">② · Custom résumé</div>
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
-      <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Custom CV · <b id="cvFor">—</b></div>
-        <div class="row"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed" style="width:auto;padding:7px 9px;font-size:10.5px"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve bullets</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor to JD</button><button class="sm ghost" id="aiAuditBtn" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div>
+      <div class="doc-toolbar"><div class="doc-context">Custom CV · <b id="cvFor">—</b></div>
+        <div class="doc-actions"><div class="actionCluster"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor</button><button class="sm ghost" id="aiAuditBtn" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Show your parsed master beside the generated résumé — see exactly what changed">⇆ vs master</button></div><div class="actionCluster"><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="cvsplit" id="cvSplit">
@@ -502,6 +524,7 @@ window.__act({
   aiTailorJD:function(){ if(window.aiTailorJD)window.aiTailorJD(); },
   downloadTex:function(){ downloadTex(); }, copyTex:function(el){ copyTex(el); },
   cvFit:function(el){ fitSet(el.value); },
+  cvCompare:function(){ cvCompare(); },
   mView:function(el){ setMasterView(el.dataset.arg); },
   texAi:function(el){ if(window.__texAiOpen)window.__texAiOpen(el); },
   texRegen:function(){ texRegen(); }, texOverleaf:function(){ openOverleaf(); },
@@ -1436,10 +1459,20 @@ function resumeDocHTML(cv){
   if(cv.achievements&&cv.achievements.length)h+='<h4 data-sec="achievements">'+esc(hdLab(cv,"achievements","Achievements"))+'</h4><ul>'+cv.achievements.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   if(cv.publications&&cv.publications.length)h+='<h4 data-sec="publications">'+esc(hdLab(cv,"publications","Publications"))+'</h4><ul>'+cv.publications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   return h; }
+/* ⇆ side-by-side: the parsed MASTER beside the generated résumé — see exactly what tailoring changed */
+function cvCompare(){ if(!CUR)return; const sp=document.getElementById("cvSplit"), b=document.getElementById("cmpBtn"); if(!sp)return;
+  const old=document.getElementById("cvMasterPane");
+  if(old){ old.remove(); sp.classList.remove("cmp"); if(b)b.classList.remove("primary"); return; }
+  const m=document.createElement("div"); m.id="cvMasterPane"; m.style.minWidth="0";
+  m.innerHTML='<div class="hint" style="margin:0 0 6px">YOUR MASTER — as parsed from the upload (read-only)</div><div class="doc" id="masterDoc"></div>';
+  sp.insertBefore(m,sp.firstChild);
+  const doc=m.querySelector("#masterDoc"); if(doc&&CUR.parsed)doc.innerHTML=resumeDocHTML(CUR.parsed);
+  sp.classList.add("cmp"); if(b)b.classList.add("primary"); }
 function renderResume(){ document.getElementById("cvEmpty").style.display="none"; document.getElementById("cvBody").style.display="block";
   const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit";
   const tex=isTex(M.raw); ["texDlBtn","texCpBtn"].forEach(id=>{ const t=document.getElementById(id); if(t)t.style.display=tex?"":"none"; });
   const fs2=document.getElementById("cvFit"); if(fs2)fs2.value=fitGet();
+  const mpd=document.getElementById("masterDoc"); if(mpd&&CUR&&CUR.parsed)mpd.innerHTML=resumeDocHTML(CUR.parsed);   /* keep the ⇆ compare pane in step with re-runs */
   /* v6 loss ribbon — names exactly what the PDF will trim under the current fit; hidden when nothing is lost */
   const lossEl=document.getElementById("cvLoss");
   if(lossEl){ const L=contentLoss();
@@ -1718,8 +1751,19 @@ function boldRuns(s,terms){ s=String(s==null?"":s); if(!terms||!terms.length)ret
   if(last<s.length)out.push(s.slice(last));
   return out; }
 function jdTerms(){ return (CUR&&CUR.buckets)?((CUR.buckets.reqHave||[]).concat(CUR.buckets.prefHave||[])):[]; }
-function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[]; const bterms=jdTerms();
-  const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
+/* gold-template bolding: the owner's LaTeX \textbf's every tool AND metric inside bullets. PDF-only —
+   the on-screen doc stays plain text so aiMap/edit pull-back keep working. */
+function boldNums(seg){ const out=[]; const re=/\d[\d,.]*(?:\+|%)?/g; let last=0,m;
+  while((m=re.exec(seg))){ if(m.index>last)out.push(seg.slice(last,m.index)); out.push({text:m[0],bold:true}); last=m.index+m[0].length; }
+  if(!out.length)return [seg]; if(last<seg.length)out.push(seg.slice(last)); return out; }
+function goldRuns(s,terms){ const r=boldRuns(s,terms); const arr=(typeof r==="string")?[r]:r; const out=[];
+  arr.forEach(x=>{ if(typeof x==="string")boldNums(x).forEach(y=>out.push(y)); else out.push(x); });
+  return (out.length===1&&typeof out[0]==="string")?out[0]:out; }
+function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[];
+  /* bold set = JD-matched keywords + the candidate's OWN skills (paren details stripped) — the gold look */
+  const bset=new Set(jdTerms()); (cv.skills||[]).forEach(g=>(g.items||[]).forEach(it=>{ const t=String(it||"").replace(/\s*\(.*\)\s*$/,"").trim(); if(t.length>2&&t.length<=30)bset.add(t); }));
+  const bterms=Array.from(bset).slice(0,90);
+  const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F+2,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
     c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:1.1,lineColor:"#2f5d8a"}],margin:[0,0,0,4]}); };
   c.push({text:cv.name||"Your Name",bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"});
   /* the candidate's OWN headline from the master (their domains line) — never the JD/target role;
@@ -1734,10 +1778,10 @@ function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); cons
   if(cv.experience&&cv.experience.length){ sec(hdLab(cv,"experience","Experience")); cv.experience.forEach(e=>{
     c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#2b333d",fontSize:F-1,margin:[0,0,0,1]});
-    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#2f5d8a"}); }); }
+    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#2f5d8a"}); }); }
   if(cv.projects&&cv.projects.length){ sec(hdLab(cv,"projects","Projects")); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
     c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
-    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:boldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#2f5d8a"}); }); }
+    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#2f5d8a"}); }); }
   if(cv.education&&cv.education.length){ sec(hdLab(cv,"education","Education")); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
@@ -2350,7 +2394,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var jdRead=(mode==="tailor"&&typeof d.read==="string"&&d.read.trim())?'<div class="aitip">Read the JD as: '+esc(d.read.trim().slice(0,140))+'</div>':"";
     aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
       (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai,d))+
-      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+jdRead); }
+      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+(mode==="tailor"?' <button class="sm ghost" data-act="aiAudit" title="Three-lens review of the result before you send it">🔬 Audit this</button>':'')+jdRead); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
   window.aiTailorJD=function(){ aiBulk("tailor"); };
