@@ -26,7 +26,10 @@
   /* ============================================================================================
      Apply Co·Pilot — design system: v8 "realistic" dark (a token repoint of the v7 warm-editorial structure)
      Near-black canvas #0b0b0f · coral #cc785c accent · Sora grotesk display + Inter body + IBM Plex Mono.
-     One cool-neutral elevation ladder + coral. Never add a warm surface tone; --cream*/--dark* are legacy NAMES.
+     One cool-neutral elevation ladder + coral. Never add a warm surface tone. The --cream and --dark token
+     families are legacy NAMES kept so the v7 rules still resolve; both hold cool values now.
+     NEVER write a token glob like --cream[star][slash] inside a CSS comment: the [star][slash] terminates the
+     comment early and the browser then discards this whole :root block. That shipped once. See stress_pro [26].
      EXEMPT: the .doc résumé paper + pdfmake docs keep the owner's LaTeX gold palette (ATS paper).
      ============================================================================================ */
   :root{ color-scheme: dark;
