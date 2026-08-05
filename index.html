@@ -65,6 +65,10 @@
   html,body{margin:0;min-height:100%}
   body{color:var(--bodyc);font:400 15px/1.55 var(--sans);letter-spacing:0;background:var(--canvas);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   /* canvas wash — color-block first, shadow rare. Replaces the old starfield layers. */
+  /* hero dust — a canvas field on the same layer as the atmosphere. Alphas are deliberately at the
+     bottom of the contrast budget: the composite behind body text must not move, so these are ~.10
+     resting and only brighten within ~170px of the cursor. Never raise them blind. */
+  #dust{position:fixed;inset:0;z-index:0;pointer-events:none}
   #space{position:fixed;inset:0;z-index:0;pointer-events:none;background:
     radial-gradient(112% 56% at 50% -14%,var(--beam-soft) 0%,var(--beam-0) 62%),
     radial-gradient(62% 44% at 90% 3%,var(--beam-floor) 0%,rgba(204,120,92,0) 72%),
@@ -335,6 +339,22 @@
   .doc.edit{outline:2px dashed #b9c6dd;outline-offset:3px}
   .doc.edit a{cursor:pointer;text-decoration:underline dotted #2f5d8a 1.5px;text-underline-offset:2px}
   .doc.edit a:hover{background:#eaf1fb;border-radius:3px}
+  /* ===== résumé TEMPLATES (v10). The class lives on <body> so every .doc — the résumé, the ⇆ master
+     pane and the cover letter — switches together, and resumeDocHTML keeps emitting identical markup
+     (aiMap and the data-sec contract must not see a template). "classic" is the convention every one of
+     the nine reference résumés follows: pure black, no accent, hierarchy from weight + caps + rules. ===== */
+  body.tpl-classic .doc{color:#000}
+  body.tpl-classic .doc a{color:#000;text-decoration:underline}
+  body.tpl-classic .doc h3.n{font-size:23pt;color:#000;letter-spacing:.6px}
+  body.tpl-classic .doc .ti{color:#000;font-weight:600;font-size:10.5pt}
+  body.tpl-classic .doc .ct{color:#000;border-bottom:0.75px solid #000}
+  body.tpl-classic .doc h4{color:#000;border-bottom:1px solid #000;letter-spacing:1.2px;font-size:10.5pt}
+  body.tpl-classic .doc .rh{color:#000}
+  body.tpl-classic .doc .role .r,body.tpl-classic .doc .sub2 .r{color:#000}
+  body.tpl-classic .doc .sub2{color:#000}
+  body.tpl-classic .doc .pj .tech{color:#000}
+  body.tpl-classic .doc li::marker{color:#000}
+  body.tpl-classic .doc.edit a{text-decoration-color:#000}
   /* ===== floating popups — one shared recipe: canvas card, hairline, coral primary ===== */
   #linkPop{position:fixed;z-index:9999;display:none;width:320px;max-width:92vw;background:var(--canvas,#faf9f5);color:var(--bodyc,#3d3d3a);border:1px solid var(--hair,#e6dfd8);border-radius:var(--r,12px);padding:16px;font-family:'Inter',system-ui,sans-serif}
   #linkPop .lpt{font:500 11px/1 'Inter',system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:var(--muted,#6c6a64);margin:0 0 10px}
@@ -443,7 +463,7 @@
 </style>
 </head>
 <body class="booting guest">
-<div id="space" aria-hidden="true"></div>
+<div id="space" aria-hidden="true"></div><canvas id="dust" aria-hidden="true"></canvas>
 <div id="progress"></div>
 
 <nav class="nav">
@@ -592,8 +612,9 @@
       <div class="box"><h5>✗ Required — in the JD, missing from your résumé · add only if genuinely true</h5><div id="kwReqMiss"></div></div>
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
       <div class="box" id="recBox" style="display:none"><h5>// Tips to raise your score</h5><ol id="kwRecs" style="margin:0;padding-left:18px"></ol></div>
+      <div class="hint" id="aiKwMsg" style="display:none;margin:8px 0 0"></div>
       <div class="hint" id="recNote" style="display:none;color:var(--acc);margin:6px 0">✓ Accepted keywords will be woven into your résumé when you view it.</div>
-      <div class="row" style="margin-top:6px"><button class="sm primary" data-act="viewTailored" title="Jump to ② with accepted keywords woven in — if you have unsaved manual edits it asks first, then rebuilds">→ View tailored résumé</button><button class="sm ghost" data-act="tab" data-arg="cl">→ Cover letter</button></div>
+      <div class="row" style="margin-top:6px"><button class="sm ghost" data-act="aiAuditKw" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager — on the résumé this run generated. The score above is deterministic and keyword-based; this is the human read. Critique only, nothing is changed.">🔬 Audit this verdict</button><button class="sm primary" data-act="viewTailored" title="Jump to ② with accepted keywords woven in — if you have unsaved manual edits it asks first, then rebuilds">→ View tailored résumé</button><button class="sm ghost" data-act="tab" data-arg="cl">→ Cover letter</button></div>
     </div>
   </div></section>
 
@@ -603,8 +624,9 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="doc-toolbar"><div class="doc-context">Custom CV · <b id="cvFor">—</b></div>
-        <div class="doc-actions"><div class="actionCluster"><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
+        <div class="doc-actions"><div class="actionCluster"><select id="cvTpl" data-chg="cvTpl" title="Résumé template. Classic ATS is the pure-black, no-accent, no-table convention shared by the Fortune-500 résumés this app is calibrated against — links stay clickable but read as underlines, so nothing depends on colour. Gold is the accented LaTeX look."><option value="classic">Template: Classic ATS (black)</option><option value="gold">Template: Gold (accent)</option></select><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
+      <div class="hint" id="cvSumSrc" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="cvsplit" id="cvSplit">
       <details class="box" id="texStudio" style="display:none">
@@ -710,7 +732,7 @@ window.__act({
   aiHumanizeCover:function(){ if(window.aiHumanizeCover)window.aiHumanizeCover(); },
   aiTailorJD:function(){ if(window.aiTailorJD)window.aiTailorJD(); },
   downloadTex:function(){ downloadTex(); }, texApplyDoc:function(){ texApplyDoc(); }, copyTex:function(el){ copyTex(el); },
-  cvFit:function(el){ fitSet(el.value); },
+  cvFit:function(el){ fitSet(el.value); }, cvTpl:function(el){ tplSet(el.value); },
   cvCompare:function(){ cvCompare(); },
   mView:function(el){ setMasterView(el.dataset.arg); },
   texAi:function(el){ if(window.__texAiOpen)window.__texAiOpen(el); },
@@ -1850,13 +1872,20 @@ function secKey(t){ t=String(t||"").toLowerCase();
   return t.trim(); }
 /* heading label to render: the master's own if captured and sane, else the stock default */
 function hdLab(cv,key,def){ const H=(cv&&cv.headings)||{}; const L=H[key]; return (L&&L.length>=3&&L.length<=40)?L:def; }
+/* HTML twin of goldRuns — matches on the RAW string, then escapes each segment, so a term containing
+   & or < can never smuggle markup through. Returns escaped HTML with <b> around the matches only. */
+function boldHTML(s,terms,withNums){ const r=(withNums?goldRuns:boldRuns)(String(s==null?"":s),terms||[]);
+  if(typeof r==="string")return esc(r);
+  return r.map(x=>(typeof x==="string")?esc(x):("<b>"+esc(x.text)+"</b>")).join(""); }
 function resumeDocHTML(cv){
   let h='<h3 class="n">'+esc(cv.name||"Your Name")+'</h3>';
   /* header = name + the candidate's OWN headline (their domains line, from the master — never the JD role) */
   if(cv.headline)h+='<div class="ti">'+esc(cv.headline)+'</div>';
   const ct=contactHTML(cv); if(ct)h+='<div class="ct">'+ct+'</div>';
-  if(cv.summary)h+='<h4 data-sec="summary">'+esc(hdLab(cv,"summary","Summary"))+'</h4><p>'+esc(cv.summary)+'</p>';
-  if(cv.skills&&cv.skills.length)h+='<h4 data-sec="skills">'+esc(hdLab(cv,"skills","Skills"))+'</h4>'+cv.skills.map(g=>'<p><span class="rh">'+esc(g.group)+':</span> '+(g.items||[]).map(esc).join(", ")+'</p>').join("");
+  /* the JD's own keywords (and the quantified phrases) carry the recruiter's eye — the main.tex \textbf rule.
+     textContent is byte-identical to the plain string, so the ✎-Edit summary pull-back is unaffected. */
+  if(cv.summary)h+='<h4 data-sec="summary">'+esc(hdLab(cv,"summary","Summary"))+'</h4><p>'+boldHTML(cv.summary,jdTerms(),true)+'</p>';
+  if(cv.skills&&cv.skills.length)h+='<h4 data-sec="skills">'+esc(hdLab(cv,"skills","Skills"))+'</h4>'+cv.skills.map(g=>'<p><span class="rh">'+esc(g.group)+':</span> '+(g.items||[]).map(it=>boldHTML(it,jdTerms(),false)).join(", ")+'</p>').join("");
   if(cv.experience&&cv.experience.length)h+='<h4 data-sec="experience">'+esc(hdLab(cv,"experience","Experience"))+'</h4>'+cv.experience.map(e=>{ const bl=(e.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join(""); const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · ");
     return '<div class="role"><span class="rh">'+esc(e.role||e.org)+'</span><span class="r">'+esc(e.dates||"")+'</span></div>'+((sub&&e.role)?'<div class="sub2"><span>'+esc(sub)+'</span></div>':"")+(bl?"<ul>"+bl+"</ul>":""); }).join("");
   if(cv.projects&&cv.projects.length)h+='<h4 data-sec="projects">'+esc(hdLab(cv,"projects","Projects"))+'</h4>'+cv.projects.map(p=>{ const bl=(p.bullets||[]).map(b=>"<li>"+esc(b)+"</li>").join("");
@@ -1868,6 +1897,17 @@ function resumeDocHTML(cv){
   if(cv.achievements&&cv.achievements.length)h+='<h4 data-sec="achievements">'+esc(hdLab(cv,"achievements","Achievements"))+'</h4><ul>'+cv.achievements.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   if(cv.publications&&cv.publications.length)h+='<h4 data-sec="publications">'+esc(hdLab(cv,"publications","Publications"))+'</h4><ul>'+cv.publications.map(c=>"<li>"+esc(c)+"</li>").join("")+'</ul>';
   return h; }
+/* Where did the summary on screen actually come from? Derived, never tracked — CUR.parsed is the master as
+   uploaded, CUR.cv0 is the pristine deterministic tailoring, so anything matching neither has been rewritten.
+   Three honest states, and the AI one names the guard that keeps it truthful. */
+function sumSource(){ if(!CUR||!CUR.cv)return "";
+  const cur=tidy(CUR.cv.summary||""); if(!cur)return "";
+  const mas=tidy((CUR.parsed&&CUR.parsed.summary)||""), det=tidy((CUR.cv0&&CUR.cv0.summary)||"");
+  const w=wcount(cur);
+  if(mas&&cur===mas)return "<b>Summary — from your master, word for word</b> ("+w+" words). The JD did not move it.";
+  if(det&&cur===det)return "<b>Summary — built by the app from your master</b> ("+w+" words): your real latest title, your exact tenure, and your own skills, ordered for this JD. Nothing invented.";
+  return "<b>Summary — AI-rewritten, then checked against your master</b> ("+w+" words). Every figure in it had to already appear in your own text, and it is refused outright if it drops your vocabulary or comes back shorter.";
+}
 /* ⇆ side-by-side: the parsed MASTER beside the generated résumé — see exactly what tailoring changed */
 function cvCompare(){ if(!CUR)return; const sp=document.getElementById("cvSplit"), b=document.getElementById("cmpBtn"); if(!sp)return;
   const old=document.getElementById("cvMasterPane");
@@ -1882,6 +1922,8 @@ function renderResume(){ document.getElementById("cvEmpty").style.display="none"
   const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit";
   const tex=isTex(M.raw); ["texDlBtn","texCpBtn"].forEach(id=>{ const t=document.getElementById(id); if(t)t.style.display=tex?"":"none"; });
   const fs2=document.getElementById("cvFit"); if(fs2)fs2.value=fitGet();
+  tplPaint(); const ts=document.getElementById("cvTpl"); if(ts)ts.value=tplGet();
+  const ss=document.getElementById("cvSumSrc"); if(ss){ const sm=sumSource(); ss.style.display=sm?"block":"none"; ss.innerHTML=sm; }
   const mpd=document.getElementById("masterDoc"); if(mpd&&CUR&&CUR.parsed)mpd.innerHTML=resumeDocHTML(CUR.parsed);   /* keep the ⇆ compare pane in step with re-runs */
   /* v6 loss ribbon — names exactly what the PDF will trim under the current fit; hidden when nothing is lost */
   const lossEl=document.getElementById("cvLoss");
@@ -2125,8 +2167,21 @@ function copyTrk(btn){ const cols=["Date","Company","Role","Stage","Next","Notes
 /* ===== export: real vector PDF via pdfmake (clickable links + selectable text, no watermark) ===== */
 function fnameFor(which){ const who=String((CUR&&CUR.cv&&CUR.cv.name)||M.name||"Resume").replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim()||"Resume"; return who+(which==="coverDoc"?" Cover Letter":" Resume"); }
 const PDF_BLUE="#2f5d8a", PDF_INK="#1a1f27", PDF_GRAY="#5a626b", PDF_HEAD="#16233a", CW_PT=527;
+/* v10 templates. Device-local (never synced — it is a taste, not data) and swept by wipeLocal's apply_* pass.
+   classic = the Fortune-500 / Jake's-Resume convention the owner's nine reference résumés share: one ink,
+   no accent, links underlined instead of coloured so they still READ as links on a monochrome print.
+   gold = the owner's own LaTeX template. Screen side is the mirror of this, in CSS, under body.tpl-*. */
+const TPLKEY="apply_tpl_v1";
+const TPL={
+  classic:{label:"Classic ATS",ink:"#000000",head:"#000000",rule:"#000000",link:"#000000",muted:"#000000",sub:"#000000",mark:"#000000",nameUp:12,headUp:1.5,ruleW:0.9,hairW:0.7,hlBold:false,hlColor:"#000000",deco:"underline"},
+  gold:{label:"Gold",ink:PDF_INK,head:PDF_HEAD,rule:PDF_BLUE,link:PDF_BLUE,muted:PDF_GRAY,sub:"#2b333d",mark:PDF_BLUE,nameUp:10,headUp:2,ruleW:1.1,hairW:0.6,hlBold:true,hlColor:PDF_BLUE,deco:null}};
+function tplGet(){ try{ const v=localStorage.getItem(TPLKEY); return TPL[v]?v:"classic"; }catch(e){ return "classic"; } }
+function tplPal(){ return TPL[tplGet()]||TPL.classic; }
+function tplPaint(){ try{ const b=document.body; if(!b||!b.classList)return; b.classList.remove("tpl-classic","tpl-gold"); b.classList.add("tpl-"+tplGet()); }catch(e){} }
+function tplSet(v){ try{ localStorage.setItem(TPLKEY,TPL[v]?v:"classic"); }catch(e){} tplPaint(); try{ if(typeof CUR!=="undefined"&&CUR)renderResume(); }catch(e){} }
+try{ tplPaint(); }catch(e){}
 function jr(runs,sep){ runs=runs.filter(Boolean); const o=[]; runs.forEach((r,i)=>{ if(i)o.push(sep); o.push(r); }); return o; }
-function lnk(text,url){ return url?{text:text,link:url,color:PDF_BLUE}:text; }
+function lnk(text,url){ if(!url)return text; const T=tplPal(); const o={text:text,link:url,color:T.link}; if(T.deco)o.decoration=T.deco; return o; }
 function cvWeight(cv){ let n=(cv.summary||"").length+(cv.headline?cv.headline.length+20:0); (cv.skills||[]).forEach(g=>n+=g.group.length+(g.items||[]).join(", ").length+4);
   (cv.experience||[]).forEach(e=>{n+=46;(e.bullets||[]).forEach(b=>n+=b.length+6);}); (cv.projects||[]).forEach(p=>{n+=24+(p.tech||"").length;(p.bullets||[]).forEach(b=>n+=b.length+6);});
   (cv.education||[]).forEach(()=>n+=70); n+=(cv.certifications||[]).join(" ").length+(cv.achievements||[]).join(" ").length+(cv.publications||[]).join(" ").length; return n; }
@@ -2179,65 +2234,65 @@ function boldNums(seg){ const out=[]; const re=/\d[\d,.]*(?:\+|%)?/g; let last=0
 function goldRuns(s,terms){ const r=boldRuns(s,terms); const arr=(typeof r==="string")?[r]:r; const out=[];
   arr.forEach(x=>{ if(typeof x==="string")boldNums(x).forEach(y=>out.push(y)); else out.push(x); });
   return (out.length===1&&typeof out[0]==="string")?out[0]:out; }
-function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[];
+function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[]; const T=tplPal();
   /* bold set = JD-matched keywords + the candidate's OWN skills (paren details stripped) — the gold look */
   /* JD-matched terms + the candidate's own skills + anything they marked \textbf{} in the LaTeX Studio */
   const bset=new Set(jdTerms()); (TEXBOLD||[]).forEach(t=>bset.add(t)); (cv.skills||[]).forEach(g=>(g.items||[]).forEach(it=>{ const t=String(it||"").replace(/\s*\(.*\)\s*$/,"").trim(); if(t.length>2&&t.length<=30)bset.add(t); }));
   const bterms=Array.from(bset).slice(0,90);
-  const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F+2,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
-    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:1.1,lineColor:"#2f5d8a"}],margin:[0,0,0,4]}); };
-  c.push({text:cv.name||"Your Name",bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"});
+  const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F+T.headUp,color:T.head,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
+    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.ruleW,lineColor:T.rule}],margin:[0,0,0,4]}); };
+  c.push({text:cv.name||"Your Name",bold:true,fontSize:F+T.nameUp,color:T.head,alignment:"center"});
   /* the candidate's OWN headline from the master (their domains line) — never the JD/target role;
      the target role keyword still lives only in the summary's last sentence */
-  if(cv.headline)c.push({text:cv.headline,bold:true,fontSize:F+0.5,color:PDF_BLUE,margin:[0,1,0,0],alignment:"center"});
+  if(cv.headline)c.push({text:cv.headline,bold:T.hlBold,fontSize:F+0.5,color:T.hlColor,margin:[0,1,0,0],alignment:"center"});
   const c1=[]; if(cv.location)c1.push(cv.location); if(cv.phone)c1.push(lnk(cv.phone,"tel:"+cv.phone.replace(/[^+0-9]/g,""))); if(cv.email)c1.push(lnk(cv.email,"mailto:"+cv.email));
   const c2=[]; if(cv.linkedin)c2.push(lnk("LinkedIn",urlify(cv.linkedin))); if(cv.github)c2.push(lnk("GitHub",urlify(cv.github))); if(cv.website)c2.push(lnk("Portfolio",urlify(cv.website)));
   /* ONE line — no newline between the contact parts and the profile links (owner request) */
   let contact=jr(c1," · "); if(c2.length){ contact.push(" · "); contact=contact.concat(jr(c2," · ")); }
-  if(contact.length){ c.push({text:contact,fontSize:F-1.4,color:PDF_GRAY,margin:[0,3,0,3],alignment:"center"});
+  if(contact.length){ c.push({text:contact,fontSize:F-1.4,color:T.muted,margin:[0,3,0,3],alignment:"center"});
     /* closes the header band, mirroring the screen hairline; lighter than a section rule on purpose */
-    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.6,lineColor:"#2f5d8a"}],margin:[0,0,0,2]}); }
-  if(cv.summary){ sec(hdLab(cv,"summary","Summary")); c.push({text:cv.summary,margin:[0,0,0,1]}); }
-  if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:PDF_HEAD},(g.items||[]).join(", ")],margin:[0,0.6,0,0.6]})); }
+    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.hairW,lineColor:T.rule}],margin:[0,0,0,2]}); }
+  if(cv.summary){ sec(hdLab(cv,"summary","Summary")); c.push({text:goldRuns(cv.summary,jdTerms()),margin:[0,0,0,1]}); }
+  if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:T.head}].concat([boldRuns((g.items||[]).join(", "),jdTerms())]),margin:[0,0.6,0,0.6]})); }
   if(cv.experience&&cv.experience.length){ sec(hdLab(cv,"experience","Experience")); cv.experience.forEach(e=>{
-    c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
-    const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:"#2b333d",fontSize:F-1,margin:[0,0,0,1]});
-    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:"#2f5d8a"}); }); }
+    c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:T.head}},{width:"auto",text:e.dates||"",alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,3,0,0]});
+    const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:T.sub,fontSize:F-1,margin:[0,0,0,1]});
+    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:T.mark}); }); }
   if(cv.projects&&cv.projects.length){ sec(hdLab(cv,"projects","Projects")); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
-    c.push({text:[{text:p.name,bold:true,color:PDF_HEAD},p.tech?{text:"  |  "+p.tech,italics:true,color:PDF_GRAY,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:PDF_BLUE,fontSize:F-1}:""],margin:[0,3,0,1]});
-    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:"#2f5d8a"}); }); }
+    c.push({text:[{text:p.name,bold:true,color:T.head},p.tech?{text:"  |  "+p.tech,italics:true,color:T.sub,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:T.link,decoration:T.deco||undefined,fontSize:F-1}:""],margin:[0,3,0,1]});
+    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:T.mark}); }); }
   if(cv.education&&cv.education.length){ sec(hdLab(cv,"education","Education")); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
-    c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:PDF_HEAD}},{width:"auto",text:e.dates||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,3,0,0]});
+    c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:T.head}},{width:"auto",text:e.dates||"",alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,3,0,0]});
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
-    if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:"#2b333d"}},{width:"auto",text:e.location||"",alignment:"right",color:PDF_GRAY,fontSize:F-1.4}]}); }); }
-  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:"#2f5d8a"}); }
-  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:"#2f5d8a"}); }
-  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:"#2f5d8a"}); }
-  return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:PDF_INK,lineHeight:1.12}, content:c }; }
+    if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:T.sub}},{width:"auto",text:e.location||"",alignment:"right",color:T.muted,fontSize:F-1.4}]}); }); }
+  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:T.mark}); }
+  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:T.mark}); }
+  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:T.mark}); }
+  return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:T.ink,lineHeight:1.12}, content:c }; }
 function coverDocDef(cv,cover){ const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   const paras=String(cover||"").split(/\n+/).map((p,i)=>(i===0&&/^Application for /.test(p))?{text:p,bold:true,margin:[0,0,0,8]}:{text:p,margin:[0,0,0,8]});
   return { pageSize:"A4", pageMargins:[48,46,48,46], defaultStyle:{fontSize:10.6,color:PDF_INK,lineHeight:1.32}, content:[{text:today,margin:[0,0,0,12],color:PDF_GRAY}].concat(paras) }; }
 /* edited-DOM → pdfmake (WYSIWYG so manual edits land in the PDF, links preserved) */
-function domRuns(el){ const a=[]; el.childNodes.forEach(n=>{ if(n.nodeType===3){ const tx=n.nodeValue.replace(/\s+/g," "); if(tx.trim())a.push(tx); }
+function domRuns(el){ const T=tplPal(); const a=[]; el.childNodes.forEach(n=>{ if(n.nodeType===3){ const tx=n.nodeValue.replace(/\s+/g," "); if(tx.trim())a.push(tx); }
   else if(n.nodeType===1){ if(n.tagName==="BR")a.push("\n");
-    else if(n.tagName==="A")a.push({text:n.textContent,link:n.getAttribute("href")||"",color:PDF_BLUE});
+    else if(n.tagName==="A")a.push({text:n.textContent,link:n.getAttribute("href")||"",color:T.link,decoration:T.deco||undefined});
     else { const bold=(n.classList&&(n.classList.contains("rh")))||n.tagName==="B"||n.tagName==="STRONG"; const ital=(n.classList&&n.classList.contains("tech"))||n.tagName==="I"||n.tagName==="EM";
-      domRuns(n).forEach(r=>{ if(typeof r==="string"&&(bold||ital))a.push({text:r,bold:bold||undefined,italics:ital||undefined,color:bold?PDF_HEAD:(ital?PDF_GRAY:undefined)}); else a.push(r); }); } } });
+      domRuns(n).forEach(r=>{ if(typeof r==="string"&&(bold||ital))a.push({text:r,bold:bold||undefined,italics:ital||undefined,color:bold?T.head:(ital?T.sub:undefined)}); else a.push(r); }); } } });
   return a.length?a:[el.textContent||""]; }
 function domToDocDef(node,isCover){
   if(isCover){ const c=[...node.children].map(p=>({text:p.innerText,margin:[0,0,0,8]})); return {pageSize:"A4",pageMargins:[48,46,48,46],defaultStyle:{fontSize:10.6,color:PDF_INK,lineHeight:1.32},content:c.length?c:[{text:node.innerText}]}; }
-  const F=baseFont((node.innerText||"").length); const c=[];
+  const F=baseFont((node.innerText||"").length); const c=[]; const T=tplPal();
   [...node.children].forEach(el=>{ const cl=el.classList;
-    if(el.tagName==="H3"){ c.push({text:el.textContent,bold:true,fontSize:F+10,color:PDF_HEAD,alignment:"center"}); }
-    else if(cl.contains("ti")){ c.push({text:el.textContent,bold:true,fontSize:F+0.5,color:PDF_BLUE,margin:[0,1,0,0],alignment:"center"}); }
-    else if(cl.contains("ct")){ c.push({text:domRuns(el),fontSize:F-1.4,color:PDF_GRAY,margin:[0,3,0,1],alignment:"center"}); }
-    else if(el.tagName==="H4"){ c.push({text:el.textContent.toUpperCase(),bold:true,fontSize:F-0.3,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]}); c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:1.1,lineColor:"#2f5d8a"}],margin:[0,0,0,4]}); }
-    else if(cl.contains("role")||cl.contains("sub2")){ const sp=el.children; const left=sp[0]?domRuns(sp[0]):[el.textContent]; const right=sp[1]?sp[1].textContent:""; c.push({columns:[{width:"*",text:left},{width:"auto",text:right,alignment:"right",color:PDF_GRAY,fontSize:F-1.4}],margin:[0,cl.contains("role")?3:0,0,0]}); }
+    if(el.tagName==="H3"){ c.push({text:el.textContent,bold:true,fontSize:F+T.nameUp,color:T.head,alignment:"center"}); }
+    else if(cl.contains("ti")){ c.push({text:el.textContent,bold:T.hlBold,fontSize:F+0.5,color:T.hlColor,margin:[0,1,0,0],alignment:"center"}); }
+    else if(cl.contains("ct")){ c.push({text:domRuns(el),fontSize:F-1.4,color:T.muted,margin:[0,3,0,1],alignment:"center"}); }
+    else if(el.tagName==="H4"){ c.push({text:el.textContent.toUpperCase(),bold:true,fontSize:F-0.3,color:T.head,characterSpacing:0.6,margin:[0,F*0.85,0,1]}); c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.ruleW,lineColor:T.rule}],margin:[0,0,0,4]}); }
+    else if(cl.contains("role")||cl.contains("sub2")){ const sp=el.children; const left=sp[0]?domRuns(sp[0]):[el.textContent]; const right=sp[1]?sp[1].textContent:""; c.push({columns:[{width:"*",text:left},{width:"auto",text:right,alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,cl.contains("role")?3:0,0,0]}); }
     else if(cl.contains("pj")){ c.push({text:domRuns(el),margin:[0,3,0,1]}); }
-    else if(el.tagName==="UL"){ const items=[...el.children].map(li=>li.textContent.trim()).filter(Boolean); if(items.length)c.push({ul:items,margin:[3,0,0,3],markerColor:"#2f5d8a"}); }
+    else if(el.tagName==="UL"){ const items=[...el.children].map(li=>li.textContent.trim()).filter(Boolean); if(items.length)c.push({ul:items,margin:[3,0,0,3],markerColor:T.mark}); }
     else if(el.tagName==="P"){ c.push({text:domRuns(el),margin:[0,1,0,1]}); }
   });
-  return {pageSize:"A4",pageMargins:[34,32,34,32],defaultStyle:{fontSize:F,color:PDF_INK,lineHeight:1.12},content:c.length?c:[{text:node.innerText||""}]}; }
+  return {pageSize:"A4",pageMargins:[34,32,34,32],defaultStyle:{fontSize:F,color:T.ink,lineHeight:1.12},content:c.length?c:[{text:node.innerText||""}]}; }
 function makePdf(which){ const cv=CUR&&CUR.cv; if(!cv){alert("Run analysis first.");return;}
   if(window.__noPdfMake||!window.pdfMake){ printFallback(which); return; }
   const node=document.getElementById(which); const edited=node&&node.dataset&&node.dataset.dirty==="1"; let def;
@@ -2291,12 +2346,50 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   /* scroll-reveal */
   try{ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{threshold:.12,rootMargin:"0px 0px -8% 0px"});
     document.querySelectorAll(".reveal").forEach(function(el){io.observe(el);}); }catch(e){ document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in");}); }
+  /* Hand-written particle field. Deliberately NOT three.js: nothing here needs a scene graph, and the
+     extension vendors every library, so a 3D engine would cost ~600KB per install for this. Pauses once
+     the hero is scrolled past or the tab is hidden, and never starts under prefers-reduced-motion. */
+  (function(){
+    var cvs=document.getElementById("dust"); if(!cvs||reduce||!cvs.getContext)return;
+    var ctx=cvs.getContext("2d"); if(!ctx)return;
+    /* frames is a budget, not a flag: it refills on interaction and drains otherwise, so an idle hero
+       costs nothing and a headless capture is never held open by an endless rAF chain. */
+    var W=0,H=0,parts=[],mx=-1e4,my=-1e4,live=true,raf=0,frames=260;
+    function size(){ var DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+      cvs.width=Math.round(W*DPR); cvs.height=Math.round(H*DPR);
+      cvs.style.width=W+"px"; cvs.style.height=H+"px"; ctx.setTransform(DPR,0,0,DPR,0,0);
+      var n=Math.max(18,Math.min(60,Math.round(W*H/28000))); parts=[];
+      for(var i=0;i<n;i++)parts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.13,vy:(Math.random()-0.5)*0.13,r:0.6+Math.random()*0.9}); }
+    function step(){ raf=0; if(!live||frames<=0)return; frames--;
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<parts.length;i++){ var p=parts[i];
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<-8)p.x=W+8; else if(p.x>W+8)p.x=-8;
+        if(p.y<-8)p.y=H+8; else if(p.y>H+8)p.y=-8;
+        var dx=p.x-mx,dy=p.y-my,dm=Math.sqrt(dx*dx+dy*dy),near=dm<170?(1-dm/170):0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.2832);
+        ctx.fillStyle="rgba(204,120,92,"+(0.10+near*0.26).toFixed(3)+")"; ctx.fill();
+        for(var j=i+1;j<parts.length;j++){ var q=parts[j],ax=p.x-q.x,ay=p.y-q.y,d=Math.sqrt(ax*ax+ay*ay);
+          if(d<110){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
+            ctx.strokeStyle="rgba(204,120,92,"+(((1-d/110)*(0.05+near*0.09))).toFixed(3)+")";
+            ctx.lineWidth=0.6; ctx.stroke(); } } }
+      raf=requestAnimationFrame(step); }
+    function kick(){ if(live&&frames>0&&!raf)raf=requestAnimationFrame(step); }
+    function setLive(on){ if(on===live)return; live=on; if(on){ frames=260; kick(); } else { if(raf)cancelAnimationFrame(raf); raf=0; ctx.clearRect(0,0,W,H); } }
+    addEventListener("resize",function(){ size(); frames=260; kick(); },{passive:true});
+    addEventListener("pointermove",function(e){ mx=e.clientX; my=e.clientY; frames=260; kick(); },{passive:true});
+    addEventListener("pointerout",function(e){ if(!e.relatedTarget){ mx=-1e4; my=-1e4; } },{passive:true});
+    document.addEventListener("visibilitychange",function(){ setLive(!document.hidden&&pageYOffset<innerHeight*1.35); });
+    window.__dust=function(y){ setLive(!document.hidden&&y<innerHeight*1.35); };
+    size(); kick();
+  })();
   /* progress + atmosphere parallax + nav spy */
   var space=document.getElementById("space");
   var ticking=false,sy=0,sections=[].slice.call(document.querySelectorAll("main.flow > section"));
   function onScroll(){ sy=window.pageYOffset; if(!ticking){ticking=true; requestAnimationFrame(function(){
     var max=document.body.scrollHeight-innerHeight||1, p=sy/max; if(bar)bar.style.width=(p*100)+"%";
     if(space)space.style.backgroundPositionY=(sy*0.32)+"px";   /* slow drift = depth */
+    if(window.__dust)window.__dust(sy);   /* the dust field only earns its frames over the hero */
     var mid=sy+innerHeight*0.35, cur=null; sections.forEach(function(s){ if(s.offsetTop<=mid)cur=s.id; });
     if(cur){ var t=cur.replace("pane-",""); document.querySelectorAll(".nlinks a").forEach(function(a){a.classList.toggle("on",a.dataset.t===t);}); }
     ticking=false; });} }
@@ -3017,23 +3110,26 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   /* ---- 🔬 Audit — three reviewer lenses in ONE pass; critique only, never touches the document ----
      Generate → Critique → Explain: scores per lens, missing signals marked supported / NOT-in-your-master
      (the honest line other tools skip), per-bullet fixes referencing the same ids aiMap uses. */
-  window.aiAudit=async function(){ if(!CUR){ aiMsg("aiCvMsg","Run the analysis first."); return; }
+  /* `where` picks the render target: "kw" = the ① verdict pane, anything else = ② résumé.
+     One pass, one quota action — the second entry point is UI, not a second call. */
+  window.aiAudit=async function(where){ var W=(where==="kw")?"aiKwMsg":"aiCvMsg";
+    if(!CUR){ aiMsg(W,"Run the analysis first."); return; }
     var cv=CUR.cvBase||CUR.cv, run0=CUR, d=null, bk="";
     var bl=collectBullets(cv,999);
     var gen="SUMMARY:\n"+(cv.summary||"")+"\n\nSKILLS:\n"+((cv.skills||[]).map(function(g){return g.group+": "+(g.items||[]).join(", ");}).join("\n"))+"\n\nBULLETS (id + text):\n"+bl.map(function(x){return "["+x.id+"] "+x.text;}).join("\n");
-    aiMsg("aiCvMsg",'<span class="spin"></span>Three AI reviewers are auditing the generated résumé against this JD — ATS, recruiter, hiring manager…');
+    aiMsg(W,'<span class="spin"></span>Three AI reviewers are auditing the generated résumé against this JD — ATS, recruiter, hiring manager…');
     if(window.__AI_FAKE_AUDIT){ d=window.__AI_FAKE_AUDIT; }
-    else{ if(!SB||!AUTH_USER){ aiMsg("aiCvMsg","Sign in to use AI features."); return; }
+    else{ if(!SB||!AUTH_USER){ aiMsg(W,"Sign in to use AI features."); return; }
       var body=Object.assign({mode:"audit",master:String(window.__masterText()).slice(0,8000),gen:gen.slice(0,7000)},aiGround(cv));
       bk=byokAttach(body);
       try{ var r=await SB.functions.invoke("ai",{body:body});
         if(r.error){ var st=r.error.context&&r.error.context.status;
-          aiMsg("aiCvMsg",(st===429)?"⏳ You have used today's AI actions — add your own free key in ⚙ AI, or try again tomorrow.":(st===404)?"AI backend is not deployed yet — the deterministic engine stands.":"AI is unreachable right now — try again in a moment."); return; }
+          aiMsg(W,(st===429)?"⏳ You have used today's AI actions — add your own free key in ⚙ AI, or try again tomorrow.":(st===404)?"AI backend is not deployed yet — the deterministic engine stands.":"AI is unreachable right now — try again in a moment."); return; }
         d=r.data||{};
-      }catch(e){ aiMsg("aiCvMsg","AI is unreachable right now — try again in a moment."); return; } }
+      }catch(e){ aiMsg(W,"AI is unreachable right now — try again in a moment."); return; } }
     var viaOai=byokSettle(bk,d);
-    if(CUR!==run0){ aiMsg("aiCvMsg","That audit expired — a new analysis ran while it was working."); return; }
-    if(d._v!==2||d._mode!=="audit"){ aiMsg("aiCvMsg","🔬 Audit needs the newest AI backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
+    if(CUR!==run0){ aiMsg(W,"That audit expired — a new analysis ran while it was working."); return; }
+    if(d._v!==2||d._mode!=="audit"){ aiMsg(W,"🔬 Audit needs the newest AI backend — re-paste the edge function in the Supabase dashboard, then retry."); return; }
     var sc=function(x){ return Math.max(0,Math.min(100,Math.round(+(((x||{}).score))||0))); };
     var idLabel=function(id){ var m=String(id||"").match(/^([ep])(\d+):(\d+)$/); if(!m)return /summary/i.test(String(id||""))?"Summary":String(id||"");
       var i=+m[2],j=+m[3]; if(m[1]==="e"){ var e=(cv.experience||[])[i]||{}; return (e.org||e.role||("Role "+(i+1)))+" · bullet "+(j+1); }
@@ -3042,7 +3138,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var miss=(d.missing||[]).slice(0,8).map(function(m){ m=m||{}; return '<span class="kchip '+(m.supported?"have":"miss")+'" title="'+esc(String(m.where||""))+'">'+esc(String(m.signal||""))+(m.supported?" · your master covers this":" · NOT in your master — never invent it")+'</span>'; }).join(" ");
     var str=(d.strengths||[]).slice(0,6).map(function(s){ return '<span class="kchip pref">'+esc(String(s))+'</span>'; }).join(" ");
     var acts=(d.actions||[]).slice(0,6).map(function(a){ a=a||{}; return '<div class="hint" style="margin:3px 0">→ <b>'+esc(idLabel(a.id))+':</b> '+esc(String(a.fix||""))+'</div>'; }).join("");
-    aiMsg("aiCvMsg",'🔬 <b>Audit — '+sc(d)+'/100</b> · critique only, nothing was changed'+esc(byokNote(bk,viaOai,d))+
+    aiMsg(W,'🔬 <b>Audit — '+sc(d)+'/100</b> · critique only, nothing was changed'+esc(byokNote(bk,viaOai,d))+
       lens("ATS",d.ats)+lens("Recruiter",d.recruiter)+lens("Hiring manager",d.hiring)+
       (miss?'<div style="margin:7px 0 2px"><b>Missing hiring signals</b><br>'+miss+'</div>':"")+
       (str?'<div style="margin:7px 0 2px"><b>Strengths</b> '+str+'</div>':"")+
@@ -3267,7 +3363,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     aiKeys:function(el){ window.aiKeysOpen(el); }, aiKeysClose:function(){ if(_aiKeys)_aiKeys.style.display="none"; },
     aiKeysSave:function(){ window.aiKeysSave(); }, aiKeysClear:function(){ window.aiKeysClear(); },
     aiKeysProv:function(){ aiKeysProvUI(); }, aiKeysTest:function(){ window.aiKeysTest(); },
-    aiAudit:function(){ if(window.aiAudit)window.aiAudit(); },
+    aiAudit:function(){ if(window.aiAudit)window.aiAudit(); }, aiAuditKw:function(){ if(window.aiAudit)window.aiAudit("kw"); },
   });
 
   renderForm();
