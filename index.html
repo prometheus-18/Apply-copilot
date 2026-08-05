@@ -995,6 +995,31 @@ function splitProse(b){ b=tidy(String(b||"")); if(b.length<=140)return b?[b]:[];
   if(parts.length<2)return[b];   /* honestly unsplittable — leave byte-identical */
   return parts.map(polishBullet).filter(x=>x.length>8); }
 function normBullets(list){ const out=[],seen=new Set(); (list||[]).forEach(b=>splitProse(b).forEach(f=>{ const k=f.toLowerCase(); if(!seen.has(k)){seen.add(k);out.push(f);} })); return out.slice(0,12); }
+/* outcome-first pass -- deterministic, analyze()-ONLY and AFTER the score-sort/caps, so no score, order or
+   bullet count can move. Rearranges the candidate's OWN clauses toward action -> impact; a bullet that states
+   NO result is returned untouched (outcomes are never manufactured, only re-emphasised).
+   (1) bracketEnum: an "including ..." list wedged between the action and its result clause is parenthesised --
+       word sequence byte-identical, two parens, so the eye jumps action -> result instead of reading a list.
+   (2) leadOutcome: a trailing QUANTIFIED result buried >=10 words deep is promoted to the front ("Built X for
+       11 teams, cutting ad-hoc requests 38%" -> "Cut ad-hoc requests 38% by building X for 11 teams") --
+       closed verb maps BOTH ways; an unmapped opener, a compound "Designed and built ..." opener, an
+       unquantified result or a shallow head all degrade to identity.
+   Idempotent: every rewrite leaves " by <gerund>" / " (incl" behind and both rules refuse those, and output
+   stays ONE sentence <=30 words so splitProse's re-upload pass-through stays byte-identical ([19]). */
+const OUT_PAST={reducing:"Reduced",cutting:"Cut",saving:"Saved",improving:"Improved",increasing:"Increased",boosting:"Boosted",lifting:"Lifted",lowering:"Lowered",raising:"Raised",trimming:"Trimmed",eliminating:"Eliminated",shortening:"Shortened",halving:"Halved",growing:"Grew",accelerating:"Accelerated",generating:"Generated",unlocking:"Unlocked",avoiding:"Avoided",preventing:"Prevented",delivering:"Delivered",driving:"Drove",achieving:"Achieved",enabling:"Enabled"};
+const ACT_ING={built:"building",designed:"designing",developed:"developing",created:"creating",implemented:"implementing",automated:"automating",migrated:"migrating",rebuilt:"rebuilding",refactored:"refactoring",launched:"launching",shipped:"shipping",led:"leading",managed:"managing",owned:"owning",ran:"running",wrote:"writing",rewrote:"rewriting",authored:"authoring",analysed:"analysing",analyzed:"analyzing",modelled:"modelling",modeled:"modeling",engineered:"engineering",architected:"architecting","re-architected":"re-architecting","fine-tuned":"fine-tuning",introduced:"introducing",standardised:"standardising",standardized:"standardizing",consolidated:"consolidating",streamlined:"streamlining",optimised:"optimising",optimized:"optimizing",trained:"training",deployed:"deploying",integrated:"integrating",configured:"configuring",replaced:"replacing",ported:"porting",tuned:"tuning",profiled:"profiling",negotiated:"negotiating",coordinated:"coordinating",partnered:"partnering",mentored:"mentoring",presented:"presenting",delivered:"delivering",performed:"performing",applied:"applying",executed:"executing",segmented:"segmenting",forecast:"forecasting",prepared:"preparing",administered:"administering",cleaned:"cleaning",reconciled:"reconciling",validated:"validating",tested:"testing",resolved:"resolving",added:"adding"};
+const OUTC_RE=",\\s+(?=(?:"+Object.keys(OUT_PAST).join("|")+")\\b)";
+function lastOutc(s){ let last=-1,m; const re=new RegExp(OUTC_RE,"gi"); while((m=re.exec(s)))last=m.index; return last; }
+function bracketEnum(s){ const m=s.match(/,\s+(?=(?:including|such as)\b)/i); if(!m)return s; const at=m.index; if(s.indexOf("(",at)>=0)return s;
+  const rest=s.slice(at+m[0].length),cut=lastOutc(rest); if(cut<0)return s; const list=rest.slice(0,cut);
+  if((list.match(/,\s/g)||[]).length<2||wn(list)>16)return s; return s.slice(0,at)+" ("+list+")"+rest.slice(cut); }
+function leadOutcome(s){ if(/\bby\s+[a-z]+ing\b/i.test(s)||/[.!?]\s/.test(s))return s; const cut=lastOutc(s); if(cut<0)return s;
+  const head=s.slice(0,cut),tail=s.slice(cut+1).trim().replace(/[.\s]+$/,"");
+  if(/,\s/.test(tail)||!/\d/.test(tail)||wn(tail)<3||wn(head)<10||wn(head)+wn(tail)>30)return s;
+  const hv=(head.match(/^[A-Za-z][A-Za-z-]*/)||[""])[0],tv=(tail.match(/^[a-z]+/)||[""])[0],hg=ACT_ING[hv.toLowerCase()];
+  if(!hg||!OUT_PAST[tv]||/^\S+\s+and\s/i.test(head))return s;
+  return OUT_PAST[tv]+tail.slice(tv.length)+" by "+hg+head.slice(hv.length)+(/[.]$/.test(s)?".":""); }
+function outcomeFirst(list){ return (list||[]).map(b=>{ const s=tidy(String(b||"")),o=leadOutcome(bracketEnum(s)); return o===s?b:o; }); }
 function splitRoleOrg(h){ h=h.replace(/\s+/g," ").trim(); const m=h.split(/\s[–—|]\s|\s-\s|\sat\s/i); return [(m[0]||"").trim(),(m.slice(1).join(" ").trim())]; }
 function normDate(s){ s=String(s||"").trim(); if(/present|current|now|ongoing/i.test(s))return"Present";
   const m=s.match(/([A-Za-z]{3,9})\.?\s*'?(\d{2,4})/); if(m){ const i=MFULL.findIndex(x=>x.toLowerCase().startsWith(m[1].slice(0,3).toLowerCase())); let y=m[2]; if(y.length===2)y=(+y>50?"19":"20")+y; return (i>=0?MFULL[i]+" ":"")+y; }
@@ -1295,6 +1320,47 @@ function parseResume(raw){ let t=deLig(String(raw||"")).replace(/\r\n?/g,"\n").r
 
 /* ===== fit keyword bank ===== */
 const BANK=[["SQL",["sql","mysql","postgres","postgresql","t-sql"]],["Python",["python","pandas","numpy"]],["R",["r programming","rstudio"]],["Excel",["excel","spreadsheet","powerpoint"]],["A/B testing",["a/b","ab test","experimentation","experiment","test & control","test and control"]],["Statistics",["statistics","statistical","hypothesis","regression"]],["Machine learning",["machine learning","ml ","scikit","tensorflow","pytorch","predictive model","uplift model"]],["Deep learning",["deep learning","neural network","cnn","transformer"]],["NLP / LLM",["nlp","llm","gpt","openai","prompt"]],["Data visualization",["dashboard","tableau","power bi","looker","visualization","visualisation","reporting"]],["ETL / pipelines",["etl","pipeline","airflow","dbt","data pipeline"]],["Cloud",["aws","gcp","azure","s3","bigquery","redshift"]],["Snowflake",["snowflake"]],["Git",["git","github","version control"]],["JavaScript",["javascript","typescript","react","node","angular","vue"]],["APIs",["rest api","graphql","restful","fastapi","api"]],["Segmentation",["segmentation","rfm","clustering","k-means","cohort"]],["Marketing analytics",["campaign","marketing mix","mmx","seo","ga4","attribution","funnel","roi"]],["Stakeholders",["stakeholder","cross-functional","leadership","business recommendation"]],["Communication",["communication","presentation","storytelling","narrative"]],["Healthcare",["healthcare","clinical","patient","hipaa","revenue cycle","life sciences","pharma"]],["Product",["product manager","roadmap","backlog"]],["CRM",["crm","salesforce","hubspot"]],["Finance/modeling",["financial model","forecasting","valuation"]],["Data warehouse",["warehouse","dimensional","star schema","data quality"]],["Spark/big data",["spark","pyspark","hadoop","kafka"]],["MLOps",["mlops","deployment","sagemaker","vertex ai","mlflow"]],["Agile",["agile","scrum","jira"]]];
+/* Named tools. BANK entries are CONCEPTS, and several of them list a generic word right next to
+   specific products ("dashboard" beside "tableau"/"power bi"/"looker"), so a JD that explicitly
+   demanded TABLEAU was answered by a résumé that merely said "dashboard" — the owner's Barclays run
+   scored 99 with an EMPTY miss list while the one real gap (no Tableau anywhere in the master) stayed
+   invisible. TOOLS attaches the products to their concept: when the JD NAMES one at the concept's own
+   tier, that concept's SINGLE slot is judged on the named product instead of the generic word, and the
+   chip/tip carry the product name so the existing "suggest, never add" machinery (kwReqMiss + detRecs)
+   does the asking. Deliberately NOT new BANK entries: a new entry is a new slot, and a new slot
+   re-weights every other requirement, so a candidate who happens to own the new tool would see their
+   coverage RATIO rise — inflation. Two rules keep this pass from ever raising a score: refining an
+   existing slot leaves reqTot/prefTot untouched and can only move a verdict have -> miss, and a tool
+   the bank could not see before may open a slot only when it is a GAP (never a fresh have). Every
+   verdict here is grounded in whether the résumé literally contains the tool the JD literally named.
+   Products are matched with wb() — strict boundaries, no inflectional tail: proper nouns do not
+   pluralise and "Sass" must never read as "SAS". Tools that are ALREADY their own BANK label (SQL,
+   Excel, R, Snowflake) need no entry. Deliberately absent: SQL dialects (an ATS screens "SQL", and a
+   Postgres-vs-MySQL "miss" would punish an interchangeable skill) and the cloud PLATFORM names
+   aws/gcp/azure (they stay generic Cloud aliases — a platform is not a substitute for a warehouse, so
+   "your closest match is AWS" would be nonsense advice). */
+const TOOLS=[["Data visualization",[["Tableau",["tableau"]],["Power BI",["power bi","powerbi","power-bi"]],["Looker",["looker","looker studio"]],["Qlik",["qlik","qlikview","qlik sense","qliksense"]]]],
+  ["ETL / pipelines",[["Airflow",["airflow"]],["dbt",["dbt"]],["Alteryx",["alteryx"]],["Informatica",["informatica"]],["SSIS",["ssis"]]]],
+  ["Statistics",[["SAS",["sas"]],["SPSS",["spss"]],["Stata",["stata"]],["MATLAB",["matlab"]]]],
+  ["Marketing analytics",[["Google Analytics",["google analytics","ga4"]],["Adobe Analytics",["adobe analytics"]]]],
+  ["CRM",[["Salesforce",["salesforce"]],["HubSpot",["hubspot"]]]],
+  ["Agile",[["Jira",["jira"]]]],
+  ["Spark/big data",[["Spark",["spark","pyspark"]],["Kafka",["kafka"]],["Hadoop",["hadoop"]]]],
+  ["Cloud",[["BigQuery",["bigquery","big query"]],["Redshift",["redshift"]],["Databricks",["databricks"]]]]];
+const TOOLSET=new Set(TOOLS.reduce((a,t)=>a.concat(t[1].map(x=>x[0])),[]));
+function wbFind(t,hay){ if(!t)return null; try{ const m=new RegExp("(?:^|[^a-z0-9+#])("+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")(?![a-z0-9+#])","i").exec(hay); return m?{i:m.index+m[0].length-m[1].length,len:m[1].length}:null; }catch(e){ const i=hay.indexOf(t); return i<0?null:{i:i,len:t.length}; } }
+function toolsOf(l){ const e=TOOLS.find(t=>t[0]===l); return e?e[1]:null; }
+/* products of BANK label `l` that the JD NAMES, earliest mention first */
+function toolHits(l,J){ const ts=toolsOf(l); if(!ts)return null; const out=[];
+  ts.forEach(t=>{ let h=null; t[1].forEach(a=>{ const x=wbFind(a,J); if(x&&(!h||x.i<h.i))h=x; }); if(h)out.push({name:t[0],syns:t[1],i:h.i,len:h.len}); });
+  return out.length?out.sort((a,b)=>a.i-b.i):null; }
+/* one slot, so an "X or Y" alternation is satisfied by either and reported as one gap. Every part is a
+   TOOLS product name, which is how detRecs tells "Tableau / Power BI" (an alternation) apart from the
+   BANK label "ETL / pipelines" (a concept that merely happens to contain a slash). */
+function toolLab(a){ return a.join(" / "); }
+function toolParts(k){ const p=String(k||"").split(" / "); return p.every(x=>TOOLSET.has(x))?p:null; }
+function synsFor(l){ const b=BANK.find(x=>x[0]===l); if(b)return b[1];
+  for(const t of TOOLS){ const e=t[1].find(x=>x[0]===l); if(e)return e[1]; } return []; }
 const REQ_CUE=/\b(must|required|requirement|minimum|at least|essential|you (?:have|will|should)|proficien|expert|strong|advanced)\b/i;
 const PREF_CUE=/\b(preferred|nice to have|a plus|bonus|ideally|desirable|familiar|exposure|good to have|advantage)\b/i;
 const PREF_FWD=/^.{0,45}?\b(a plus|is a plus|are a plus|preferred|nice to have|desirable|good to have|bonus|advantage)\b/i;
@@ -1323,11 +1389,33 @@ function classifyHit(jd,idx,len){ const fwd=jd.slice(idx+(len||0),idx+(len||0)+5
   const win=jd.slice(Math.max(0,idx-150),idx); const r=win.search(REQ_CUE),p=win.search(PREF_CUE);
   if(p>=0&&p>r)return"pref"; if(r>=0)return"req"; if(PREF_CUE.test(jd.slice(Math.max(0,idx-420),idx)))return"pref"; return"req"; }
 function bucketSkills(jd,src){ const J=" "+(jd||"").toLowerCase()+" ", s=" "+(src||"").toLowerCase()+" ";
-  const reqHave=[],reqMiss=[],prefHave=[],prefMiss=[];
-  for(const [label,syns] of BANK){ let hit=null; for(const x of syns){ const h=synFind(x,J); if(h){hit=h;break;} } if(!hit)continue;
-    const inSrc=syns.some(x=>synHas(x,s))||wb(label.toLowerCase().split(/[ /]/)[0],s);
-    const tier=classifyHit(J,hit.i,hit.len); (tier==="req"?(inSrc?reqHave:reqMiss):(inSrc?prefHave:prefMiss)).push(label); }
-  return {reqHave,reqMiss,prefHave,prefMiss}; }
+  const reqHave=[],reqMiss=[],prefHave=[],prefMiss=[],near=[];
+  for(const [label,syns] of BANK){ let hit=null; for(const x of syns){ const h=synFind(x,J); if(h){hit=h;break;} }
+    /* A named product also FIRES its concept, so a JD that says only "Qlik"/"Databricks" (words the
+       bank had no generic alias for) is visible at all — but ONLY as a gap. Letting a brand-new slot
+       land in the HAVE column would raise the coverage RATIO of everyone who owns the tool, and the
+       honest-original score must never go up just because the bank learned a new word. */
+    const named=toolHits(label,J);
+    if(!hit&&named&&!named.some(t=>t.syns.some(a=>wb(a,s))))hit=named[0];
+    if(!hit)continue;
+    const tier=classifyHit(J,hit.i,hit.len);
+    let lab=label, inSrc=syns.some(x=>synHas(x,s))||wb(label.toLowerCase().split(/[ /]/)[0],s);
+    /* only products demanded at THIS slot's tier may take it over — a tool the JD merely prefers must
+       never be reported as a required gap (and must never move a required demand into the pref tier,
+       which would quietly re-weight it from 0.8 to 0.2) */
+    const same=named?named.filter(t=>classifyHit(J,t.i,t.len)===tier):[];
+    if(same.length){ const mine=same.filter(t=>t.syns.some(a=>wb(a,s)));
+      /* A named tool REFINES an existing credit; it never creates one. No tool in the résumé => the
+         slot is the gap, named. Tool present but the concept was already a miss => leave the slot
+         exactly as it was: crediting "you have Statistics" off the bare string "SPSS" would be a new
+         credit, and the have-set must only ever shrink so the score can never go up. */
+      if(!mine.length){ inSrc=false; lab=toolLab(same.map(t=>t.name));
+        /* the résumé owns a SIBLING tool of the same concept (Looker where the JD says Tableau): still a
+           miss, because an ATS scans for the literal word — but detRecs names it so the human can judge */
+        const sib=toolsOf(label).filter(t=>!same.some(q=>q.name===t[0])&&t[1].some(a=>wb(a,s))); if(sib.length)near.push({want:lab,got:toolLab(sib.map(t=>t[0]))}); }
+      else if(inSrc)lab=mine[0].name; }
+    (tier==="req"?(inSrc?reqHave:reqMiss):(inSrc?prefHave:prefMiss)).push(lab); }
+  return {reqHave,reqMiss,prefHave,prefMiss,nearMiss:near}; }
 
 /* ===== seniority + experience-fit ===== */
 const RANKS=[[0,/\b(intern|internship|trainee|co[- ]?op)\b/i],[1,/\b(entry[- ]?level|graduate|junior|jr\.?)\b/i],[2,/\b(analyst|specialist|coordinator|associate)\b/i],[3,/\b(mid[- ]?level|engineer ii|developer ii)\b/i],[4,/\b(senior|sr\.?|engineer iii)\b/i],[5,/\b(lead|staff|principal)\b/i],[6,/\b(manager|mgr|head of)\b/i],[7,/\b(director|senior manager|sr\.? manager)\b/i],[8,/\b(vp|vice president|svp|evp|chief|c[teiofm]o\b|executive|partner)\b/i]];
@@ -1345,7 +1433,7 @@ function candidateYears(exp){ const iv=[]; (exp||[]).forEach(e=>{ const p=String
 
 /* ===== scoring (deterministic, defensible, non-inflated) ===== */
 function zoneHits(labels,zone){ const z=" "+(zone||"").toLowerCase()+" "; if(!labels.length)return 1; let n=0;
-  labels.forEach(l=>{ const syns=(BANK.find(b=>b[0]===l)||[null,[]])[1]; if(syns.some(x=>synHas(x,z))||wb(l.toLowerCase().split(/[ /]/)[0],z))n++; }); return n/labels.length; }
+  labels.forEach(l=>{ const syns=synsFor(l); if(syns.some(x=>synHas(x,z))||wb(l.toLowerCase().split(/[ /]/)[0],z))n++; }); return n/labels.length; }
 function scoreArrangement(buckets,need,have,structure,zone){
   const reqTot=buckets.reqHave.length+buckets.reqMiss.length, prefTot=buckets.prefHave.length+buckets.prefMiss.length;
   const reqCov=reqTot?buckets.reqHave.length/reqTot:1, prefCov=prefTot?buckets.prefHave.length/prefTot:1;
@@ -1374,29 +1462,84 @@ function jdSpell(item,J){ let s=String(item||"");
     if(hasB&&!hasA)swap(a,b); else if(hasA&&!hasB)swap(b,a); });
   return s; }
 /* group RANKING ignores generic filler tokens — "data"/"analysis" appear in every JD and let
-   Relevant Coursework outrank Programming for a Data Analyst JD (owner-reported). Distinctive terms only. */
-const SKILL_STOP=new Set(["data","business","analysis","analytics","management","development","skills","professional","relevant","tools","techniques","technologies","systems","experience","knowledge","strong","working","team","teams","ability","solutions"]);
-function jdHasStrict(item,jt){ const w=(item||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; return w.some(x=>jt.has(x)&&!SKILL_STOP.has(x))?1:0; }
+   Relevant Coursework outrank Programming for a Data Analyst JD (owner-reported). Distinctive terms only — English function words are stopped too ("Probability and Statistics" used to score a hit on the word "and"). */
+const SKILL_STOP=new Set(["data","business","analysis","analytics","management","development","skills","professional","relevant","tools","techniques","technologies","systems","experience","knowledge","strong","working","team","teams","ability","solutions","and","the","for","with","from","into","that","this","are","was","were","has","have","its","our","your","their","not","but","all","any","per","via","use","used","using","also","such","both","each","more","most","over","under","within","across","than","then","will","can","may","must","should","would","about","when","which","while","because","after","before","during","between","through"]);
+function jdHasStrict(item,jt){ const w=(item||"").toLowerCase().match(/[a-z][a-z+#.]{2,}/g)||[]; return w.some(x=>{const b=x.replace(/\.+$/,"");return !SKILL_STOP.has(b)&&(jt.has(x)||jt.has(b)||jt.has(b+"."));})?1:0; } /* jdTokens keeps a trailing period ("Strong Excel." -> "excel."), so a skill the JD names at the END of a sentence used to score ZERO — compare the raw token AND its de-dotted form. Ranking only: jdTokens/bulletScore keep the identical token set, so résumé CONTENT never moves. */
 function goldSkills(groups,jd,jt){ const J=String(jd||"").toLowerCase();
   return (groups||[]).map((g,gi)=>{ const seen=new Set(),items=[];
     (g.items||[]).forEach(it=>{ const v=jdSpell(it,J),k=v.toLowerCase().replace(/\s+/g," ").trim(); if(k&&!seen.has(k)){seen.add(k);items.push(v);} });
-    const rel=(items.length?items.reduce((s,it)=>s+jdHasStrict(it,jt),0)/items.length:0)+0.5*jdHasStrict(g.group,jt);
+    const rel=items.reduce((s,it)=>s+jdHasStrict(it,jt),0)+0.15*jdHasStrict(g.group,jt); /* COUNT of JD-named skills, never the mean — the mean punished the master's deepest group (2 of 8 real Analytics hits lost to 2 of 5 soft skills). The group-NAME hit is a 0.15 tie-breaker only: at 0.5 a coincidental team name ("Decision Intelligence") leapfrogged a group the JD named 3 skills from. Ties keep the master's own order. */
     return {g:Object.assign({},g,{items}),rel,gi}; })
   .sort((a,b)=>b.rel-a.rel||a.gi-b.gi).map(x=>x.g); }
 function fmtYears(y){ y=Math.round((+y||0)*10)/10; if(y<1)return ""; return (y%1===0?String(y):y.toFixed(1))+" year"+(y>1?"s":"")+" of "; }
 /* summary agent (deterministic base): identity = the candidate's REAL latest title — NEVER the JD role
    (that would claim a job they haven't held); years = the exact interval-merged figure (1.9 stays "1.9",
    never rounded up to "2+"); the target role appears only as a stated objective. */
-function tailoredSummary(p,role,company,have,haveYrs){
-  const top=have.slice(0,6); const rec=p.experience&&p.experience[0];
-  const id=cleanSep((rec&&rec.role)||"")||"Professional"; const org=cleanSep((rec&&rec.org)||"");
-  const yrs=fmtYears(haveYrs);
+/* v6.6 — the MIDDLE of the summary is now the candidate's OWN master-summary sentences, VERBATIM.
+   Gone: the two hard-coded filler sentences ("…a record of turning data and effort into measurable
+   business outcomes", "Comfortable owning work end-to-end…") and the BANK canon labels as skill nouns
+   (which made the résumé claim "Statistics"/"Data visualization" while losing the master's real
+   "Snowflake" / "Marketing Mix Modelling (MMx)" / "A/B Test & Control").
+   ⚠ DELETION-ONLY: a master sentence is kept WHOLE or dropped, never regex-sliced — slicing a tenure
+   head and re-prepending our own clause is what breeds "at ZS, at ZS, at ZS" across re-uploads. */
+const W2N={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20};
+const YRNUM="(?:\\d{1,2}(?:\\.\\d)?|"+Object.keys(W2N).join("|")+")";
+const YRCLAIM=new RegExp("\\b("+YRNUM+")\\s*\\+?\\s*(?:years?|yrs?)\\b","ig");
+const YRHAS=new RegExp("\\b"+YRNUM+"\\s*\\+?\\s*(?:years?|yrs?)\\b","i");
+/* junk the parser can legitimately hand us: AltaCV rating bars, contact lines, "Fechas:" run-ons */
+const SUMNOISE=/[·•|@]|https?:|:|[─-▟]|[●○◦▪]|_{2,}/;
+const LANGSET=new Set("english,french,german,italian,spanish,latin,dutch,hindi,mandarin,chinese,portuguese,russian,arabic,japanese,korean,bengali,tamil,telugu,marathi,punjabi,urdu,catalan,polish,swedish,danish,norwegian,finnish,greek,turkish,hebrew,thai,vietnamese,indonesian,malay,czech,romanian,hungarian,ukrainian,persian,farsi,swahili,gujarati,kannada,malayalam,nepali,sinhala".split(","));
+/* decimal-safe sentence split (same boundary rule as detCover); tidy() first, so "\n" is a free sentinel */
+function sumSents(s){ return tidy(String(s||"")).replace(/([.!?])\s+(?=[A-ZÀ-Þ0-9"“])/g,"$1\n").split("\n").map(x=>cleanSep(tidy(x))).filter(Boolean); }
+function sumList(a){ return a.length>2?a.slice(0,-1).join(", ")+", and "+a[a.length-1]:a.length===2?a[0]+" and "+a[1]:(a[0]||""); }
+/* the candidate's own summary sentences, minus anything WE could have written (idempotency) and minus
+   any tenure OVERCLAIM. A truthful tenure sentence is kept and s1 then drops OUR figure, so the résumé
+   always carries exactly ONE years claim and it is never larger than the interval-merged figure. */
+function masterBits(p,idw,yrs,jt){ const out=[];
+  sumSents(p&&p.summary).forEach(x=>{ const t=/[.!?]$/.test(x)?x:x+".";
+    if(t.length<25||t.length>300||!/^[A-ZÀ-Þ]/.test(t)||!/\s/.test(t))return;   /* stubs, mega-runons, fragments */
+    if(SUMNOISE.test(t)||(t.match(/\s+/g)||[]).length>44)return;                          /* parser noise */
+    if(/^(?:brings proven strength in|brings a record of turning|comfortable owning work end-to-end)\b/i.test(t))return;   /* our own past output */
+    if(/now targeting the .{1,60} role\.|,\s*most recently at\b/i.test(t))return;         /* our own objective / s1 shape, ANYWHERE in the sentence (a flattened re-upload can fuse them) */
+    if(idw&&t.toLowerCase().indexOf(idw)===0)return;                                      /* identity echo of s1 */
+    const cl=[]; let m; YRCLAIM.lastIndex=0; while((m=YRCLAIM.exec(t)))cl.push(W2N[m[1].toLowerCase()]||+m[1]);
+    if(cl.length&&(/\d\s*\+\s*(?:years?|yrs?)/i.test(t)||cl.some(c=>c>yrs+0.05)))return;   /* "N+ years" / tenure OVERCLAIM laundering */
+    if(out.indexOf(t)<0)out.push(t); });
+  return out.map((t,i)=>({t,i,s:bulletScore(t,jt)})).sort((a,b)=>b.s-a.s||a.i-b.i).map(x=>x.t); }
+/* no usable master prose (11 of 20 fixtures have no summary at all) → the candidate's OWN skill items,
+   never BANK canon labels: noise BLACKLIST so parenthesised skills ("Marketing Mix Modelling (MMx)") and
+   one-letter "R" survive; natural languages dropped at ITEM level (a "Languages" group of Python/Go/C++
+   must never be lost); coursework groups excluded from a strength claim; ordered by JD relevance. */
+function ownSkillBits(cv,p,jt){ const gs=((cv&&cv.skills&&cv.skills.length?cv.skills:(p&&p.skills))||[]),out=[];
+  gs.forEach((g,gi)=>{ if(/coursework|courses|curriculum|subjects|modules|academic|interests|hobbies|references/i.test(String(g.group||"")))return;
+    (g.items||[]).forEach((it,ii)=>{ const v=cleanSep(tidy(it));
+      if(!v||v.length<2||v.length>40||SUMNOISE.test(v)||!/[A-Za-z]/.test(v)||(v.match(/\s+/g)||[]).length>4)return;
+      if(LANGSET.has(v.toLowerCase().replace(/[^a-z]/g,""))||/\b(?:native|nativo|fluent|mother tongue|bilingual|[ABC][12]|IELTS|TOEFL)\b/i.test(v)||/^(?:other|additional|further)\b/i.test(v))return;
+      if(out.some(o=>o.v.toLowerCase()===v.toLowerCase()))return;
+      out.push({v,r:2*jdHasStrict(v,jt)+jdHas(v,jt),gi,ii}); }); });
+  return out.sort((a,b)=>b.r-a.r||a.gi-b.gi||a.ii-b.ii).map(x=>x.v); }
+function tailoredSummary(p,role,company,have,haveYrs,jd,cv){
+  const rec=p.experience&&p.experience[0]; const jt=jdTokens(jd||"");   /* jd is ORDERING-ONLY; a 5-arg legacy call degrades to master order */
+  const id0=cleanSep((rec&&rec.role)||"").split(/[.!?]\s/)[0].trim(), id=/[A-Za-z]/.test(id0)&&id0.length<=70?id0:"Professional"; const org=cleanSep((rec&&rec.org)||"");   /* a job title is one short clause: a flattened master can parse a whole paragraph as the role */
+  const yrs=fmtYears(haveYrs), yn=Math.round((+haveYrs||0)*10)/10, idw=id.toLowerCase().split(/\s+/).slice(0,2).join(" ");
   const rt=role&&role!=="the role"?tidy(role).replace(/^\[.*?\]\s*/,"").replace(/\s+role\s*$/i,""):"";
-  let s1=id+" with "+yrs+"hands-on experience"+(org?", most recently at "+org:"")+".";
-  let s2=top.length?("Brings proven strength in "+top.slice(0,4).join(", ")+(top.length>4?", and "+top[4]:"")+", with a record of turning data and effort into measurable business outcomes."):"Brings a record of turning data and effort into measurable business outcomes.";
-  let s3="Comfortable owning work end-to-end, collaborating across functions, and ramping quickly on new tools and domains."+(rt&&rt.toLowerCase()!==id.toLowerCase()?" Now targeting the "+rt+" role.":"");
+  /* non-attributive by design: ", most recently at X" never claims the whole figure was earned AT X */
+  const s1y=id+(yrs?" with "+yrs+"experience":"")+(org?(yrs?", most recently at ":" at ")+org:"")+".";
+  let mid=masterBits(p,idw,yn,jt);
+  if(!mid.length){ const sk=ownSkillBits(cv,p,jt).slice(0,5);
+    if(sk.length)mid=["Skilled in "+sumList(sk)+"."];
+    else { const hay=" "+String(serialize(p)).toLowerCase()+" ";   /* last resort: only BANK labels the master's OWN words actually support */
+      const bk=(have||[]).filter(l=>synHas(String(l).toLowerCase(),hay)).slice(0,5);
+      if(bk.length)mid=["Skilled in "+sumList(bk)+"."]; } }
+  const tgt=rt&&rt.toLowerCase()!==id.toLowerCase()?"Now targeting the "+rt+" role.":"";
+  /* stay under validSummary's 460-char default so ✦ Improve bullets / ✦ Tailor can still rewrite it */
+  const keep=[]; let len=s1y.length+(tgt?tgt.length+1:0);
+  mid.forEach(t=>{ if(len+t.length+1<=430){keep.push(t);len+=t.length+1;} });
+  /* exactly ONE tenure claim per résumé: if a kept master sentence already states the candidate's own
+     figure (verified above to be <= the interval-merged one), s1 drops ours instead of printing two */
+  const out=[keep.some(t=>YRHAS.test(t))?id+(org?" at "+org:"")+".":s1y].concat(keep,tgt?[tgt]:[]).join(" ");
   /* company-neutral on purpose: the résumé stays reusable; the company name lives in the cover letter only */
-  return tidy(s1+" "+s2+" "+s3); }
+  return tidy(out); }
 function structureScore(p){ return (p.skills.length?1:0)*0.4+(p.experience.length?1:0)*0.4+((p.education.length||p.summary)?1:0)*0.2; }
 function serialize(cv){ const sk=(cv.skills||[]).map(g=>g.group+" "+(g.items||[]).join(" ")).join(" ");
   const ex=(cv.experience||[]).map(e=>e.role+" "+e.org+" "+(e.bullets||[]).join(" ")).join(" ");
@@ -1413,21 +1556,30 @@ function analyze(company,role,jd){ const parsed=parseResume(masterText()); if(!p
   if((cv.experience||[]).length>12)cv.experience=cv.experience.slice(0,12);   /* parse keeps ≤14 for honest scoring; v6: zero-content-loss contract, pdfmake paginates */
   /* recruiter-style pointers: prose → concise bullets BEFORE scoring, so fragments rank individually
      (quantified ones float up via bulletScore's digit bonus) and the caps keep the most JD-relevant ones */
-  cv.experience=(cv.experience||[]).map(e=>{ const sc=normBullets(e.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:sc.map(x=>x.b).slice(0,8)}; });
+  cv.experience=(cv.experience||[]).map(e=>{ const sc=normBullets(e.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...e,bullets:outcomeFirst(sc.map(x=>x.b).slice(0,8))}; });
   cv.projects=(cv.projects||[]).slice(0,6).map(p=>{ const sc=normBullets(p.bullets).map(b=>({b,s:bulletScore(b,jt)})); if(sc.some(x=>x.s>0))sc.sort((a,b)=>b.s-a.s); return {...p,bullets:sc.map(x=>x.b).slice(0,5)}; })
     /* whole-PROJECT order follows JD relevance too (analytics projects first for analytics roles) — runs
        BEFORE the cvBase/cv0 snapshots so aiMap's positional p{i}:{j} ids stay consistent everywhere */
     .map((p,pi)=>({p,pi,s:bulletScore(p.name+" "+(p.tech||""),jt)+(p.bullets||[]).reduce((a,b)=>a+bulletScore(b,jt),0)}))
-    .sort((a,b)=>b.s-a.s||a.pi-b.pi).map(x=>x.p);
-  cv.skills=goldSkills((cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHas(b,jt)-jdHas(a,jt))})),jd,jt);
-  cv.summary=tailoredSummary(parsed,cv.title,company,allHave,have.years);
+    .sort((a,b)=>b.s-a.s||a.pi-b.pi).map(x=>({...x.p,bullets:outcomeFirst(x.p.bullets)}));   /* outcome-first AFTER the project sort -- scoring stays on the untouched text */
+  cv.skills=goldSkills((cv.skills||[]).map(g=>({...g,items:(g.items||[]).slice().sort((a,b)=>jdHasStrict(b,jt)-jdHasStrict(a,jt))})),jd,jt);
+  cv.summary=tailoredSummary(parsed,cv.title,company,allHave,have.years,jd,cv);   /* jd = jdTokens ordering only; cv = the goldSkills-ordered own-skill fallback */
   const orig=scoreArrangement(buckets,need,have,struct,zoneOf(parsed));
   const tail=scoreArrangement(buckets,need,have,structureScore(cv),zoneOf(cv));
   if(tail.score<orig.score)tail.score=orig.score;
   return {company,role,cv,parsed,buckets,need,have,orig,tail,recs:detRecs(buckets),cover:detCover(company,role,cv,buckets)}; }   /* v6: `parsed` powers the content-loss ribbon */
 function detRecs(b){ const r=[];
-  b.reqMiss.slice(0,10).forEach(k=>r.push({t:"Required in the JD: “"+k+"” — add it only if you genuinely have it.",add:[k]}));
-  b.prefMiss.slice(0,8).forEach(k=>r.push({t:"Preferred / nice-to-have: “"+k+"” — add if true.",add:[k]}));
+  /* a tool the JD spells out is what an ATS keyword scan literally looks for — say so, and name the
+     sibling tool the résumé does have so the human can judge the substitution. An "X / Y" alternation
+     gets no one-click Add: a composite is not a skill anyone can paste into Skills. */
+  const tool=k=>!!toolParts(k), alt=k=>(toolParts(k)||[]).length>1;
+  const nr=k=>{ const n=(b.nearMiss||[]).find(x=>x.want===k); return n?" Your résumé shows "+n.got+" instead — closest match, but a keyword scan looks for the exact word.":""; };
+  b.reqMiss.slice(0,10).forEach(k=>r.push(tool(k)
+    ?{t:"The JD names “"+k+"” specifically and your résumé doesn't."+nr(k)+" Add it only if you genuinely use it"+(alt(k)?" (whichever one of those you use)":"")+".",add:alt(k)?null:[k]}
+    :{t:"Required in the JD: “"+k+"” — add it only if you genuinely have it.",add:[k]}));
+  b.prefMiss.slice(0,8).forEach(k=>r.push(tool(k)
+    ?{t:"Preferred — the JD names “"+k+"”."+nr(k)+" Add if true.",add:alt(k)?null:[k]}
+    :{t:"Preferred / nice-to-have: “"+k+"” — add if true.",add:[k]}));
   r.push({t:"Lead each role with its most quantified, JD-relevant bullet (already reordered for you)."});
   r.push({t:"Add numbers (%, ₹/$, time, volume) to bullets that don't have them — fix inline with ✎ Edit."});
   r.push({t:"Mirror the JD's exact tool/skill names, and list each skill once in Skills and again inside a bullet."});
