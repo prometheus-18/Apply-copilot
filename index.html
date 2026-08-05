@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <script type="application/json" id="cowork-artifact-meta">
 {
-  "name": "Apply Copilot",
+  "name": "Apply Co-Pilot",
   "schemaVersion": 1,
-  "description": "Sign in, upload your résumé once (any template — two-column, LaTeX, academic, multi-page), paste any job → honest ATS fit score, a tailored ATS-safe résumé + cover letter that stay in sync as you edit — experience and projects always come out as concise recruiter-style bullet points (never paragraphs), inline ✦ AI editing with tone presets and a humanizer (never invents facts), LinkedIn outreach with current-employee search, and a WebGL space UI."
+  "description": "Sign in with email or Google, upload your résumé once (PDF, TXT or LaTeX — any template, including two-column, academic and multi-page), then paste a job description: you get an honest ATS fit score for the résumé as it stands plus the projected one after tailoring, with every knockout and every missing named tool spelled out — and a tailored résumé and matching cover letter exported as real vector PDFs with clickable links and selectable text. Experience and projects come out as concise recruiter-style bullet points rebuilt from your own words; nothing is ever invented. Optional AI passes (tailor to the JD, a three-lens audit, per-line rewrites) are opt-in per click and re-checked client-side. A LaTeX master stays verbatim and tailored bullets splice back into your .tex for Overleaf. Plus LinkedIn outreach and an application tracker."
 }
 </script>
 <html lang="en">
@@ -24,9 +24,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.1/dist/umd/supabase.js" integrity="sha384-0x8XPoHt08aHZj+RHs8ojmhZ5IDsTLjPgblgWdriayWriqv9dic3Vkv1K2+UqgZV" crossorigin="anonymous" onerror="window.__noSupabase=1"></script>
 <style>
   /* ============================================================================================
-     Apply Co·Pilot — design system: "warm editorial" (VoltAgent/awesome-design-md → design-md/claude)
-     Cream canvas · coral voltage · dark-navy product surfaces · serif display + humanist sans.
-     Trinity only — cream, coral, dark navy. Never add a fourth surface tone.
+     Apply Co·Pilot — design system: v8 "realistic" dark (a token repoint of the v7 warm-editorial structure)
+     Near-black canvas #0b0b0f · coral #cc785c accent · Sora grotesk display + Inter body + IBM Plex Mono.
+     One cool-neutral elevation ladder + coral. Never add a warm surface tone; --cream*/--dark* are legacy NAMES.
      EXEMPT: the .doc résumé paper + pdfmake docs keep the owner's LaTeX gold palette (ATS paper).
      ============================================================================================ */
   :root{ color-scheme: dark;
@@ -46,17 +46,17 @@
     --disp:'Sora','Segoe UI Variable Display','Avenir Next','Century Gothic',system-ui,sans-serif;
     --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
     /* legacy token names — every existing rule (and the popup "dark-token recipe") keeps working, repointed */
-    --obsidian:#0b0b0f;--graphite:#c3c3cf;--slate:#9b9baa;--ash:#8f8fa1;--mist:#c3c3cf;--fog:#f4f4f7;--paper:#15151c;--bone:#f2f1ef;--ember:#cc785c;--tangerine:#e8a184;
-    --srf:var(--canvas);--card:var(--soft);--card2:var(--cream);--well:#08080c;
-    --tx:var(--bodyc);--hd:var(--ink);--mut:var(--muted);--fnt:var(--muted-soft);
-    --ln:var(--hair);--pln:#2f2f3a;--btn-ln:#636378;--ghost:var(--cream-strong);
-    --acc:#cc785c;--acc-ink:#e8a184;--acc-soft:rgba(204,120,92,.16);
+
+    --card:var(--soft);--well:#08080c;
+    --mut:var(--muted);
+    --btn-ln:#636378;
+    --acc:#cc785c;--acc-soft:rgba(204,120,92,.16);
     --positive:#57d18f;--positive-soft:rgba(87,209,143,.14);--warning:#f0b46b;--warning-soft:rgba(240,180,107,.13);
-    --chrome:linear-gradient(180deg,#07070a 0%,#1c1c25 62%,#4a4a5a 100%);
+
     /* atmosphere tokens — DECORATION ONLY, consumed by #space and .hero::before/::after and nothing else.
        Alphas are contrast-budgeted: even where ALL layers overlap at full strength the composited
        background stays #22243d, where --muted-soft still clears 4.76:1. Never raise them blind. */
-    --beam:rgba(124,140,248,.10);--beam-ray:rgba(124,140,248,.06);--beam-soft:rgba(124,140,248,.05);--beam-0:rgba(124,140,248,0);--beam-floor:rgba(204,120,92,.10);--beam-hi:rgba(138,154,255,.34);--beam-hi-ray:rgba(168,180,255,.22);--beam-hi-soft:rgba(124,140,248,.13);}
+    --beam:rgba(124,140,248,.10);--beam-soft:rgba(124,140,248,.05);--beam-0:rgba(124,140,248,0);--beam-floor:rgba(204,120,92,.10);--beam-hi:rgba(138,154,255,.34);--beam-hi-ray:rgba(168,180,255,.22);--beam-hi-soft:rgba(124,140,248,.13);}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   html,body{margin:0;min-height:100%}
@@ -77,8 +77,9 @@
   .nbrand{font:500 15.5px var(--sans);letter-spacing:-.012em;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:9px}
   .devtag{font:500 9.5px var(--mono);letter-spacing:.1em;color:#fff;background:var(--coral);border-radius:var(--pill);padding:3px 8px}
   .nlinks{display:flex;gap:2px;flex-wrap:wrap}
-  .nlinks a{position:relative;cursor:pointer;font:500 13px var(--sans);letter-spacing:-.005em;color:var(--muted);padding:8px 11px;border-radius:var(--r-sm);transition:color .15s,background .15s}
-  .nlinks a:hover{color:var(--ink);text-decoration:none}
+  /* section links read as primary navigation, so they sit at full text strength, not muted */
+  .nlinks a{position:relative;cursor:pointer;font:500 13px var(--sans);letter-spacing:-.005em;color:var(--ink);padding:8px 11px;border-radius:var(--r-sm);transition:color .15s,background .15s,opacity .15s}
+  .nlinks a:hover{color:var(--ink);background:var(--cream);text-decoration:none}
   .nlinks a.on{color:var(--ink);background:var(--cream)}
   .nlinks a.todo::after{content:"";position:absolute;top:5px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--coral);animation:pulse 1.4s infinite}
   /* layout — full-bleed bands, 1200px content, 96px section rhythm */
@@ -197,7 +198,7 @@
   .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-in-out infinite}
   .chip.ok{color:var(--succ);border-color:rgba(93,184,114,.42);background:var(--positive-soft)}
   .chip.warn{color:var(--coral-act);border-color:rgba(204,120,92,.4);background:var(--acc-soft)}
-  .chip.alarm{color:var(--err);border-color:rgba(198,69,69,.4);background:rgba(198,69,69,.08)}
+
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.6)}}
   @keyframes spin{to{transform:rotate(360deg)}}
   /* output components */
@@ -233,7 +234,7 @@
   .aicard{border:1px solid var(--hair);border-radius:var(--r);padding:14px 16px;margin:10px 0;background:var(--cream)}
   .aicard .old{color:var(--muted-soft);font-size:12.5px;text-decoration:line-through;text-decoration-color:rgba(204,120,92,.6)}
   .aicard .new{color:var(--body-strong);font-size:13.5px;margin:8px 0 10px}
-  .aicard.applied{border-color:rgba(93,184,114,.45)}
+
   .aieval{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0;font:500 11px/1 var(--sans)}
   .aieval .ev{padding:4px 9px;border:1px solid var(--hair);border-radius:var(--pill);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
   .aieval .ev.good{color:var(--succ);border-color:rgba(93,184,114,.45)}
@@ -284,7 +285,7 @@
   .support .blurb{font:400 16px/1.65 var(--sans);color:var(--bodyc);max-width:560px;margin:0 auto 28px}
   .qrcard{background:#fff;border:1px solid var(--hair);border-radius:var(--r);padding:18px;display:inline-block;line-height:0}
   .qrcard img,.qrcard svg{width:188px;height:188px;display:block}
-  .qrph{width:188px;height:188px;display:flex;align-items:center;justify-content:center;border:1.5px dashed var(--btn-ln);border-radius:var(--r-sm);color:var(--muted);font:500 11px var(--sans);letter-spacing:.1em;text-align:center;line-height:1.6}
+
   .upiid{font:500 13px var(--mono);letter-spacing:.02em;color:var(--ink);margin-top:16px}
   .upiapps{font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.1em;color:var(--muted-soft);margin-top:7px}
   /* account control */
@@ -500,7 +501,7 @@
               <button type="button" class="gbtn" id="authGoogle" data-act="authGoogle"><svg viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.35 0-4.34-1.58-5.05-3.71H.96v2.34A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71a5.41 5.41 0 0 1 0-3.42V4.96H.96a9 9 0 0 0 0 8.09l3-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.34C4.67 5.17 6.66 3.58 9 3.58z"/></svg>Continue with Google</button>
               <div class="gnote">Google shares your name, email address and profile photo with the sign-in service - nothing else, and nothing is ever posted on your behalf.</div>
             </div>
-            <div class="authnote" id="authExtNote">Google sign-in needs a full browser tab, so it is not available in the side panel. Sign in here with your email and password - it is the same account. Only ever used Google? Open the web app, sign in there, then use "Set a password" in the account bar at the top.</div>
+            <div class="authnote">Google sign-in needs a full browser tab, so it is not available in the side panel. Sign in here with your email and password - it is the same account. Only ever used Google? Open the web app, sign in there, then use "Set a password" in the account bar at the top.</div>
             <div class="authrow">
               <button type="button" class="authlink" id="authForgot" data-act="authReset">Forgot your password?</button>
               <button type="button" class="authlink" id="authRecDone" data-act="authRecDone">Not now, back to the app</button>
@@ -532,7 +533,7 @@
         <div class="mor">or</div>
         <div class="drop mpaste">
           <div class="dlab">⌨ Paste the source</div>
-          <div style="margin:7px 0"><b>Paste your résumé</b><br><span class="hint">plain text · full LaTeX source (Overleaf → Menu → Source) · Markdown</span></div>
+          <div style="margin:7px 0"><b>Paste your résumé</b><br><span class="hint">plain text · full LaTeX source (Overleaf → Menu → Source)</span></div>
           <label class="fld" for="mPaste">Résumé source</label><textarea id="mPaste" class="short" placeholder="Paste the full text of your résumé — or your entire LaTeX source…"></textarea>
           <div class="row" style="margin-top:8px;justify-content:center"><button class="sm" data-act="setMasterFromPaste">Set as master</button><button class="sm ghost" data-act="loadSample">Load a sample</button></div>
         </div>
@@ -597,7 +598,7 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="doc-toolbar"><div class="doc-context">Custom CV · <b id="cvFor">—</b></div>
-        <div class="doc-actions"><div class="actionCluster"><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" id="aiAuditBtn" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
+        <div class="doc-actions"><div class="actionCluster"><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="cvsplit" id="cvSplit">
@@ -623,7 +624,7 @@
     <div id="clEmpty" class="empty">Run analysis to generate a matching cover letter.</div>
     <div id="clBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Cover letter</div>
-        <div class="row"><button class="sm ghost" id="aiHumClBtn" data-act="aiHumanizeCover" title="AI rewrites the letter into the proven 5-part structure (role+company → employer evidence → projects → why this company → close) using only your facts">✦ AI letter</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc" title="Copies the letter as plain text">Copy text</button></div></div>
+        <div class="row"><button class="sm ghost" data-act="aiHumanizeCover" title="AI rewrites the letter into the proven 5-part structure (role+company → employer evidence → projects → why this company → close) using only your facts">✦ AI letter</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc" title="Copies the letter as plain text">Copy text</button></div></div>
       <div class="hint" id="aiClMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="coverDoc"></div>
       <div class="hint" style="margin-top:7px">The letter follows your résumé live — accepted keywords, AI rewrites and summary edits flow into it. <b>✦ AI letter</b> rewrites it into the proven 5-part structure (your facts and numbers stay untouched); while editing, click any paragraph for the <b>✦ AI edit</b> popup.</div>
@@ -641,7 +642,7 @@
     <div class="seclabel">⑤ · Job Tracker</div>
     <div class="row" id="trkStats" style="gap:8px;margin-bottom:8px"></div>
     <div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="hint">Saved in your browser · export opens in <b>Excel</b> &amp; <b>Google Sheets</b>.</div><div class="row"><button class="sm ghost" data-act="copyTrk">⧉ Copy for Sheets</button><button class="sm primary" data-act="exportCSV">⬇ Export CSV</button></div></div>
-    <div style="overflow:auto"><table id="trkTbl"><thead><tr><th>Date</th><th>Company / Role</th><th>Stage</th><th>Next</th><th>Notes</th><th></th></tr></thead><tbody id="trkRows"></tbody></table></div>
+    <div style="overflow:auto"><table><thead><tr><th>Date</th><th>Company / Role</th><th>Stage</th><th>Next</th><th>Notes</th><th></th></tr></thead><tbody id="trkRows"></tbody></table></div>
   </div></section>
 
   <!-- FIND JOBS (last) -->
@@ -659,9 +660,9 @@
   <section class="step" id="pane-support"><div class="wm reveal" aria-hidden="true">Support</div><div class="panel reveal support">
     <div class="seclabel">♥ · Support the project</div>
     <div class="blurb">Apply Co·Pilot is free and always will be. If it helped you land an interview, you can support its development — any amount, straight from any UPI app.</div>
-    <div class="qrcard" id="upiQR"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h41v41H0z"/><path stroke="#000000" d="M4 4.5h7m2 0h5m1 0h2m1 0h3m2 0h1m2 0h7M4 5.5h1m5 0h1m2 0h3m1 0h3m1 0h2m2 0h2m3 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m5 0h3m4 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h4m5 0h2m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h1m3 0h2m2 0h1m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h2m1 0h2m2 0h2m4 0h2m3 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h4m3 0h1m3 0h4M4 12.5h1m1 0h5m2 0h1m1 0h7m2 0h1m1 0h1m3 0h5M5 13.5h1m2 0h2m3 0h2m1 0h1m6 0h6m1 0h1m3 0h3M4 14.5h1m4 0h2m1 0h5m2 0h2m4 0h1m3 0h3m2 0h2M5 15.5h1m1 0h1m5 0h2m3 0h3m3 0h2m2 0h1m1 0h2m1 0h3M4 16.5h1m3 0h1m1 0h3m1 0h1m6 0h3m1 0h2m4 0h2M5 17.5h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m2 0h1m1 0h3m1 0h2m4 0h2M7 18.5h11m3 0h2m1 0h1m3 0h1m2 0h1m2 0h2M4 19.5h4m1 0h1m4 0h1m2 0h2m1 0h1m1 0h1m2 0h1m2 0h2m1 0h1m1 0h3M5 20.5h1m1 0h1m2 0h2m2 0h1m1 0h1m1 0h1m2 0h1m4 0h4m2 0h1m2 0h1M8 21.5h1m3 0h1m1 0h1m1 0h3m2 0h7m1 0h2m5 0h1M4 22.5h3m1 0h1m1 0h2m2 0h2m3 0h1m4 0h1m1 0h1m1 0h3m1 0h4M5 23.5h3m1 0h1m4 0h1m1 0h1m2 0h1m4 0h2m2 0h2m2 0h1m1 0h3M4 24.5h2m1 0h2m1 0h2m1 0h2m2 0h2m7 0h1m1 0h2m2 0h2m2 0h1M4 25.5h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h3m1 0h5m1 0h1m1 0h1m5 0h2M4 26.5h1m1 0h6m1 0h1m2 0h2m1 0h1m4 0h1m5 0h6M4 27.5h1m2 0h1m5 0h1m1 0h1m8 0h2m2 0h2m3 0h2m1 0h1M4 28.5h1m2 0h1m1 0h2m1 0h3m2 0h1m1 0h3m1 0h2m1 0h1m1 0h6m2 0h1M12 29.5h1m2 0h1m1 0h2m2 0h5m1 0h2m3 0h1m3 0h1M4 30.5h7m2 0h1m1 0h1m3 0h2m1 0h1m2 0h4m1 0h1m1 0h1m2 0h1M4 31.5h1m5 0h1m1 0h2m2 0h1m2 0h1m5 0h4m3 0h1m1 0h3M4 32.5h1m1 0h3m1 0h1m1 0h9m2 0h1m2 0h1m1 0h5m2 0h2M4 33.5h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h2m1 0h6m3 0h2m1 0h3M4 34.5h1m1 0h3m1 0h1m1 0h4m3 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1M4 35.5h1m5 0h1m2 0h3m2 0h1m1 0h1m2 0h1m1 0h2m5 0h1m1 0h1M4 36.5h7m1 0h2m2 0h1m1 0h1m1 0h3m3 0h3m1 0h1m1 0h1m2 0h1"/></svg>
+    <div class="qrcard"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h41v41H0z"/><path stroke="#000000" d="M4 4.5h7m2 0h5m1 0h2m1 0h3m2 0h1m2 0h7M4 5.5h1m5 0h1m2 0h3m1 0h3m1 0h2m2 0h2m3 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m5 0h3m4 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h4m5 0h2m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h1m3 0h2m2 0h1m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h2m1 0h2m2 0h2m4 0h2m3 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h4m3 0h1m3 0h4M4 12.5h1m1 0h5m2 0h1m1 0h7m2 0h1m1 0h1m3 0h5M5 13.5h1m2 0h2m3 0h2m1 0h1m6 0h6m1 0h1m3 0h3M4 14.5h1m4 0h2m1 0h5m2 0h2m4 0h1m3 0h3m2 0h2M5 15.5h1m1 0h1m5 0h2m3 0h3m3 0h2m2 0h1m1 0h2m1 0h3M4 16.5h1m3 0h1m1 0h3m1 0h1m6 0h3m1 0h2m4 0h2M5 17.5h3m1 0h1m1 0h1m1 0h2m1 0h1m1 0h3m2 0h1m1 0h3m1 0h2m4 0h2M7 18.5h11m3 0h2m1 0h1m3 0h1m2 0h1m2 0h2M4 19.5h4m1 0h1m4 0h1m2 0h2m1 0h1m1 0h1m2 0h1m2 0h2m1 0h1m1 0h3M5 20.5h1m1 0h1m2 0h2m2 0h1m1 0h1m1 0h1m2 0h1m4 0h4m2 0h1m2 0h1M8 21.5h1m3 0h1m1 0h1m1 0h3m2 0h7m1 0h2m5 0h1M4 22.5h3m1 0h1m1 0h2m2 0h2m3 0h1m4 0h1m1 0h1m1 0h3m1 0h4M5 23.5h3m1 0h1m4 0h1m1 0h1m2 0h1m4 0h2m2 0h2m2 0h1m1 0h3M4 24.5h2m1 0h2m1 0h2m1 0h2m2 0h2m7 0h1m1 0h2m2 0h2m2 0h1M4 25.5h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h3m1 0h5m1 0h1m1 0h1m5 0h2M4 26.5h1m1 0h6m1 0h1m2 0h2m1 0h1m4 0h1m5 0h6M4 27.5h1m2 0h1m5 0h1m1 0h1m8 0h2m2 0h2m3 0h2m1 0h1M4 28.5h1m2 0h1m1 0h2m1 0h3m2 0h1m1 0h3m1 0h2m1 0h1m1 0h6m2 0h1M12 29.5h1m2 0h1m1 0h2m2 0h5m1 0h2m3 0h1m3 0h1M4 30.5h7m2 0h1m1 0h1m3 0h2m1 0h1m2 0h4m1 0h1m1 0h1m2 0h1M4 31.5h1m5 0h1m1 0h2m2 0h1m2 0h1m5 0h4m3 0h1m1 0h3M4 32.5h1m1 0h3m1 0h1m1 0h9m2 0h1m2 0h1m1 0h5m2 0h2M4 33.5h1m1 0h3m1 0h1m1 0h2m1 0h3m1 0h2m1 0h6m3 0h2m1 0h3M4 34.5h1m1 0h3m1 0h1m1 0h4m3 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1M4 35.5h1m5 0h1m2 0h3m2 0h1m1 0h1m2 0h1m1 0h2m5 0h1m1 0h1M4 36.5h7m1 0h2m2 0h1m1 0h1m1 0h3m3 0h3m1 0h1m1 0h1m2 0h1"/></svg>
 </div>
-    <div class="upiid" id="upiId">UPI · mrrahulverma18-2@okaxis</div>
+    <div class="upiid">UPI · mrrahulverma18-2@okaxis</div>
     <div class="upiapps">SCAN WITH GPAY · PHONEPE · PAYTM · ANY UPI APP</div>
   </div></section>
 
@@ -2232,7 +2233,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   /* scroll-reveal */
   try{ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{threshold:.12,rootMargin:"0px 0px -8% 0px"});
     document.querySelectorAll(".reveal").forEach(function(el){io.observe(el);}); }catch(e){ document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in");}); }
-  /* progress + starfield parallax + nav spy */
+  /* progress + atmosphere parallax + nav spy */
   var space=document.getElementById("space");
   var ticking=false,sy=0,sections=[].slice.call(document.querySelectorAll("main.flow > section"));
   function onScroll(){ sy=window.pageYOffset; if(!ticking){ticking=true; requestAnimationFrame(function(){
@@ -2589,8 +2590,8 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   /* ===== ✦ AI editor (v4) — the AI Review box is retired: AI now lives WHERE the text lives.
      While editing (✎), click or select any summary line, bullet, or cover paragraph → a ✦ fab appears →
      the AI edit popup offers tone presets (Professional/Balanced/Conversational/Bold), your own custom
-     instruction, and a Humanize pass. Toolbar buttons run one-click batch passes (Improve bullets ·
-     Humanize · Humanize letter). Same Groq edge fn, same truthfulness contract: AI only rephrases what
+     instruction, and a Humanize pass. Toolbar buttons run one-click batch passes (Improve (quick) ·
+     Tailor to JD · Audit (critique only) · AI letter). Same edge fn (house model chain, optional BYOK), same truthfulness contract: AI only rephrases what
      exists, every digit is re-checked client-side, and AI-slop (em-dashes as punctuation, "leverage/
      spearheaded/…") is stripped or rejected deterministically — never trusted to the model. */
   var AI_LAST=null, AI_UNDO=null, AI_UNDO_RUN=null, AI_AFTER=null, AI_UNDO_FORCE=0, AI_UNDO_COVER=null, AI_UNDO_COVER_RUN=null, OUT_HTML=null, OUT_RUN=null;
@@ -2668,7 +2669,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   window.__aiReset=function(){ if(window.__aiPopClose)window.__aiPopClose(); };
   /* résumé changed → a previously humanized letter has been rebuilt deterministically; tell the user once */
   window.__coverResynced=function(rerendered){ if(AI_UNDO_COVER){ AI_UNDO_COVER=null;
-    if(rerendered)aiMsg("aiClMsg","Résumé changed — the letter was rebuilt to match it. Run ✦ Humanize again for the human voice."); } };
+    if(rerendered)aiMsg("aiClMsg","Résumé changed — the letter was rebuilt to match it. Run ✦ AI letter again for the human voice."); } };
 
   /* ---- inline ✦ editor: map a caret/selection in the editable doc to the unit it belongs to ---- */
   function aiMap(doc,rawNode){
