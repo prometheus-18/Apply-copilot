@@ -1294,19 +1294,39 @@ function parseResume(raw){ let t=deLig(String(raw||"")).replace(/\r\n?/g,"\n").r
     publications:parseCerts(denoise(sect.publications||"")).slice(0,6) }; }
 
 /* ===== fit keyword bank ===== */
-const BANK=[["SQL",["sql","mysql","postgres","t-sql"]],["Python",["python","pandas","numpy"]],["R",["r programming","rstudio"]],["Excel",["excel","spreadsheet","powerpoint"]],["A/B testing",["a/b","ab test","experimentation","experiment","test & control","test and control"]],["Statistics",["statistics","statistical","hypothesis","regression"]],["Machine learning",["machine learning","ml ","scikit","tensorflow","pytorch","predictive model","uplift model"]],["Deep learning",["deep learning","neural network","cnn","transformer"]],["NLP / LLM",["nlp","llm","gpt","openai","prompt"]],["Data visualization",["dashboard","tableau","power bi","looker","visualization","reporting"]],["ETL / pipelines",["etl","pipeline","airflow","dbt","data pipeline"]],["Cloud",["aws","gcp","azure","s3","bigquery","redshift"]],["Snowflake",["snowflake"]],["Git",["git","github","version control"]],["JavaScript",["javascript","typescript","react","node","angular","vue"]],["APIs",["rest api","graphql","api"]],["Segmentation",["segmentation","rfm","clustering","k-means","cohort"]],["Marketing analytics",["campaign","marketing mix","mmx","seo","ga4","attribution","funnel","roi"]],["Stakeholders",["stakeholder","cross-functional","leadership","business recommendation"]],["Communication",["communication","presentation","storytelling","narrative"]],["Healthcare",["healthcare","clinical","patient","hipaa","revenue cycle","life sciences","pharma"]],["Product",["product manager","roadmap","backlog"]],["CRM",["crm","salesforce","hubspot"]],["Finance/modeling",["financial model","forecasting","valuation"]],["Data warehouse",["warehouse","dimensional","star schema","data quality"]],["Spark/big data",["spark","pyspark","hadoop","kafka"]],["MLOps",["mlops","deployment","sagemaker","vertex ai","mlflow"]],["Agile",["agile","scrum","jira"]]];
+const BANK=[["SQL",["sql","mysql","postgres","postgresql","t-sql"]],["Python",["python","pandas","numpy"]],["R",["r programming","rstudio"]],["Excel",["excel","spreadsheet","powerpoint"]],["A/B testing",["a/b","ab test","experimentation","experiment","test & control","test and control"]],["Statistics",["statistics","statistical","hypothesis","regression"]],["Machine learning",["machine learning","ml ","scikit","tensorflow","pytorch","predictive model","uplift model"]],["Deep learning",["deep learning","neural network","cnn","transformer"]],["NLP / LLM",["nlp","llm","gpt","openai","prompt"]],["Data visualization",["dashboard","tableau","power bi","looker","visualization","visualisation","reporting"]],["ETL / pipelines",["etl","pipeline","airflow","dbt","data pipeline"]],["Cloud",["aws","gcp","azure","s3","bigquery","redshift"]],["Snowflake",["snowflake"]],["Git",["git","github","version control"]],["JavaScript",["javascript","typescript","react","node","angular","vue"]],["APIs",["rest api","graphql","restful","fastapi","api"]],["Segmentation",["segmentation","rfm","clustering","k-means","cohort"]],["Marketing analytics",["campaign","marketing mix","mmx","seo","ga4","attribution","funnel","roi"]],["Stakeholders",["stakeholder","cross-functional","leadership","business recommendation"]],["Communication",["communication","presentation","storytelling","narrative"]],["Healthcare",["healthcare","clinical","patient","hipaa","revenue cycle","life sciences","pharma"]],["Product",["product manager","roadmap","backlog"]],["CRM",["crm","salesforce","hubspot"]],["Finance/modeling",["financial model","forecasting","valuation"]],["Data warehouse",["warehouse","dimensional","star schema","data quality"]],["Spark/big data",["spark","pyspark","hadoop","kafka"]],["MLOps",["mlops","deployment","sagemaker","vertex ai","mlflow"]],["Agile",["agile","scrum","jira"]]];
 const REQ_CUE=/\b(must|required|requirement|minimum|at least|essential|you (?:have|will|should)|proficien|expert|strong|advanced)\b/i;
 const PREF_CUE=/\b(preferred|nice to have|a plus|bonus|ideally|desirable|familiar|exposure|good to have|advantage)\b/i;
 const PREF_FWD=/^.{0,45}?\b(a plus|is a plus|are a plus|preferred|nice to have|desirable|good to have|bonus|advantage)\b/i;
 function wb(t,hay){ if(!t)return false; try{return new RegExp("(?:^|[^a-z0-9+#])"+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?![a-z0-9+#])","i").test(hay);}catch(e){return hay.indexOf(t)>=0;} }
+/* Skill-synonym matcher for BOTH the JD and the résumé. A bare indexOf() used to read "digital" as
+   "git" (inflating coverage) and "evaluation" as "valuation" (inventing a requirement the candidate
+   is then told they lack). Plain word boundaries over-correct — they drop "pipelines" (plural) and
+   "postgresql" (a real word containing a synonym) — so one inflectional tail is allowed. Returns the
+   match position + length because classifyHit() needs them to read the req/pref cue window. */
+const SYN_TAIL="(?:s|es|ing|ed)?";
+/* Two tiers, both anchored on a LEFT word boundary — that anchor alone is what stops "valuation"
+   matching inside "evaluation" and "git" inside "digital". A synonym with 6+ alphanumerics is
+   distinctive enough to also match as a word PREFIX, so "pharma"->"pharmaceutical" and
+   "pipeline"->"pipelines" keep working; anything shorter gets only an inflectional tail, so "excel"
+   cannot reach "excellent" and "ml " cannot reach "html ". ("sql" vs "postgresql" is handled by
+   listing postgresql as its own synonym.) Returns position + length: classifyHit needs them to read
+   the surrounding required/preferred cue window. */
+function synFind(t,hay){ if(!t)return null;
+  const q=t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), broad=t.replace(/[^a-z0-9]/gi,"").length>=6;
+  const pat=broad?("(?:^|[^a-z0-9+#])("+q+"[a-z]*)"):("(?:^|[^a-z0-9+#])("+q+SYN_TAIL+")(?![a-z0-9+#])");
+  try{ const m=new RegExp(pat,"i").exec(hay);
+       return m?{i:m.index+m[0].length-m[1].length,len:m[1].length}:null;
+  }catch(e){ const i=hay.indexOf(t); return i<0?null:{i:i,len:t.length}; } }
+function synHas(t,hay){ return !!synFind(t,hay); }
 function classifyHit(jd,idx,len){ const fwd=jd.slice(idx+(len||0),idx+(len||0)+52).split(/[.;\n]/)[0]; if(PREF_FWD.test(fwd))return"pref";
   const win=jd.slice(Math.max(0,idx-150),idx); const r=win.search(REQ_CUE),p=win.search(PREF_CUE);
   if(p>=0&&p>r)return"pref"; if(r>=0)return"req"; if(PREF_CUE.test(jd.slice(Math.max(0,idx-420),idx)))return"pref"; return"req"; }
 function bucketSkills(jd,src){ const J=" "+(jd||"").toLowerCase()+" ", s=" "+(src||"").toLowerCase()+" ";
   const reqHave=[],reqMiss=[],prefHave=[],prefMiss=[];
-  for(const [label,syns] of BANK){ let idx=-1,len=0; for(const x of syns){ const i=J.indexOf(x); if(i>=0){idx=i;len=x.length;break;} } if(idx<0)continue;
-    const inSrc=syns.some(x=>s.includes(x))||wb(label.toLowerCase().split(/[ /]/)[0],s);
-    const tier=classifyHit(J,idx,len); (tier==="req"?(inSrc?reqHave:reqMiss):(inSrc?prefHave:prefMiss)).push(label); }
+  for(const [label,syns] of BANK){ let hit=null; for(const x of syns){ const h=synFind(x,J); if(h){hit=h;break;} } if(!hit)continue;
+    const inSrc=syns.some(x=>synHas(x,s))||wb(label.toLowerCase().split(/[ /]/)[0],s);
+    const tier=classifyHit(J,hit.i,hit.len); (tier==="req"?(inSrc?reqHave:reqMiss):(inSrc?prefHave:prefMiss)).push(label); }
   return {reqHave,reqMiss,prefHave,prefMiss}; }
 
 /* ===== seniority + experience-fit ===== */
@@ -1325,7 +1345,7 @@ function candidateYears(exp){ const iv=[]; (exp||[]).forEach(e=>{ const p=String
 
 /* ===== scoring (deterministic, defensible, non-inflated) ===== */
 function zoneHits(labels,zone){ const z=" "+(zone||"").toLowerCase()+" "; if(!labels.length)return 1; let n=0;
-  labels.forEach(l=>{ const syns=(BANK.find(b=>b[0]===l)||[null,[]])[1]; if(syns.some(x=>z.includes(x))||wb(l.toLowerCase().split(/[ /]/)[0],z))n++; }); return n/labels.length; }
+  labels.forEach(l=>{ const syns=(BANK.find(b=>b[0]===l)||[null,[]])[1]; if(syns.some(x=>synHas(x,z))||wb(l.toLowerCase().split(/[ /]/)[0],z))n++; }); return n/labels.length; }
 function scoreArrangement(buckets,need,have,structure,zone){
   const reqTot=buckets.reqHave.length+buckets.reqMiss.length, prefTot=buckets.prefHave.length+buckets.prefMiss.length;
   const reqCov=reqTot?buckets.reqHave.length/reqTot:1, prefCov=prefTot?buckets.prefHave.length/prefTot:1;
