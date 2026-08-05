@@ -613,7 +613,7 @@
         <textarea id="texEd" spellcheck="false" data-lenis-prevent placeholder="Run the analysis to build your tailored .tex…"></textarea>
         <div class="row" style="justify-content:space-between;margin-top:8px;gap:8px;flex-wrap:wrap">
           <span class="hint" id="texCount">—</span>
-          <div class="row"><button class="sm ghost" data-act="texAi" title="Select a \item body or the summary paragraph in the editor first">✦ AI edit selection</button><button class="sm ghost" data-act="texRegen" title="Discards manual edits and rebuilds this editor from the current tailoring">↺ Rebuild .tex</button><button class="sm primary" data-act="texOverleaf" title="Opens overleaf.com with exactly what is in this editor, ready to compile">↗ Open in Overleaf</button></div>
+          <div class="row"><button class="sm primary" data-act="texApplyDoc" title="Rebuild the résumé preview and the PDF from the LaTeX in this editor. Any \textbf{} you wrote becomes bold in the PDF.">✓ Apply to résumé</button><button class="sm ghost" data-act="texAi" title="Select one \item body or the summary paragraph in the editor first">✦ AI edit selection</button><button class="sm ghost" data-act="texRegen" title="DISCARDS your manual edits and rebuilds this editor from the current tailoring">↺ Discard &amp; rebuild</button><button class="sm ghost" data-act="texOverleaf" title="Opens overleaf.com with exactly what is in this editor, ready to compile">↗ Open in Overleaf</button></div>
         </div>
         <div class="hint" id="texMsg" style="margin-top:7px"></div>
       </details>
@@ -709,7 +709,7 @@ window.__act({
   aiHumanizeResume:function(){ if(window.aiHumanizeResume)window.aiHumanizeResume(); },
   aiHumanizeCover:function(){ if(window.aiHumanizeCover)window.aiHumanizeCover(); },
   aiTailorJD:function(){ if(window.aiTailorJD)window.aiTailorJD(); },
-  downloadTex:function(){ downloadTex(); }, copyTex:function(el){ copyTex(el); },
+  downloadTex:function(){ downloadTex(); }, texApplyDoc:function(){ texApplyDoc(); }, copyTex:function(el){ copyTex(el); },
   cvFit:function(el){ fitSet(el.value); },
   cvCompare:function(){ cvCompare(); },
   mView:function(el){ setMasterView(el.dataset.arg); },
@@ -945,6 +945,40 @@ function texStudioSync(){ const st=document.getElementById("texStudio"),ta=docum
   if(!st._wired){ st._wired=1; st.addEventListener("toggle",function(){ if(st.open&&document.getElementById("cvMasterPane")){ cvCompare(); flash("texMsg","⇆ Compare closed — the master pane and this editor share the same two columns.",5000); } }); }
   texCount(); }
 window.__texStudioSync=function(){ texStudioSync(); };
+/* Emphasis the USER wrote in the .tex. Kept OUT of cvBase on purpose: cvBase must stay plain text or
+   aiMap's DOM->cvBase mapping and the ✎-Edit pull-back (both textContent-based) break. Instead these
+   terms join the PDF's existing bold set, which is how JD-matched terms are already emphasised. */
+let TEXBOLD=[];
+function texBoldTerms(src){ const out=[],seen={};
+  String(src||"").replace(/\\textbf\s*\{([^{}]{2,60})\}/g,function(_,t){
+    t=String(t)
+      .replace(/\\([&%$#_])/g,"$1")            /* \& -> &, \% -> %, … before macros are stripped */
+      .replace(/\\[a-zA-Z]+\s*/g," ")          /* any remaining control sequence */
+      .replace(/#\d+/g,"")                     /* macro parameters (#1/#2) are not terms */
+      .replace(/[{}]/g,"").replace(/\s+/g," ").replace(/[:;,.\s]+$/,"").trim();
+    /* a term needs letters, some length, and must not be a field label ("Languages & Querying:") */
+    if(!/[A-Za-z]/.test(t)||t.length<2||t.length>48)return _;
+    const k=t.toLowerCase(); if(!seen[k]){ seen[k]=1; out.push(t); } return _; });
+  return out.slice(0,60); }
+/* Apply the editor buffer to the actual document. Round-trips through the same texToText + parseResume
+   the uploader uses, so what you get is exactly what the app would have parsed from that file. */
+function texApplyDoc(){
+  if(!CUR||!isTex(M.raw)){ flash("texMsg","Run the analysis on a LaTeX master first.",5000); return; }
+  const ta=document.getElementById("texEd"), src=(ta&&ta.value)||"";
+  if(!src.trim()){ flash("texMsg","The editor is empty — nothing to apply.",5000); return; }
+  let p=null;
+  try{ p=parseResume(texToText(src)); }catch(e){ p=null; }
+  /* fail safe: never silently drop the user's work */
+  if(!p||!p.name||(!(p.experience||[]).length&&!(p.projects||[]).length&&!p.summary)){
+    flash("texMsg","Couldn't read that LaTeX — your editor text is untouched. Check for an unclosed brace or a missing \\end{itemize}, then try again.",12000); return; }
+  if(!confirm("Apply the editor's LaTeX to your r\u00e9sum\u00e9?\n\nThe preview and the PDF will be rebuilt from this text. Your tailoring so far is replaced, and an AI Undo from before this point no longer applies."))return;
+  CUR.cvBase=JSON.parse(JSON.stringify(p));
+  CUR.cvBase.title=(CUR.cv&&CUR.cv.title)||CUR.cvBase.title||"";
+  TEXBOLD=texBoldTerms(src);
+  _texBase=src; texSave();
+  try{ if(typeof AI_UNDO!=="undefined")AI_UNDO=null; }catch(e){}   /* the old positional undo no longer maps */
+  try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
+  flash("texMsg","✓ Applied — the r\u00e9sum\u00e9 and the PDF now come from your LaTeX"+(TEXBOLD.length?(", and "+TEXBOLD.length+" \\textbf term"+(TEXBOLD.length===1?"":"s")+" are bold in the PDF"):"")+".",9000); }
 function texRegen(){ if(!CUR||!isTex(M.raw))return;
   if(!confirm("Rebuild the .tex from the current tailoring? Manual edits in the editor will be discarded."))return;
   const fresh=buildTailoredTex()||"",ta=document.getElementById("texEd"); if(ta)ta.value=fresh; _texBase=fresh; texSave(); texCount();
@@ -2147,7 +2181,8 @@ function goldRuns(s,terms){ const r=boldRuns(s,terms); const arr=(typeof r==="st
   return (out.length===1&&typeof out[0]==="string")?out[0]:out; }
 function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[];
   /* bold set = JD-matched keywords + the candidate's OWN skills (paren details stripped) — the gold look */
-  const bset=new Set(jdTerms()); (cv.skills||[]).forEach(g=>(g.items||[]).forEach(it=>{ const t=String(it||"").replace(/\s*\(.*\)\s*$/,"").trim(); if(t.length>2&&t.length<=30)bset.add(t); }));
+  /* JD-matched terms + the candidate's own skills + anything they marked \textbf{} in the LaTeX Studio */
+  const bset=new Set(jdTerms()); (TEXBOLD||[]).forEach(t=>bset.add(t)); (cv.skills||[]).forEach(g=>(g.items||[]).forEach(it=>{ const t=String(it||"").replace(/\s*\(.*\)\s*$/,"").trim(); if(t.length>2&&t.length<=30)bset.add(t); }));
   const bterms=Array.from(bset).slice(0,90);
   const sec=t=>{ c.push({text:t.toUpperCase(),bold:true,fontSize:F+2,color:PDF_HEAD,characterSpacing:0.6,margin:[0,F*0.85,0,1]});
     c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:1.1,lineColor:"#2f5d8a"}],margin:[0,0,0,4]}); };
