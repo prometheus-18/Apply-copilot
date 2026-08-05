@@ -2653,6 +2653,28 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var T=(targets||[]).slice(0,8),hits=0; T.forEach(function(k){ if(k&&nw.toLowerCase().indexOf(String(k).toLowerCase())>=0)hits++; });
     return {faith:faith, rel:(T.length?Math.round(hits/T.length*100):null), inv:inv.slice(0,4)}; }
   /* ---- shared context builders ---- */
+  /* An AI summary passing the honesty guards can still be a DOWNGRADE. A real run replaced a four-clause
+     summary naming Snowflake, Marketing Mix Modelling (MMx) and "A/B Test & Control" with one generic
+     line, and the status text just said "+ a truthful summary". These two gates sit BELOW the honesty
+     guards: keep most of the length, and keep most of the distinctive nouns the current summary earned.
+     Failing either is not an error — the deterministic summary stays and the UI says why. */
+  var SUM_FN=/^(?:with|that|this|from|into|across|their|your|have|has|been|will|also|more|most|than|then|about|which|while|using|other|through|between|including|such|both|each|over|under|when|where|role|years|year|experience|experienced|hands|recently|currently|professional|targeting|delivering|building|strong|proven|record|business|outcomes|solutions|working|across)$/;
+  function sumTerms(s){ var out={},w=String(s||"").toLowerCase().match(/[a-z][a-z0-9+#.&\/-]{3,}/g)||[];
+    w.forEach(function(x){ x=x.replace(/[.,)\]]+$/,""); if(x.length>3&&!SUM_FN.test(x))out[x]=1; }); return out; }
+  function sumKept(oldS,newS){ var a=Object.keys(sumTerms(oldS)); if(!a.length)return 1;
+    var b=sumTerms(newS),n=0; a.forEach(function(t){ if(b[t])n++; }); return n/a.length; }
+  /* returns "" when the candidate is an acceptable improvement, else a human reason */
+  function sumDowngrade(oldS,newS){
+    oldS=String(oldS||""); newS=String(newS||"");
+    if(!oldS)return "";
+    var floor=Math.max(140,Math.round(oldS.length*0.65));
+    if(newS.length<floor)return "it was "+Math.round(100-(newS.length/oldS.length)*100)+"% shorter than your current summary";
+    var keep=sumKept(oldS,newS);
+    if(keep<0.5){ var nt=sumTerms(newS);
+      /* name the most distinctive casualties, not the first alphabetically */
+      var lost=Object.keys(sumTerms(oldS)).filter(function(t){ return !nt[t]; }).sort(function(a,b){ return b.length-a.length; }).slice(0,4);
+      return "it dropped too much of your own vocabulary"+(lost.length?" (e.g. "+lost.join(", ")+")":""); }
+    return ""; }
   function sumContext(){ var cvb=(CUR&&CUR.cvBase)||{},bl=[];
     ((cvb.experience)||[]).forEach(function(e){(e.bullets||[]).forEach(function(t){bl.push(t);});});
     ((cvb.projects)||[]).forEach(function(p){(p.bullets||[]).forEach(function(t){bl.push(t);});});
@@ -2902,20 +2924,34 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(mode==="humanize"){ var s0=(Array.isArray(d.rewrites)?d.rewrites:[]).filter(function(x){return x&&x.id==="sum";})[0];
       if(s0)sumNew=deSlop(String(s0.text||"").trim()); rws=rws.filter(function(x){return x.id!=="sum";}); }
     var sumOK=!!(sumNew&&slopFree(sumNew,sc.src)&&validSummary(sc.src,sumNew,sc.years,sc.role,sc.realTitle));
-    if(!rws.length&&!sumOK){ aiMsg("aiCvMsg",cand.length?"The truthfulness guardrail rejected every suggestion (changed numbers or slop wording) — nothing was applied.":"AI didn't find anything to improve — your résumé already reads well for this JD."); return; }
+    var sumWhy="",sumOld=String((CUR.cvBase&&CUR.cvBase.summary)||"");
+    if(sumOK){ sumWhy=sumDowngrade(sumOld,sumNew); if(sumWhy)sumOK=false; }
+    if(!rws.length&&!sumOK){ aiMsg("aiCvMsg",sumWhy?("Nothing was applied. The AI summary was rejected because "+esc(sumWhy)+", and no bullet rewrite passed the guardrail — your résumé is unchanged."):cand.length?"The truthfulness guardrail rejected every suggestion (changed numbers or slop wording) — nothing was applied.":"AI didn't find anything to improve — your résumé already reads well for this JD."); return; }
     AI_UNDO=JSON.stringify(CUR.cvBase); AI_UNDO_RUN=CUR;
+    var changes=[];   /* {label,before,after} — captured BEFORE the write so the diff is real */
     rws.forEach(function(x){ var m=x.id.match(/^([ep])(\d+):(\d+)$/); if(!m)return;
       var list=(m[1]==="e"?CUR.cvBase.experience:CUR.cvBase.projects); var it=list&&list[+m[2]];
-      if(it&&it.bullets&&it.bullets[+m[3]]!=null)it.bullets[+m[3]]=x.text; });
-    if(sumOK)CUR.cvBase.summary=sumNew;
+      if(it&&it.bullets&&it.bullets[+m[3]]!=null){
+        var lbl=(m[1]==="e"?((it.org||it.role||("Role "+(+m[2]+1)))):(it.name||("Project "+(+m[2]+1))))+" · bullet "+(+m[3]+1);
+        changes.push({label:lbl,before:String(it.bullets[+m[3]]),after:x.text});
+        it.bullets[+m[3]]=x.text; } });
+    if(sumOK){ changes.unshift({label:"Professional summary",before:sumOld,after:sumNew}); CUR.cvBase.summary=sumNew; }
     try{ CUR.cv=buildDisplayCv(); renderResume(); syncDerived(); }catch(e){}
     AI_AFTER=JSON.stringify(CUR.cvBase); AI_UNDO_FORCE=0;
     /* owner call: no coaching-tip lines above the résumé — the document itself is the result; tips live in ①.
        The one-line JD "read" stays: it shows WHAT the tailor aligned to (inferred domain + specialization). */
     var jdRead=(mode==="tailor"&&typeof d.read==="string"&&d.read.trim())?'<div class="aitip">Read the JD as: '+esc(d.read.trim().slice(0,140))+'</div>':"";
-    aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a truthful summary":"")+
+    /* every applied change, shown. Collapsed by default so a 60-rewrite tailor pass stays readable. */
+    var diff=changes.length?('<details style="margin:8px 0 0"><summary style="cursor:pointer;font:500 12px var(--sans);color:var(--muted)">'+
+      'See exactly what changed ('+changes.length+')</summary>'+changes.map(function(c){
+        return '<div class="aicard"><div class="hint" style="margin:0 0 5px"><b>'+esc(c.label)+'</b></div>'+
+               '<div class="old">'+esc(c.before)+'</div><div class="new">'+esc(c.after)+'</div></div>'; }).join("")+
+      '</details>'):"";
+    /* a rejected summary must never look like a silent downgrade */
+    var sumNote=sumWhy?('<div class="aitip">Kept your existing summary — the AI version was not an improvement: '+esc(sumWhy)+'.</div>'):"";
+    aiMsg("aiCvMsg",'✦ '+(mode==="tailor"?"Tailored to this JD — applied ":"Applied ")+rws.length+' bullet rewrite'+(rws.length===1?"":"s")+(sumOK?" + a stronger summary":"")+
       (cand.length>rws.length?' · guardrail rejected '+(cand.length-rws.length):'')+esc(byokNote(bk,viaOai,d))+
-      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+(mode==="tailor"?' <button class="sm ghost" data-act="aiAudit" title="Three-lens review of the result before you send it">🔬 Audit this</button>':'')+jdRead); }
+      ' <button class="sm ghost" data-act="aiUndoAll">Undo</button>'+(mode==="tailor"?' <button class="sm ghost" data-act="aiAudit" title="Three-lens review of the result before you send it">🔬 Audit this</button>':'')+jdRead+sumNote+diff); }
   window.aiImproveAll=function(){ aiBulk("review"); };
   window.aiHumanizeResume=function(){ aiBulk("humanize"); };
   window.aiTailorJD=function(){ aiBulk("tailor"); };
