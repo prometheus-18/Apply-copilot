@@ -12,16 +12,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Apply Co-Pilot — your résumé, tailored to any job</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id%3D'g'%20x1%3D'0'%20y1%3D'0'%20x2%3D'0'%20y2%3D'1'%3E%3Cstop%20offset%3D'0'%20stop-color%3D'%23ff6e3c'%2F%3E%3Cstop%20offset%3D'1'%20stop-color%3D'%23ff4c24'%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D'64'%20height%3D'64'%20rx%3D'15'%20fill%3D'%23161616'%2F%3E%3Crect%20x%3D'3.5'%20y%3D'3.5'%20width%3D'57'%20height%3D'57'%20rx%3D'12.5'%20fill%3D'url(%23g)'%2F%3E%3Cpath%20d%3D'M32%2014%20L15%2050%20M32%2014%20L49%2050%20M22.5%2039%20L41.5%2039'%20fill%3D'none'%20stroke%3D'%23fff'%20stroke-width%3D'7'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%2F%3E%3C%2Fsvg%3E">
-<meta name="theme-color" content="#cc785c">
+<meta name="theme-color" content="#0b0b0f">
 <meta name="description" content="Turn one truthful résumé into a tailored, ATS-clean application package — honest fit score, custom résumé and cover letter as real vector PDFs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous" onerror="window.__noPdfJs=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.12/build/pdfmake.min.js" integrity="sha384-UbICcZf4B6+FB/cmTNLOqZzUc40rHayX14EhEDfAnFhmte7yAAA7s081OeuC8VVT" crossorigin="anonymous" onerror="window.__noPdfMake=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.12/build/vfs_fonts.js" integrity="sha384-zmD5tDN2awbMigS/yVcxHObSsdXXKh/27Y/bSII38WfNl+D7O/aVCIteAXsLY3p3" crossorigin="anonymous" onerror="window.__noPdfMake=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.23/dist/lenis.min.js" integrity="sha384-iiCtod6ZId6zT42Bar9EFXNKZh8X4VliWYWFOuY3/t1AxCvLejXExXcbluoc57CJ" crossorigin="anonymous" onerror="window.__noLenis=1"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.0/dist/umd/supabase.js" integrity="sha384-3lSoufGjgosjqp3JDr/NReX3PjMd3SlC8wJ23CWFjB6DSFNf71I0DhcRTUm9MwgO" crossorigin="anonymous" onerror="window.__noSupabase=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.1/dist/umd/supabase.js" integrity="sha384-0x8XPoHt08aHZj+RHs8ojmhZ5IDsTLjPgblgWdriayWriqv9dic3Vkv1K2+UqgZV" crossorigin="anonymous" onerror="window.__noSupabase=1"></script>
 <style>
   /* ============================================================================================
      Apply Co·Pilot — design system: "warm editorial" (VoltAgent/awesome-design-md → design-md/claude)
@@ -29,38 +29,43 @@
      Trinity only — cream, coral, dark navy. Never add a fourth surface tone.
      EXEMPT: the .doc résumé paper + pdfmake docs keep the owner's LaTeX gold palette (ATS paper).
      ============================================================================================ */
-  :root{ color-scheme: light;
+  :root{ color-scheme: dark;
     /* surfaces */
-    --canvas:#faf9f5;--soft:#f5f0e8;--cream:#efe9de;--cream-strong:#e8e0d2;
-    --dark:#181715;--dark-el:#252320;--dark-soft:#1f1e1b;--on-dark:#faf9f5;--on-dark-soft:#a09d96;
+    --canvas:#0b0b0f;--soft:#15151c;--cream:#1c1c25;--cream-strong:#25252f;
+    --dark:#07070a;--dark-el:#20202a;--dark-soft:#101016;--on-dark:#f2f2f7;--on-dark-soft:#a9a9b8;
     /* text */
-    --ink:#141413;--bodyc:#3d3d3a;--body-strong:#252523;--muted:#6c6a64;--muted-soft:#8e8b82;
+    --ink:#f4f4f7;--bodyc:#c3c3cf;--body-strong:#e2e2e9;--muted:#9b9baa;--muted-soft:#8f8fa1;
     /* hairlines */
-    --hair:#e6dfd8;--hair-soft:#ebe6df;
+    --hair:#2c2c37;--hair-soft:#232330;--scroll-th:#33333f;--scroll-th-hi:#45455a;
     /* brand + semantic */
-    --coral:#cc785c;--coral-act:#a9583e;--coral-dis:#e6dfd8;--teal:#5db8a6;--amber:#e8a55a;
-    --succ:#5db872;--warn:#d4a017;--err:#c64545;
+    --coral:#cc785c;--coral-act:#e8a184;--on-acc:#150f0c;--coral-dis:#2a2a34;--teal:#5ecfba;--amber:#f0b46b;
+    --succ:#5fd08d;--warn:#f0b46b;--err:#f4736b;--have:#6fdca4;--have-soft:rgba(111,220,164,.13);--have-ln:rgba(111,220,164,.48);
     /* shape + rhythm */
     --r:12px;--r-sm:8px;--r-xl:16px;--pill:9999px;--sec:96px;
     --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
-    --disp:'Cormorant Garamond','EB Garamond','Tiempos Headline',Georgia,'Times New Roman',serif;
+    --disp:'Sora','Segoe UI Variable Display','Avenir Next','Century Gothic',system-ui,sans-serif;
     --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
     /* legacy token names — every existing rule (and the popup "dark-token recipe") keeps working, repointed */
-    --obsidian:#141413;--graphite:#3d3d3a;--slate:#6c6a64;--ash:#8e8b82;--mist:#3d3d3a;--fog:#faf9f5;--paper:#f5f0e8;--bone:#ffffff;--ember:#cc785c;--tangerine:#a9583e;
-    --srf:var(--canvas);--card:var(--soft);--card2:var(--cream);--well:#fffdf9;
+    --obsidian:#0b0b0f;--graphite:#c3c3cf;--slate:#9b9baa;--ash:#8f8fa1;--mist:#c3c3cf;--fog:#f4f4f7;--paper:#15151c;--bone:#f2f1ef;--ember:#cc785c;--tangerine:#e8a184;
+    --srf:var(--canvas);--card:var(--soft);--card2:var(--cream);--well:#08080c;
     --tx:var(--bodyc);--hd:var(--ink);--mut:var(--muted);--fnt:var(--muted-soft);
-    --ln:var(--hair);--pln:#ded4c5;--btn-ln:#d5cabb;--ghost:var(--cream-strong);
-    --acc:#cc785c;--acc-ink:#a9583e;--acc-soft:rgba(204,120,92,.10);
-    --positive:#3f8a55;--positive-soft:rgba(93,184,114,.13);--warning:#9a6f10;--warning-soft:rgba(212,160,23,.13);
-    --chrome:linear-gradient(180deg,#141413 0%,#2b2a27 62%,#5c5952 100%);}
+    --ln:var(--hair);--pln:#2f2f3a;--btn-ln:#636378;--ghost:var(--cream-strong);
+    --acc:#cc785c;--acc-ink:#e8a184;--acc-soft:rgba(204,120,92,.16);
+    --positive:#57d18f;--positive-soft:rgba(87,209,143,.14);--warning:#f0b46b;--warning-soft:rgba(240,180,107,.13);
+    --chrome:linear-gradient(180deg,#07070a 0%,#1c1c25 62%,#4a4a5a 100%);
+    /* atmosphere tokens — DECORATION ONLY, consumed by #space and .hero::before/::after and nothing else.
+       Alphas are contrast-budgeted: even where ALL layers overlap at full strength the composited
+       background stays #22243d, where --muted-soft still clears 4.76:1. Never raise them blind. */
+    --beam:rgba(124,140,248,.10);--beam-ray:rgba(124,140,248,.06);--beam-soft:rgba(124,140,248,.05);--beam-0:rgba(124,140,248,0);--beam-floor:rgba(204,120,92,.10);--beam-hi:rgba(138,154,255,.34);--beam-hi-ray:rgba(168,180,255,.22);--beam-hi-soft:rgba(124,140,248,.13);}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   html,body{margin:0;min-height:100%}
   body{color:var(--bodyc);font:400 15px/1.55 var(--sans);letter-spacing:0;background:var(--canvas);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
   /* canvas wash — color-block first, shadow rare. Replaces the old starfield layers. */
   #space{position:fixed;inset:0;z-index:0;pointer-events:none;background:
-    radial-gradient(130% 66% at 50% -16%,#fffefb 0%,rgba(255,254,251,0) 60%),
-    radial-gradient(60% 42% at 92% 2%,rgba(204,120,92,.055) 0%,rgba(204,120,92,0) 72%)}
+    radial-gradient(112% 56% at 50% -14%,var(--beam-soft) 0%,var(--beam-0) 62%),
+    radial-gradient(62% 44% at 90% 3%,var(--beam-floor) 0%,rgba(204,120,92,0) 72%),
+    radial-gradient(94% 38% at 50% 106%,var(--beam-soft) 0%,var(--beam-0) 70%)}
   a{color:var(--coral);text-decoration:none}a:hover{color:var(--coral-act)}
   #progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;background:var(--coral)}
   /* the Anthropic-style radial spike mark — inline <svg>, never a data: URI (extension CSP stays clean) */
@@ -68,7 +73,7 @@
   .spike path{fill:currentColor}
   /* top nav — cream band, 64px, hairline floor */
   .nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    min-height:64px;padding:11px clamp(18px,4vw,48px);background:rgba(250,249,245,.9);-webkit-backdrop-filter:blur(14px) saturate(1.08);backdrop-filter:blur(14px) saturate(1.08);border-bottom:1px solid var(--hair)}
+    min-height:64px;padding:11px clamp(18px,4vw,48px);background:rgba(11,11,15,.82);-webkit-backdrop-filter:blur(14px) saturate(1.08);backdrop-filter:blur(14px) saturate(1.08);border-bottom:1px solid var(--hair)}
   .nbrand{font:500 15.5px var(--sans);letter-spacing:-.012em;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:9px}
   .devtag{font:500 9.5px var(--mono);letter-spacing:.1em;color:#fff;background:var(--coral);border-radius:var(--pill);padding:3px 8px}
   .nlinks{display:flex;gap:2px;flex-wrap:wrap}
@@ -86,7 +91,7 @@
   .heroGrid{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:clamp(30px,5vw,72px);align-items:center;width:100%;max-width:1200px;margin:0 auto}
   .heroCopy,.heroSide{min-width:0}
   .kicker{display:inline-flex;align-items:center;gap:8px;font:500 11.5px var(--sans);letter-spacing:.13em;text-transform:uppercase;color:var(--coral-act);background:rgba(204,120,92,.09);border:1px solid rgba(204,120,92,.26);border-radius:var(--pill);padding:6px 13px;margin-bottom:22px}
-  .hero h1{font:400 clamp(42px,6vw,70px)/1.04 var(--disp);letter-spacing:-.022em;color:var(--ink);margin:0}
+  .hero h1{font:400 clamp(38px,5.1vw,59px)/1.06 var(--disp);letter-spacing:-.022em;color:var(--ink);margin:0}
   .hero h1 em{font-style:italic;color:var(--coral)}
   .heroLead{max-width:560px;margin:20px 0 0;font:400 clamp(16px,1.4vw,18px)/1.6 var(--sans);color:var(--bodyc)}
   .heroPoints{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:11px;max-width:560px}
@@ -111,7 +116,7 @@
   .authsub{font:400 13.5px/1.5 var(--sans);color:var(--muted);margin:0 0 20px}
   .authseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--cream);border:1px solid var(--hair);border-radius:var(--r-sm);margin-bottom:18px}
   .authseg button{border:1px solid transparent;background:transparent;color:var(--muted);font:500 13px var(--sans);letter-spacing:0;padding:9px 8px;border-radius:6px}
-  .authseg button:hover{color:var(--ink);border-color:transparent;background:rgba(255,255,255,.5)}
+  .authseg button:hover{color:var(--ink);border-color:transparent;background:var(--cream-strong)}
   .authseg button.on{background:var(--canvas);color:var(--ink);border-color:var(--hair)}
   .pwwrap{position:relative}
   .pwwrap input{padding-right:70px}
@@ -129,6 +134,28 @@
   .authtrust{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:18px;padding-top:15px;border-top:1px solid var(--hair-soft);font:400 12px var(--sans);color:var(--muted-soft)}
   .authtrust span{display:inline-flex;align-items:center;gap:6px}
   .authtrust span::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--teal)}
+  /* "Continue with Google" - ONE control serves BOTH Create-account and Sign-in, because
+     signInWithOAuth creates-or-signs-in. renderForm() owns the wrapper visibility, so it can never
+     appear on the recovery card and restart a redirect mid-recovery. The 4-colour G is Google's
+     brand mark and must not be recoloured; it is an inline <svg> because the extension gate forbids
+     remote assets. It joins the .doc paper and the pdfmake docs as a palette exemption. */
+  /* --muted, not --muted-soft: measured 5.13 vs 3.23 on --canvas. The existing .authtrust/.pwnote
+     --muted-soft pattern is a pre-existing AA failure and must not be copied into new text. */
+  .authsep{display:flex;align-items:center;gap:12px;margin:16px 0 14px;font:500 10.5px var(--sans);letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+  .authsep::before,.authsep::after{content:"";flex:1 1 auto;height:1px;background:var(--hair)}
+  .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font-size:13.5px;padding:12px 14px}
+  .gbtn:hover{background:var(--cream)}
+  .gbtn svg{flex:0 0 17px;width:17px;height:17px;pointer-events:none}
+  .gnote{font:400 11.5px/1.45 var(--sans);color:var(--muted);margin-top:9px}
+  .authnote{display:none;font:400 12.5px/1.5 var(--sans);color:var(--bodyc);background:var(--cream);border:1px solid var(--hair);border-radius:var(--r-sm);padding:11px 12px;margin-top:16px}
+  /* MV3 side panel: signInWithOAuth is a TOP-LEVEL navigation, which would navigate the panel off
+     panel.html and destroy the running app; and the panel is a separate storage partition, so a
+     session minted in a web tab simply is not there. Google sign-in cannot work here - hide it and
+     say why. CSS-only (panel-boot.js sets html.ext before first paint): no new JS branch, no new
+     extension assertion, and !important so renderForm can never un-hide it. */
+  html.ext #authGoogleWrap{display:none!important}
+  html.ext .authnote{display:block}
+  body.recovery .authnote{display:none}
   .authcard a{cursor:pointer;color:var(--coral)}
   body.guest .heroCTA,body.guest .journey,body.guest .scrollcue{display:none}
   body.authed .heroAuth{display:none}
@@ -157,8 +184,8 @@
   button{font:500 13px/1 var(--sans);letter-spacing:0;border:1px solid var(--btn-ln);background:var(--canvas);color:var(--ink);border-radius:var(--r-sm);padding:12px 18px;cursor:pointer;transition:background .15s,border-color .15s,color .15s,opacity .15s}
   button:hover{border-color:var(--muted-soft);color:var(--ink)}button:active{transform:translateY(1px)}
   button:disabled{opacity:.55;cursor:not-allowed}
-  button.primary{background:var(--coral);color:#fff;border-color:var(--coral)}
-  button.primary:hover{background:var(--coral-act);border-color:var(--coral-act);color:#fff}
+  button.primary{background:var(--coral);color:var(--on-acc);border-color:var(--coral)}
+  button.primary:hover{background:var(--coral-act);border-color:var(--coral-act);color:var(--on-acc)}
   button.primary:disabled{background:var(--coral-dis);border-color:var(--coral-dis);color:var(--muted);opacity:1}
   button.ghost{background:transparent;color:var(--muted);border-color:var(--hair)}
   button.ghost:hover{color:var(--ink);border-color:var(--btn-ln);background:var(--canvas)}
@@ -168,14 +195,14 @@
   /* chips / status */
   .chip{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--sans);letter-spacing:0;padding:5px 12px;border-radius:var(--pill);border:1px solid var(--hair);color:var(--muted);background:var(--cream)}
   .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 1.6s ease-in-out infinite}
-  .chip.ok{color:#2f7a46;border-color:rgba(93,184,114,.42);background:var(--positive-soft)}
+  .chip.ok{color:var(--succ);border-color:rgba(93,184,114,.42);background:var(--positive-soft)}
   .chip.warn{color:var(--coral-act);border-color:rgba(204,120,92,.4);background:var(--acc-soft)}
-  .chip.alarm{color:#9d2f2f;border-color:rgba(198,69,69,.4);background:rgba(198,69,69,.08)}
+  .chip.alarm{color:var(--err);border-color:rgba(198,69,69,.4);background:rgba(198,69,69,.08)}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.6)}}
   @keyframes spin{to{transform:rotate(360deg)}}
   /* output components */
   .kchip{display:inline-block;border-radius:var(--pill);padding:4px 12px;font:500 13px var(--sans);margin:3px 4px 3px 0;border:1px solid transparent}
-  .kchip.have{background:var(--ink);color:var(--on-dark);border-color:var(--ink)}
+  .kchip.have{background:var(--have-soft);color:var(--have);border-color:var(--have-ln)}
   .kchip.miss{background:transparent;color:var(--coral-act);border-color:rgba(204,120,92,.55)}
   .kchip.pref{background:var(--cream);color:var(--muted);border-color:var(--hair)}
   .score-big{font-family:var(--disp);font-size:clamp(54px,6.6vw,74px);font-weight:400;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink)}
@@ -183,9 +210,9 @@
   .scorecard{flex:1;min-width:190px;border:1px solid var(--hair);border-radius:var(--r);padding:20px 22px;background:var(--canvas)}
   .scorecard.current{background:var(--cream)}
   /* the projected card is the "featured tier": the dark navy surface IS the signal */
-  .scorecard.projected{background:var(--dark);border-color:var(--dark)}
+  .scorecard.projected{background-color:var(--dark-el);background-image:linear-gradient(180deg,var(--acc-soft) 0%,rgba(204,120,92,0) 62%);border-color:var(--coral)}
   .scorecard.projected .label{color:var(--on-dark-soft)}
-  .scorecard.projected .score-big.alt{color:#7fd39c}
+  .scorecard.projected .score-big.alt{color:var(--positive)}
   .scorecard.projected .hint{color:var(--on-dark-soft)}
   .scorecard.projected .meter{background:rgba(250,249,245,.15)}
   .label{font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
@@ -209,15 +236,15 @@
   .aicard.applied{border-color:rgba(93,184,114,.45)}
   .aieval{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0;font:500 11px/1 var(--sans)}
   .aieval .ev{padding:4px 9px;border:1px solid var(--hair);border-radius:var(--pill);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .aieval .ev.good{color:#2f7a46;border-color:rgba(93,184,114,.45)}
+  .aieval .ev.good{color:var(--succ);border-color:rgba(93,184,114,.45)}
   .aieval .ev.warn{color:var(--coral-act);border-color:rgba(204,120,92,.45)}
   .aitip{margin:7px 0;font-size:13px;color:var(--bodyc)}
   .aitip::before{content:"✦ ";color:var(--coral)}
-  #akSign{margin-left:5px;font-size:9px;vertical-align:1px;color:#2f7a46}
+  #akSign{margin-left:5px;font-size:9px;vertical-align:1px;color:var(--succ)}
   #akSign.warn{color:var(--coral-act)}
-  .ko{border:1px solid rgba(212,160,23,.45);background:var(--warning-soft);color:#7d5a0c;border-radius:var(--r);padding:12px 14px;margin:11px 0;font-size:13px;line-height:1.55}
-  .ko.bad{background:rgba(198,69,69,.08);border-color:rgba(198,69,69,.4);color:#9d2f2f}
-  .ok5{color:#2f7a46}
+  .ko{border:1px solid rgba(212,160,23,.45);background:var(--warning-soft);color:var(--amber);border-radius:var(--r);padding:12px 14px;margin:11px 0;font-size:13px;line-height:1.55}
+  .ko.bad{background:rgba(198,69,69,.08);border-color:rgba(198,69,69,.4);color:var(--err)}
+  .ok5{color:var(--succ)}
   .drop{border:1.5px dashed var(--btn-ln);border-radius:var(--r);padding:28px;text-align:center;background:var(--canvas)}
   .drop .dlab{font:500 11px var(--sans);text-transform:uppercase;letter-spacing:.14em;color:var(--muted-soft)}
   .mgrid{display:grid;grid-template-columns:1fr 40px 1fr;gap:12px;align-items:stretch}
@@ -246,8 +273,8 @@
   .actionCluster button,.actionCluster select{margin:0}
   ::selection{background:rgba(204,120,92,.26);color:var(--ink)}
   ::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:var(--soft)}
-  ::-webkit-scrollbar-thumb{background:#d6ccbd;border:2px solid var(--soft);border-radius:6px}
-  ::-webkit-scrollbar-thumb:hover{background:#c2b6a3}
+  ::-webkit-scrollbar-thumb{background:var(--scroll-th);border:2px solid var(--soft);border-radius:6px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--scroll-th-hi)}
   /* footer — the dark navy band that closes every page. It never inverts. */
   footer{background:var(--dark);padding:56px clamp(18px,4vw,48px);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font:400 13px var(--sans);letter-spacing:0;color:var(--on-dark-soft)}
   footer .fbrand{display:flex;align-items:center;gap:9px;color:var(--on-dark);font-weight:500}
@@ -288,7 +315,8 @@
   .doc .clhead{font-weight:700}
   .doc li::marker{color:#2f5d8a}
   .cvsplit{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
-  @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texStudio{margin-top:0} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} .cvsplit.cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  .cvsplit.cmp #texStudio{order:1}   /* Studio is markup-FIRST; in compare mode it drops to the last cell so master|resume keep the top row */
+  @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} .cvsplit.cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
   .doc .ct{font-size:9pt;color:#444;margin-top:5px;text-align:center}
   .doc h4{font-size:10pt;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:#16233a;border-bottom:1.4px solid #2f5d8a;padding-bottom:2px;margin:14px 0 6px}
   .doc .role{display:flex;justify-content:space-between;gap:10px;font-size:10.4pt;margin-top:8px}
@@ -346,7 +374,65 @@
   .aitone{display:inline-block;padding:6px 11px;border:1px solid var(--hair,#e6dfd8);border-radius:999px;font:500 11px/1 'Inter',system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;margin:0 6px 8px 0;color:var(--muted,#6c6a64);background:var(--canvas,#faf9f5);user-select:none}
   .aitone.on{color:#fff;border-color:var(--coral,#cc785c);background:var(--coral,#cc785c)}
   #printArea{display:none}
-  @media print{ body{background:#fff} #space,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#2f5d8a;text-decoration:none} }
+  /* ============================================================================================
+     v8 "black glass" re-skin + hero light beam. Token-only rules (zero colour literals here — every
+     colour is a :root token) so the print block below inverts the whole page by repointing tokens.
+     Sits after every base rule and before @media print. Nothing here selects .doc (the ATS paper).
+     ============================================================================================ */
+  /* type retune for the grotesk display face (Sora has no italic; the hero <em> uses colour, not slant) */
+  .wm{letter-spacing:-.038em}
+  .hero h1{font-weight:500;letter-spacing:-.028em}
+  .hero h1 em{font-style:normal}
+  .authhead{font-weight:500}
+  .score-big{letter-spacing:-.018em}
+  /* hero light beam — pure gradients, compositor-only animation (opacity + transform, never filter) */
+  .hero{overflow:clip}
+  .hero::before{content:"";position:absolute;left:50%;top:-14%;width:min(700px,88vw);height:120%;transform:translateX(-50%);z-index:0;pointer-events:none;opacity:.86;
+    background:conic-gradient(from 175deg at 50% 0%,var(--beam-0) 0deg,var(--beam-hi-ray) 5deg,var(--beam-hi-soft) 9deg,var(--beam-0) 15deg),radial-gradient(44% 48% at 50% 0%,var(--beam-hi) 0%,var(--beam-hi-soft) 40%,var(--beam-0) 74%);
+    -webkit-mask-image:linear-gradient(180deg,black 0%,black 15%,rgba(0,0,0,.30) 30%,transparent 52%);mask-image:linear-gradient(180deg,black 0%,black 15%,rgba(0,0,0,.30) 30%,transparent 52%);
+    animation:beam 9s ease-in-out infinite}
+  .hero::after{content:"";position:absolute;left:50%;bottom:0;width:min(1120px,96vw);height:36%;transform:translateX(-50%);z-index:0;pointer-events:none;
+    background:radial-gradient(62% 100% at 50% 100%,var(--beam-floor) 0%,var(--beam-soft) 42%,var(--beam-0) 78%)}
+  @keyframes beam{0%,100%{opacity:.74;transform:translateX(-50%) scaleX(1)}50%{opacity:1;transform:translateX(-50%) scaleX(1.05)}}
+  .heroCopy,.heroSide{position:relative;z-index:1}
+  .heroProof span{background:var(--cream);border-color:var(--btn-ln)}
+  /* auth card — glass over the beam, so the shaft stays visible behind the sign-in gate */
+  .authcard{background:rgba(21,21,28,.74);-webkit-backdrop-filter:blur(16px) saturate(1.05);backdrop-filter:blur(16px) saturate(1.05)}
+  .authseg button.on{background:var(--cream-strong);border-color:var(--btn-ln)}
+  /* surfaces: panel = mid band; box / scorecard / actionCluster = recessed wells one step BELOW it */
+  .panel{background:var(--soft);border-color:var(--hair)}
+  .box,.empty,.drop,.actionCluster,.scorecard{background:var(--canvas)}
+  .banner,.chip,.pill,.aicard,.scorecard.current{background:var(--cream)}
+  /* controls — glow-edged pills: a raised body plus a light rim (--btn-ln clears 3:1 on every surface) */
+  button{background:var(--cream)}
+  button:hover{background:var(--cream-strong)}
+  button.ghost{background:transparent;border-color:var(--btn-ln)}
+  button.ghost:hover{background:var(--cream)}
+  input[type=text],input[type=file],input[type=password],input[type=email],textarea,select{border-color:var(--btn-ln)}
+  input[aria-invalid=true]{border-color:var(--err)}   /* re-declared: the line above matches its specificity and would otherwise win on order */
+  input[type=file]{background:var(--cream)}
+  /* wells vs terminal: .mono is the human-facing well (above canvas); #mPreview/#runLog is the void terminal */
+  .mono{background:var(--dark-soft)}
+  #mPreview,#runLog{border-color:var(--hair)}
+  /* the white .doc paper never changes — it gets a mid-tone mat so it meets a surface, not the void */
+  #cvSplit{background:var(--cream);border:1px solid var(--hair);border-radius:var(--r);padding:12px}
+  /* floating popups sit above the panel, so they take the card tone rather than the canvas */
+  #linkPop,#aiKeysPop,#aiPop,#aiFab,.aitone{background:var(--cream)}
+  #aiFab:hover,.aitone.on{color:var(--on-acc);background:var(--coral)}
+  #linkPop input,#aiKeysPop input,#aiKeysPop select,#aiPop input{background:var(--well);border-color:var(--btn-ln)}
+  #linkPop button,#aiKeysPop button,#aiPop button{background:var(--cream-strong);border-color:var(--btn-ln)}
+  #linkPop button.lpsave,#aiKeysPop button.lpsave,#aiPop button.go{background:var(--coral);border-color:var(--coral);color:var(--on-acc)}
+  /* the global ::selection rule inherits --ink (now near-white); inside the white ATS paper that is
+     invisible, so selections there use the paper's own ink + a tint of its accent */
+  .doc::selection,.doc ::selection{background:rgba(47,93,138,.24);color:#16181d}
+  @media print{
+    /* the page inverts by REPOINTING tokens — ~90% of chrome rules read them, so no per-rule print CSS */
+    :root{--canvas:#fff;--soft:#fff;--cream:#fff;--cream-strong:#efefef;--coral-dis:#efefef;--well:#fff;--dark:#fff;--dark-el:#fff;--dark-soft:#fff;
+      --on-dark:#141413;--on-dark-soft:#5f5d58;--ink:#141413;--body-strong:#252523;--bodyc:#3d3d3a;--muted:#5f5d58;--muted-soft:#6c6a64;
+      --hair:#d8d8d8;--hair-soft:#e4e4e4;--btn-ln:#c9c9c9;--scroll-th:#c9c9c9;--scroll-th-hi:#b0b0b0;
+      --succ:#1d6b3d;--positive:#1d6b3d;--err:#a02020;--amber:#7d5a0c;--teal:#1d6b5d;--coral-act:#a9583e;--on-acc:#141413;
+      --have:#1d6b3d;--have-soft:#fff;--have-ln:#9fcfb4}
+    body{background:#fff;color:var(--bodyc)} #space,#progress,.nav,footer,.seclabel,.wm,.hero{display:none} main.flow{z-index:auto} .step{padding:0;background:#fff} .panel{border:none;background:#fff;padding:0} #cvSplit{background:#fff;border:none;padding:0} .box,.empty,.drop,.actionCluster,.scorecard,.banner,.chip,.pill,.aicard,.mono,#mPreview,#runLog,button{background:#fff} #printArea{display:block} @page{margin:12mm 13mm;size:A4} .doc{border:none;border-radius:0;padding:0;font-size:10.2pt} .doc a{color:#2f5d8a;text-decoration:none} }
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} .reveal{opacity:1;transform:none} .chip .dot{animation:none} }
 </style>
 </head>
@@ -409,8 +495,15 @@
             <div class="pwnote" id="pwNote" aria-live="polite"></div>
             <div class="authmsg" id="authMsg" role="status" aria-live="polite"></div>
             <button class="primary" id="authGo" data-act="authSubmit" style="width:100%;margin-top:14px">Create account</button>
+            <div id="authGoogleWrap">
+              <div class="authsep"><span>or</span></div>
+              <button type="button" class="gbtn" id="authGoogle" data-act="authGoogle"><svg viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.35 0-4.34-1.58-5.05-3.71H.96v2.34A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71a5.41 5.41 0 0 1 0-3.42V4.96H.96a9 9 0 0 0 0 8.09l3-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.34C4.67 5.17 6.66 3.58 9 3.58z"/></svg>Continue with Google</button>
+              <div class="gnote">Google shares your name, email address and profile photo with the sign-in service - nothing else, and nothing is ever posted on your behalf.</div>
+            </div>
+            <div class="authnote" id="authExtNote">Google sign-in needs a full browser tab, so it is not available in the side panel. Sign in here with your email and password - it is the same account. Only ever used Google? Open the web app, sign in there, then use "Set a password" in the account bar at the top.</div>
             <div class="authrow">
               <button type="button" class="authlink" id="authForgot" data-act="authReset">Forgot your password?</button>
+              <button type="button" class="authlink" id="authRecDone" data-act="authRecDone">Not now, back to the app</button>
               <button type="button" class="authlink" id="authToggle" data-act="authToggle">Sign in instead →</button>
             </div>
             <div class="authtrust"><span>Your résumé stays in your own account</span><span>No trackers, no analytics</span></div>
@@ -494,7 +587,7 @@
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
       <div class="box" id="recBox" style="display:none"><h5>// Tips to raise your score</h5><ol id="kwRecs" style="margin:0;padding-left:18px"></ol></div>
       <div class="hint" id="recNote" style="display:none;color:var(--acc);margin:6px 0">✓ Accepted keywords will be woven into your résumé when you view it.</div>
-      <div class="row" style="margin-top:6px"><button class="sm primary" data-act="viewTailored">→ View tailored résumé</button><button class="sm ghost" data-act="tab" data-arg="cl">→ Cover letter</button></div>
+      <div class="row" style="margin-top:6px"><button class="sm primary" data-act="viewTailored" title="Jump to ② with accepted keywords woven in — if you have unsaved manual edits it asks first, then rebuilds">→ View tailored résumé</button><button class="sm ghost" data-act="tab" data-arg="cl">→ Cover letter</button></div>
     </div>
   </div></section>
 
@@ -504,22 +597,22 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="doc-toolbar"><div class="doc-context">Custom CV · <b id="cvFor">—</b></div>
-        <div class="doc-actions"><div class="actionCluster"><select id="cvFit" data-chg="cvFit" title="Page fit — 'Keep everything' never deletes content (the PDF flows to ~1.5 pages); '1 page' condenses like before and the note below names exactly what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="AI improves every bullet + the summary in one pass — facts locked">✦ Improve</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé: summary + bullets rewritten toward this JD, facts locked">✦ Tailor</button><button class="sm ghost" id="aiAuditBtn" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Show your parsed master beside the generated résumé — see exactly what changed">⇆ vs master</button></div><div class="actionCluster"><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc">✎ Edit</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Your original .tex with only the tailored summary and changed bullets spliced in — compile in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none">Copy LaTeX</button><button class="sm primary" data-act="downloadResume">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button></div></div></div>
+        <div class="doc-actions"><div class="actionCluster"><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" id="resetBtn" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" id="aiAllBtn" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" id="aiTailorBtn" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" id="aiAuditBtn" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="cvsplit" id="cvSplit">
-      <div style="min-width:0"><div class="doc" id="resumeDoc"></div>
-      <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div></div>
-      <details class="box" id="texStudio" style="display:none;margin-top:12px">
+      <details class="box" id="texStudio" style="display:none">
         <summary style="cursor:pointer;font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)">⌘ LaTeX Studio — edit &amp; compile your tailored .tex</summary>
-        <div class="hint" style="margin:9px 0 7px">Your original <b>.tex</b> with the tailored summary and changed bullets spliced in — open it to work <b>side by side</b> with the résumé preview on wide screens. Edit freely; select one \item body (or the summary paragraph) and hit <b>✦ AI edit selection</b> to rewrite just that span; then compile in Overleaf and download the PDF there. Saved on this device, for this job only.</div>
+        <div class="hint" style="margin:9px 0 7px">Starts as your original <b>.tex</b> with the tailored summary and changed bullets spliced in — after that <b>this editor is the source of truth</b>: ⬇ Tailored .tex, Copy LaTeX and ↗ Open in Overleaf all ship exactly what you see here. Open it to work <b>side by side</b> with the résumé preview on wide screens; select one \item body (or the summary paragraph) and hit <b>✦ AI edit selection</b> to rewrite just that span. Saved on this device, for this job only.</div>
         <textarea id="texEd" spellcheck="false" data-lenis-prevent placeholder="Run the analysis to build your tailored .tex…"></textarea>
         <div class="row" style="justify-content:space-between;margin-top:8px;gap:8px;flex-wrap:wrap">
           <span class="hint" id="texCount">—</span>
-          <div class="row"><button class="sm ghost" data-act="texAi" title="Select a \item body or the summary paragraph in the editor first">✦ AI edit selection</button><button class="sm ghost" data-act="texRegen" title="Discard manual edits and rebuild from the current tailoring">↺ Regenerate</button><button class="sm primary" data-act="texOverleaf" title="Opens overleaf.com with this file ready to compile">↗ Open in Overleaf</button></div>
+          <div class="row"><button class="sm ghost" data-act="texAi" title="Select a \item body or the summary paragraph in the editor first">✦ AI edit selection</button><button class="sm ghost" data-act="texRegen" title="Discards manual edits and rebuilds this editor from the current tailoring">↺ Rebuild .tex</button><button class="sm primary" data-act="texOverleaf" title="Opens overleaf.com with exactly what is in this editor, ready to compile">↗ Open in Overleaf</button></div>
         </div>
         <div class="hint" id="texMsg" style="margin-top:7px"></div>
       </details>
+      <div style="min-width:0"><div class="doc" id="resumeDoc"></div>
+      <div class="hint" style="margin-top:7px">The PDF has <b>real clickable links</b> (email · phone · LinkedIn · GitHub) and <b>selectable text</b> — exactly what ATS parsers read. No print dialog, no watermark. Click <b>Edit</b> to fix any text — and while editing, click or select any line to get the <b>✦ AI edit</b> popup (tone presets or your own prompt; it never invents facts).</div></div>
       </div>
     </div>
   </div></section>
@@ -530,7 +623,7 @@
     <div id="clEmpty" class="empty">Run analysis to generate a matching cover letter.</div>
     <div id="clBody" style="display:none">
       <div class="row" style="justify-content:space-between;margin-bottom:9px"><div class="hint">Cover letter</div>
-        <div class="row"><button class="sm ghost" id="aiHumClBtn" data-act="aiHumanizeCover" title="AI rewrites the letter into the proven 5-part structure (role+company → employer evidence → projects → why this company → close) using only your facts">✦ AI letter</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc">Copy</button></div></div>
+        <div class="row"><button class="sm ghost" id="aiHumClBtn" data-act="aiHumanizeCover" title="AI rewrites the letter into the proven 5-part structure (role+company → employer evidence → projects → why this company → close) using only your facts">✦ AI letter</button><button class="sm ghost" id="editBtnCl" data-act="edit" data-arg="coverDoc">✎ Edit</button><button class="sm primary" data-act="downloadCover">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="coverDoc" title="Copies the letter as plain text">Copy text</button></div></div>
       <div class="hint" id="aiClMsg" style="display:none;margin:0 0 8px"></div>
       <div class="doc" id="coverDoc"></div>
       <div class="hint" style="margin-top:7px">The letter follows your résumé live — accepted keywords, AI rewrites and summary edits flow into it. <b>✦ AI letter</b> rewrites it into the proven 5-part structure (your facts and numbers stay untouched); while editing, click any paragraph for the <b>✦ AI edit</b> popup.</div>
@@ -836,13 +929,14 @@ function texCount(){ const ta=document.getElementById("texEd"),c=document.getEle
 function texCurrent(){ const ta=document.getElementById("texEd"); const v=(ta&&typeof ta.value==="string")?ta.value:"";
   return (v&&v.trim())?v:buildTailoredTex(); }
 function texStudioSync(){ const st=document.getElementById("texStudio"),ta=document.getElementById("texEd"); if(!st||!ta)return;
-  const on=!!(CUR&&isTex(M.raw)); st.style.display=on?"":"none"; if(!on)return;
+  const on=!!(CUR&&isTex(M.raw)); st.style.display=on?"":"none"; if(!on){ st.open=false; return; }   /* clear [open] too — a lingering open attr keeps the :has() 2-col grid alive with one child */
   const fresh=buildTailoredTex()||"", d=texDraftGet();
   if(!d||d.sig!==(CUR.texSig||0)){ ta.value=fresh; _texBase=fresh; texSave(); }
   else if(d.tex===d.base){ ta.value=fresh; _texBase=fresh; texSave(); }
   else { ta.value=d.tex; _texBase=d.base||"";
     if(fresh!==_texBase)flash("texMsg","Résumé changed since you edited this .tex — ↺ Regenerate pulls the new tailoring in (discards manual edits).",8000); }
   if(!ta._wired){ ta._wired=1; ta.addEventListener("input",function(){ clearTimeout(ta._t); ta._t=setTimeout(texSave,400); texCount(); }); }
+  if(!st._wired){ st._wired=1; st.addEventListener("toggle",function(){ if(st.open&&document.getElementById("cvMasterPane")){ cvCompare(); flash("texMsg","⇆ Compare closed — the master pane and this editor share the same two columns.",5000); } }); }
   texCount(); }
 window.__texStudioSync=function(){ texStudioSync(); };
 function texRegen(){ if(!CUR||!isTex(M.raw))return;
@@ -1722,12 +1816,13 @@ function resumeDocHTML(cv){
 /* ⇆ side-by-side: the parsed MASTER beside the generated résumé — see exactly what tailoring changed */
 function cvCompare(){ if(!CUR)return; const sp=document.getElementById("cvSplit"), b=document.getElementById("cmpBtn"); if(!sp)return;
   const old=document.getElementById("cvMasterPane");
-  if(old){ old.remove(); sp.classList.remove("cmp"); if(b)b.classList.remove("primary"); return; }
+  if(old){ old.remove(); sp.classList.remove("cmp"); if(b){ b.classList.remove("primary"); b.textContent="⇆ vs master"; } return; }
   const m=document.createElement("div"); m.id="cvMasterPane"; m.style.minWidth="0";
   m.innerHTML='<div class="hint" style="margin:0 0 6px">YOUR MASTER — as parsed from the upload (read-only)</div><div class="doc" id="masterDoc"></div>';
   sp.insertBefore(m,sp.firstChild);
   const doc=m.querySelector("#masterDoc"); if(doc&&CUR.parsed)doc.innerHTML=resumeDocHTML(CUR.parsed);
-  sp.classList.add("cmp"); if(b)b.classList.add("primary"); }
+  sp.classList.add("cmp"); if(b){ b.classList.add("primary"); b.textContent="⇆ Hide master"; }
+  const st=document.getElementById("texStudio"); if(st&&st.open){ st.open=false; flash("texMsg","⌘ LaTeX Studio collapsed — ⇆ compare needs the same two columns. Your .tex draft is saved; reopen the Studio to get it straight back.",7000); } }
 function renderResume(){ document.getElementById("cvEmpty").style.display="none"; document.getElementById("cvBody").style.display="block";
   const d=document.getElementById("resumeDoc"); d.innerHTML=resumeDocHTML(CUR.cv); d.contentEditable="false"; d.classList.remove("edit"); d.dataset.dirty=""; const b=document.getElementById("editBtn"); if(b)b.textContent="✎ Edit";
   const tex=isTex(M.raw); ["texDlBtn","texCpBtn"].forEach(id=>{ const t=document.getElementById(id); if(t)t.style.display=tex?"":"none"; });
@@ -1736,7 +1831,8 @@ function renderResume(){ document.getElementById("cvEmpty").style.display="none"
   /* v6 loss ribbon — names exactly what the PDF will trim under the current fit; hidden when nothing is lost */
   const lossEl=document.getElementById("cvLoss");
   if(lossEl){ const L=contentLoss();
-    if(L){ lossEl.style.display="block"; lossEl.innerHTML="⚠ "+L.shown+" of "+L.from+" master bullets will reach the PDF under this fit — "+L.lost+" trimmed. Switch Fit to “keep everything” for zero loss, or check <a data-act=\"tab\" data-arg=\"mr\" style=\"cursor:pointer;text-decoration:underline\">what an ATS sees ↑</a>."; }
+    if(L){ lossEl.style.display="block"; const kp=fitGet()==="keep";
+      lossEl.innerHTML="⚠ "+L.shown+" of "+L.from+" parsed bullets reach the PDF under this fit — at least "+L.lost+" trimmed. "+(kp?"This is already the widest fit, so the rest were cut by the per-role / per-project caps — they are still in your master.":"Switch Fit to “keep everything” to stop page-fit trimming.")+" Check <a data-act=\"tab\" data-arg=\"mr\" style=\"cursor:pointer;text-decoration:underline\">what an ATS sees ↑</a>."; }
     else lossEl.style.display="none"; }
   if(window.__texStudioSync)window.__texStudioSync(); }
 function renderCover(){ document.getElementById("clEmpty").style.display="none"; document.getElementById("clBody").style.display="block";
@@ -1943,7 +2039,9 @@ function findJobs(which){ const r=(val("fjRole")||(CUR&&CUR.cv&&CUR.cv.title)||"
 const TK="apply_copilot_log_v3"; let LOG=[];
 const STAGES_T=["Applied","Connected","Referral asked","Assessment","Interviewing","Offer","Rejected"];
 const NEXT=["Send connection req","Send referral email","Follow up (3d)","Prep assessment","Prep interview","Waiting","Done"];
-const STCOL={"Applied":"#6c6a64","Connected":"#5a7f8c","Referral asked":"#7a8b6c","Assessment":"#c48a3a","Interviewing":"#cc785c","Offer":"#3f8a55","Rejected":"#8e8b82"};
+/* tracker stage pills — the one presentational line in the logic block. Cool-leaning fills to match the
+   dark chrome; every one holds >=4.5:1 against the .stmt white text. */
+const STCOL={"Applied":"#4a4a5c","Connected":"#2f6b8f","Referral asked":"#2b6f63","Assessment":"#8a6320","Interviewing":"#a9583e","Offer":"#2f7a46","Rejected":"#55555f"};
 function loadLog(){ try{LOG=JSON.parse(localStorage.getItem(TK)||"[]");}catch(e){LOG=[];} }
 function saveLog(){ try{localStorage.setItem(TK,JSON.stringify(LOG));}catch(e){} }
 function logApp(){ if(!CUR)return; LOG.unshift({date:new Date().toISOString().slice(0,10),company:CUR.company,role:(CUR.cv.title||CUR.role),stage:"Applied",next:"Send connection req",notes:"",url:CUR.url||""}); saveLog(); renderTracker(); tab("trk"); }
@@ -2157,6 +2255,30 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
 
   var SB=null;
   try{ if(!window.__noSupabase && window.supabase && window.supabase.createClient) SB=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); }catch(e){}
+  /* An OAuth (or reset-link) FAILURE comes back as a URL fragment. Read it once, right after the
+     client is constructed - the library already consumed the URL synchronously - map it to one of
+     OUR fixed strings, and scrub it from history. NEVER render error_description: the whole fragment
+     is attacker-authored (anyone can mail a victim a link carrying their own copy), so echoing it
+     would hand them a free line of text inside our own trusted auth card. otp_expired is tested
+     BEFORE access_denied because today the only reachable error fragment is an expired
+     password-reset link, which carries BOTH - keying on access_denied first would tell a
+     password-reset user "Google sign-in was cancelled". The message is written by the auth listener,
+     not here, so it can only appear when there is no session to reveal. The SUCCESS-path hash is
+     cleared inside the vendored library; do not chase it with replaceState (the library reads the
+     URL synchronously at construction, so a later replaceState lands on the wrong history entry).
+     sessionStorage, not localStorage, for the "we started an OAuth redirect" marker:
+     signInWithOAuth redirects THIS tab so the marker survives, it cannot make another tab look
+     freshly-signed-in, and it dies with the tab. It holds the literal "1" and is consumed on the
+     very next load, so escaping wipeLocal (localStorage only) is harmless. */
+  var OAGK="apply_oauth_go_v1", _oag=false, _fragMsg="", _frag="";
+  try{ _oag=(sessionStorage.getItem(OAGK)==="1"); if(_oag)sessionStorage.removeItem(OAGK); }catch(e){}
+  try{ _frag=String(location.hash||""); }catch(e){}
+  if(/[#&](error|error_code)=/.test(_frag)){
+    _fragMsg = /otp_expired/.test(_frag) ? "That link has expired or was already used — request a new one."
+      : /access_denied/.test(_frag) ? "Google sign-in was cancelled. You can try again, or use your email and password."
+      : "That sign-in didn’t work — use your email and password below.";
+    try{ history.replaceState(history.state,"",location.origin+location.pathname); }catch(e){}
+  }
 
   var AUTH_USER=null, MODE="up", PULLING=false, pushT=null, BOOTED=false, SESS=null;
   /* dirty flags survive the page (a side panel dies instantly on close — the 900ms debounce
@@ -2236,6 +2358,13 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var tg=$("authToggle"); if(tg){ tg.textContent=up?"Sign in instead \u2192":"\u2190 Create an account"; tg.style.display=rec?"none":""; }
     var fg=$("authForgot"); if(fg)fg.style.display=(rec||up)?"none":"";
     var seg=document.querySelector(".authseg"); if(seg)seg.style.display=rec?"none":"";
+    /* ONE Google control serves both "up" and "in" (signInWithOAuth creates-or-signs-in) and is
+       hidden in "new": authSetMode("new") is only ever reached from PASSWORD_RECOVERY, where the user
+       holds a session whose only job is updateUser({password}) - a Google click there would navigate
+       away and abandon it. The recovery card hides every other control, so it also needs one visible
+       way out, or a user who opens it and changes their mind is trapped on a one-button card. */
+    var gw=$("authGoogleWrap"); if(gw)gw.style.display=rec?"none":"";
+    var rd=$("authRecDone"); if(rd)rd.style.display=rec?"":"none";
     var su=$("authSegUp"), si=$("authSegIn");
     if(su)su.className=up?"on":""; if(si)si.className=(!up&&!rec)?"on":"";
     var p=$("authPass"); if(p){ p.setAttribute("autocomplete",(up||rec)?"new-password":"current-password");
@@ -2246,6 +2375,11 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(intro)intro.textContent = rec ? "Choose a new password for this account \u2014 you\u2019re already signed in on this device."
       : up ? "Free forever \u00b7 your r\u00e9sum\u00e9 and tracker sync across every device you sign in on."
            : "Your saved master r\u00e9sum\u00e9 and tracker load automatically.";
+    /* MODE "new" is now reached two ways: a reset link (PASSWORD_RECOVERY) and authAddPw, where the
+       user never had a password at all. Re-word for both rather than saying "new" to someone who has
+       none. Overrides the three assignments above instead of editing them. */
+    if(rec){ if(t)t.textContent="Set a password"; if(g)g.textContent="Save password";
+      if(intro)intro.textContent="Set a password for this account — you’re already signed in on this device. It replaces any previous password and never removes another way of signing in."; }
     pwMeter();
   }
 
@@ -2264,6 +2398,42 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(btn)btn.disabled=false;
   }
 
+  /* ---------- Google ----------
+     Deliberate omissions, all correct: no extra scopes (the default openid/email/profile is all
+     setAuthUI needs - it renders AUTH_USER.email); no access_type:"offline" / prompt:"consent" (we
+     never call a Google API, and offline access would park a long-lived provider_refresh_token in
+     localStorage); no skipBrowserRedirect (server-side only); no login_hint.
+     redirectTo is COMPUTED exactly the way authResetSend computes it - never read out of the URL -
+     so there is no open-redirect surface here; the server-side Supabase allow-list is the real
+     boundary. prompt:"select_account" is a shared-device SPEED BUMP, not a boundary: signing out of
+     this app can never sign anyone out of accounts.google.com.
+     Deliberately NOT gated on lockLeft(), and it deliberately does NOT clear FAILS/LOCKUNTIL: that
+     throttle exists to make password guessing expensive, a click here carries no password to guess,
+     and clearing it before any authentication would make the throttle one-click resettable. */
+  window.authGoogle=async function(){
+    if(!SB){ authMsg("Can’t reach the sign-in service. Check your connection and refresh.",0); return; }
+    var b=$("authGoogle"); if(b)b.disabled=true; authMsg("Opening Google…",1);
+    try{ sessionStorage.setItem(OAGK,"1"); }catch(e){}
+    var back=(location.protocol==="https:"||location.protocol==="http:")?(location.origin+location.pathname):null;
+    try{
+      var r=await SB.auth.signInWithOAuth({provider:"google",options:{redirectTo:back||undefined,queryParams:{prompt:"select_account"}}});
+      if(r&&r.error){ try{ sessionStorage.removeItem(OAGK); }catch(e){} authMsg("Couldn’t start Google sign-in. Try again, or use your email and password.",0); if(b)b.disabled=false; }
+    }catch(e){ try{ sessionStorage.removeItem(OAGK); }catch(e2){} authMsg("Network error — please try again.",0); if(b)b.disabled=false; }
+  };
+  /* A Google-only account has NO password credential, so it can never sign in where OAuth is
+     impossible - the side panel. Rather than promise an email round trip whose behaviour for a
+     password-less identity is unverified, give the LIVE session an in-app way to add one:
+     updateUser({password}) works on any active session, however it was minted. Offered only when the
+     identity list has google and no email identity, so nobody else sees the control. */
+  function needsPw(){
+    try{ var u=AUTH_USER||{}, all=(((u.app_metadata||{}).providers)||[]).concat((u.identities||[]).map(function(x){ return x&&x.provider; }));
+      return all.indexOf("google")>=0 && all.indexOf("email")<0;
+    }catch(e){ return false; }
+  }
+  window.authAddPw=function(){ document.body.classList.add("recovery"); authSetMode("new"); var p=$("authPass"); if(p){ p.value=""; try{ p.focus(); }catch(e){} } };
+  /* the recovery card hides the segmented control, both authlinks AND (correctly) the Google button,
+     so without this a user who opens it and changes their mind cannot get back to the app. */
+  window.authRecDone=function(){ document.body.classList.remove("recovery"); authSetMode(AUTH_USER?"in":"up"); };
   window.authResetSend=async function(){
     if(!SB){ authMsg("Can\u2019t reach the sign-in service. Check your connection and refresh.",0); return; }
     var em=$("authEmail"), email=((em||{}).value||"").trim().toLowerCase();
@@ -2337,7 +2507,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var box=$("nacct"); if(!box)return;
     if(AUTH_USER){
       var em=AUTH_USER.email||"account";
-      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="aiKeys" title="Optional: route the ✦ AI buttons through your own (free) provider key">⚙ AI<span id="akSign"></span></button><button class="sm ghost" data-act="authSignOut">Sign out</button>';
+      box.innerHTML='<span class="chip ok"><i class="dot"></i>Synced</span><span class="acctmail" title="'+esc(em)+'">'+esc(em)+'</span><button class="sm ghost" data-act="aiKeys" title="Optional: route the ✦ AI buttons through your own (free) provider key">⚙ AI<span id="akSign"></span></button>'+(needsPw()?'<button class="sm ghost" data-act="authAddPw" title="Add a password so this account also works where Google sign-in is impossible, such as the side panel">Set a password</button>':'')+'<button class="sm ghost" data-act="authSignOut">Sign out</button>';
       try{ byokSign(); }catch(e){}
     } else { box.innerHTML=""; }
   }
@@ -2991,6 +3161,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     authSubmit:function(){ window.authSubmit(); }, authToggle:function(){ window.authToggleMode(); },
     authMode:function(el){ authSetMode(el.dataset.arg); }, authPeek:function(){ window.authPeek(); }, authReset:function(){ window.authResetSend(); },
     authSignOut:function(){ window.authSignOut(); },
+    authGoogle:function(){ window.authGoogle(); }, authAddPw:function(){ window.authAddPw(); }, authRecDone:function(){ window.authRecDone(); },
     aiPopClose:function(){ window.__aiPopClose(); }, aiTone:function(el){ window.__aiTone(el); }, aiLen:function(el){ window.__aiLen(el); },
     aiPopGo:function(el){ window.aiPopGo(el.dataset.hum==="1"); }, aiPopApply:function(){ window.aiPopApply(); }, aiPopCopy:function(el){ window.aiPopCopy(el); },
     aiUndoAll:function(){ window.aiUndoAll(); }, aiUndoCover:function(){ window.aiUndoCover(); },
@@ -3016,10 +3187,18 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
       /* a reset-link session lands here: reveal the app but keep the set-a-new-password card up */
       if(event==="PASSWORD_RECOVERY"){ document.body.classList.add("recovery"); authSetMode("new"); }
       setAuthed(!!AUTH_USER);
+      /* a failed OAuth / reset return: speak only when there is no session to reveal, otherwise the
+         line would land in the already-hidden #heroAuth card */
+      if(_fragMsg&&!AUTH_USER){ authMsg(_fragMsg,0); _fragMsg=""; }
       /* Supabase re-fires SIGNED_IN on every tab refocus — pull + welcome-scroll only ONCE per page load,
          so returning to the tab leaves the user exactly where they were */
       if(AUTH_USER && (event==="SIGNED_IN"||event==="INITIAL_SESSION") && !BOOTED){
-        BOOTED=true; var fresh=(event==="SIGNED_IN");
+        /* On an OAuth return BOTH SIGNED_IN and INITIAL_SESSION fire, and which lands first is a
+           genuine task-vs-task race inside the vendored client (_pendingInitNotifications queues;
+           _emitInitialSession goes through _acquireLock), so keying "is this a fresh sign-in?" off
+           the event NAME alone made the first-run welcome scroll to (0) Master a coin flip for a
+           first-time Google user. Our own redirect marker settles it. */
+        BOOTED=true; var fresh=(event==="SIGNED_IN"||_oag);
         cloudPull().then(function(){ if(fresh) setTimeout(function(){ try{ tab("mr"); }catch(e){} },360); });
       }
     });
