@@ -321,7 +321,9 @@
   .cvsplit{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
   .cvsplit.cmp #texStudio{order:1}   /* Studio is markup-FIRST; in compare mode it drops to the last cell so master|resume keep the top row */
   @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} .cvsplit.cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
-  .doc .ct{font-size:9pt;color:#444;margin-top:5px;text-align:center}
+  /* the contact line closes the header band — a light rule in the paper's own accent separates it from
+     the first section, so the header reads as a section of its own (owner request; palette unchanged) */
+  .doc .ct{font-size:9pt;color:#444;margin-top:5px;text-align:center;padding-bottom:7px;border-bottom:0.75px solid rgba(47,93,138,.45)}
   .doc h4{font-size:10pt;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:#16233a;border-bottom:1.4px solid #2f5d8a;padding-bottom:2px;margin:14px 0 6px}
   .doc .role{display:flex;justify-content:space-between;gap:10px;font-size:10.4pt;margin-top:8px}
   .doc .role .r{color:#5a626b;font-size:9pt;white-space:nowrap}
@@ -1569,6 +1571,12 @@ function goldSkills(groups,jd,jt){ const J=String(jd||"").toLowerCase();
     const rel=items.reduce((s,it)=>s+jdHasStrict(it,jt),0)+0.15*jdHasStrict(g.group,jt); /* COUNT of JD-named skills, never the mean — the mean punished the master's deepest group (2 of 8 real Analytics hits lost to 2 of 5 soft skills). The group-NAME hit is a 0.15 tie-breaker only: at 0.5 a coincidental team name ("Decision Intelligence") leapfrogged a group the JD named 3 skills from. Ties keep the master's own order. */
     return {g:Object.assign({},g,{items}),rel,gi}; })
   .sort((a,b)=>b.rel-a.rel||a.gi-b.gi).map(x=>x.g); }
+/* The summary is budgeted in WORDS because that is the unit recruiters and the owner think in.
+   SUM_WMAX is a hard ceiling (must stay UNDER 200); SUM_WAIM is where enrichment stops trying.
+   Enrichment only ever adds the candidate's OWN sentences and OWN skill items — if there is not
+   enough real material the summary simply stays shorter. Padding would be inventing. */
+const SUM_WMAX=195, SUM_WAIM=150;
+function wcount(s){ return String(s||"").trim().split(/\s+/).filter(Boolean).length; }
 function fmtYears(y){ y=Math.round((+y||0)*10)/10; if(y<1)return ""; return (y%1===0?String(y):y.toFixed(1))+" year"+(y>1?"s":"")+" of "; }
 /* summary agent (deterministic base): identity = the candidate's REAL latest title — NEVER the JD role
    (that would claim a job they haven't held); years = the exact interval-merged figure (1.9 stays "1.9",
@@ -1630,9 +1638,17 @@ function tailoredSummary(p,role,company,have,haveYrs,jd,cv){
       const bk=(have||[]).filter(l=>synHas(String(l).toLowerCase(),hay)).slice(0,5);
       if(bk.length)mid=["Skilled in "+sumList(bk)+"."]; } }
   const tgt=rt&&rt.toLowerCase()!==id.toLowerCase()?"Now targeting the "+rt+" role.":"";
-  /* stay under validSummary's 460-char default so ✦ Improve bullets / ✦ Tailor can still rewrite it */
-  const keep=[]; let len=s1y.length+(tgt?tgt.length+1:0);
-  mid.forEach(t=>{ if(len+t.length+1<=430){keep.push(t);len+=t.length+1;} });
+  /* budget in WORDS toward SUM_WAIM, never past SUM_WMAX */
+  const keep=[]; let w=wcount(s1y)+(tgt?wcount(tgt):0);
+  mid.forEach(t=>{ const tw=wcount(t); if(w+tw<=SUM_WMAX){keep.push(t);w+=tw;} });
+  /* still thin? add the candidate's OWN skill items that the kept text has not already named.
+     Never a generic phrase, never a BANK label the master does not support. */
+  if(w<SUM_WAIM){
+    const said=" "+keep.concat([s1y]).join(" ").toLowerCase()+" ";
+    const fresh=ownSkillBits(cv,p,jt).filter(s=>said.indexOf(String(s).toLowerCase())<0);
+    for(let n=Math.min(8,fresh.length); n>=3; n--){
+      const cand="Core strengths include "+sumList(fresh.slice(0,n))+".";
+      if(w+wcount(cand)<=SUM_WMAX){ keep.push(cand); w+=wcount(cand); break; } } }
   /* exactly ONE tenure claim per résumé: if a kept master sentence already states the candidate's own
      figure (verified above to be <= the interval-merged one), s1 drops ours instead of printing two */
   const out=[keep.some(t=>YRHAS.test(t))?id+(org?" at "+org:"")+".":s1y].concat(keep,tgt?[tgt]:[]).join(" ");
@@ -1776,7 +1792,8 @@ function contactHTML(cv){ const p=[];
   if(cv.phone)p.push('<a href="tel:'+esc(cv.phone.replace(/[^+0-9]/g,""))+'">'+esc(cv.phone)+'</a>');
   if(cv.email)p.push('<a href="mailto:'+esc(cv.email)+'">'+esc(cv.email)+'</a>');
   const l=[]; if(cv.linkedin)l.push('<a href="'+esc(urlify(cv.linkedin))+'" target="_blank" rel="noopener">LinkedIn</a>'); if(cv.github)l.push('<a href="'+esc(urlify(cv.github))+'" target="_blank" rel="noopener">GitHub</a>'); if(cv.website)l.push('<a href="'+esc(urlify(cv.website))+'" target="_blank" rel="noopener">Portfolio</a>');
-  return p.join(" · ")+(l.length?'<br>'+l.join(" · "):""); }
+  /* ONE line: the owner's header keeps phone · email · LinkedIn · GitHub together, as in their main.tex */
+  return p.concat(l).join(" · "); }
 /* honest anchor labels: the candidate's own label wins; otherwise say what the link IS —
    a repo ("GitHub"), a bare profile ("GitHub Profile"), a hosted app ("Live Demo") or a site ("Website") */
 function projLabel(p,u){ if(p.linkLabel)return p.linkLabel; u=String(u||"");
@@ -2140,8 +2157,11 @@ function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); cons
   if(cv.headline)c.push({text:cv.headline,bold:true,fontSize:F+0.5,color:PDF_BLUE,margin:[0,1,0,0],alignment:"center"});
   const c1=[]; if(cv.location)c1.push(cv.location); if(cv.phone)c1.push(lnk(cv.phone,"tel:"+cv.phone.replace(/[^+0-9]/g,""))); if(cv.email)c1.push(lnk(cv.email,"mailto:"+cv.email));
   const c2=[]; if(cv.linkedin)c2.push(lnk("LinkedIn",urlify(cv.linkedin))); if(cv.github)c2.push(lnk("GitHub",urlify(cv.github))); if(cv.website)c2.push(lnk("Portfolio",urlify(cv.website)));
-  let contact=jr(c1," · "); if(c2.length){ contact.push("\n"); contact=contact.concat(jr(c2," · ")); }
-  if(contact.length)c.push({text:contact,fontSize:F-1.4,color:PDF_GRAY,margin:[0,3,0,1],alignment:"center"});
+  /* ONE line — no newline between the contact parts and the profile links (owner request) */
+  let contact=jr(c1," · "); if(c2.length){ contact.push(" · "); contact=contact.concat(jr(c2," · ")); }
+  if(contact.length){ c.push({text:contact,fontSize:F-1.4,color:PDF_GRAY,margin:[0,3,0,3],alignment:"center"});
+    /* closes the header band, mirroring the screen hairline; lighter than a section rule on purpose */
+    c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:0.6,lineColor:"#2f5d8a"}],margin:[0,0,0,2]}); }
   if(cv.summary){ sec(hdLab(cv,"summary","Summary")); c.push({text:cv.summary,margin:[0,0,0,1]}); }
   if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:PDF_HEAD},(g.items||[]).join(", ")],margin:[0,0.6,0,0.6]})); }
   if(cv.experience&&cv.experience.length){ sec(hdLab(cv,"experience","Experience")); cv.experience.forEach(e=>{
@@ -2615,10 +2635,13 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
   /* summary-agent guard: every number in the AI summary must already exist in the candidate's own text or be
      the exact computed years figure (as ONE token — no decimal-split so "9 years" can't pass at 1.9), no
      "N+ years" inflation ever, and it must not open by claiming the JD role as the candidate's identity
-     (unless the JD role IS their real title — an honest open must not be rejected). maxLen defaults to 460;
-     the inline editor passes 1500 so a "make it 200 words" custom instruction can be honored. */
+     (unless the JD role IS their real title — an honest open must not be rejected). maxLen defaults to 1400
+     (~200 words) and a hard <200-WORD ceiling applies regardless of maxLen. */
   function validSummary(src,nw,years,role,realTitle,maxLen){ if(!nw||typeof nw!=="string")return false; nw=nw.trim();
-    if(nw.length<40||nw.length>(maxLen||460))return false;
+    if(nw.length<40||nw.length>(maxLen||1400))return false;
+  /* owner rule: a summary stays UNDER 200 words however it was produced. Counted inline on purpose —
+     stress_pro [7] scrapes this function and evals it standalone, so it must not call a logic-block helper. */
+  if(nw.split(/\s+/).filter(Boolean).length>=200)return false;
     var y=Math.round(((+years)||0)*10)/10;
     var allowed=digitRuns(src).concat(digitRuns(String(y)));
     if(!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;}))return false;
