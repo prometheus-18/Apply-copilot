@@ -321,7 +321,7 @@
   .doc h3.n{font-size:21pt;margin:0;font-weight:800;letter-spacing:.3px;color:#16233a;text-align:center}
   .doc .ti{font-size:10.8pt;font-weight:600;color:#2f5d8a;margin-top:1px;text-align:center}
   .doc .clhead{font-weight:700}
-  .doc li::marker{color:#2f5d8a}
+  .doc li::before{content:"";display:inline-block;width:.334em;height:.334em;margin-right:.74em;border-radius:50%;background:#2f5d8a;vertical-align:.166em;text-indent:0}
   .cvsplit{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
   .cvsplit.cmp #texStudio{order:1}   /* Studio is markup-FIRST; in compare mode it drops to the last cell so master|resume keep the top row */
   @media(min-width:1180px){ .cvsplit:has(#texStudio[open]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .cvsplit:has(#texStudio[open]) #texEd{min-height:560px} .cvsplit.cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
@@ -335,7 +335,7 @@
   .doc .sub2{display:flex;justify-content:space-between;gap:10px;font-size:9.6pt;color:#2b333d;font-style:italic;margin-top:1px}
   .doc .sub2 .r{font-style:normal;color:#5a626b}
   .doc .pj{margin-top:8px}.doc .pj .tech{color:#555;font-size:9pt;font-style:italic}
-  .doc ul{margin:3px 0 4px 16px;padding:0}.doc li{margin:2.5px 0}.doc p{margin:3px 0}
+  .doc ul{margin:3px 0 4px 0;padding:0;list-style:none}.doc li{margin:2.5px 0;padding-left:1.074em;text-indent:-1.074em}.doc p{margin:3px 0}
   .doc.edit{outline:2px dashed #b9c6dd;outline-offset:3px}
   .doc.edit a{cursor:pointer;text-decoration:underline dotted #2f5d8a 1.5px;text-underline-offset:2px}
   .doc.edit a:hover{background:#eaf1fb;border-radius:3px}
@@ -353,7 +353,7 @@
   body.tpl-classic .doc .role .r,body.tpl-classic .doc .sub2 .r{color:#000}
   body.tpl-classic .doc .sub2{color:#000}
   body.tpl-classic .doc .pj .tech{color:#000}
-  body.tpl-classic .doc li::marker{color:#000}
+  body.tpl-classic .doc li::before{background:#000}
   body.tpl-classic .doc.edit a{text-decoration-color:#000}
   /* ===== floating popups — one shared recipe: canvas card, hairline, coral primary ===== */
   #linkPop{position:fixed;z-index:9999;display:none;width:320px;max-width:92vw;background:var(--canvas,#faf9f5);color:var(--bodyc,#3d3d3a);border:1px solid var(--hair,#e6dfd8);border-radius:var(--r,12px);padding:16px;font-family:'Inter',system-ui,sans-serif}
@@ -607,7 +607,8 @@
       </div>
       <div class="hint" id="scoreNote" style="margin-top:9px"></div>
       <div id="koBox"></div>
-      <div class="box" style="margin-top:11px"><h5>// Score breakdown</h5><div class="bd" id="bdBox"></div><div class="hint" id="seniorityNote"></div></div>
+      <div class="box" id="flagBox" style="display:none"></div>
+      <div class="box" style="margin-top:11px"><h5>// Score breakdown</h5><div class="bd" id="bdBox"></div><div class="hint" id="seniorityNote"></div><div class="hint" id="benchNote" style="margin-top:6px"></div></div
       <div class="box"><h5>✓ Required — matched in your résumé</h5><div id="kwReqHave"></div></div>
       <div class="box"><h5>✗ Required — in the JD, missing from your résumé · add only if genuinely true</h5><div id="kwReqMiss"></div></div>
       <div class="box"><h5>＋ Preferred / nice-to-have</h5><div id="kwPref"></div></div>
@@ -624,8 +625,9 @@
     <div id="cvEmpty" class="empty">Set your master (⓪) and run analysis to see your custom résumé here.</div>
     <div id="cvBody" style="display:none">
       <div class="doc-toolbar"><div class="doc-context">Custom CV · <b id="cvFor">—</b></div>
-        <div class="doc-actions"><div class="actionCluster"><select id="cvTpl" data-chg="cvTpl" title="Résumé template. Classic ATS is the pure-black, no-accent, no-table convention shared by the Fortune-500 résumés this app is calibrated against — links stay clickable but read as underlines, so nothing depends on colour. Gold is the accented LaTeX look."><option value="classic">Template: Classic ATS (black)</option><option value="gold">Template: Gold (accent)</option></select><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="keep">Fit: keep everything (1–1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
+        <div class="doc-actions"><div class="actionCluster"><select id="cvTpl" data-chg="cvTpl" title="Résumé template. Classic ATS is the pure-black, no-accent, no-table convention shared by the Fortune-500 résumés this app is calibrated against — links stay clickable but read as underlines, so nothing depends on colour. Gold is the accented LaTeX look."><option value="classic">Template: Classic ATS (black)</option><option value="gold">Template: Gold (accent)</option></select><select id="cvFit" data-chg="cvFit" title="Page fit — 'keep everything' applies no page-fit trimming (the PDF flows to ~1.5 pages); '1 page' condenses, and the note below names what gets trimmed"><option value="fit1">Fit: 1 page, keep everything (auto-size)</option><option value="keep">Fit: keep everything (flow to ~1.5 pg)</option><option value="one">Fit: condense to 1 page</option><option value="two">Fit: 2 pages, full size</option></select><button class="sm ghost" data-act="resetResume" title="Restore the résumé as originally generated — discards AI rewrites and manual edits">↺ Original</button></div><div class="actionCluster"><button class="sm ghost" data-act="aiImproveAll" title="Improves your first ~12 bullets + the summary, with an AI self-critique pass — facts locked. Your master is not uploaded.">✦ Improve (quick)</button><button class="sm ghost" data-act="aiTailorJD" title="One AI pass over the whole résumé — summary + bullets rewritten toward this JD, grounded in your master; facts locked">✦ Tailor to JD</button><button class="sm ghost" data-act="aiAudit" title="Three AI reviewers in one pass — ATS, recruiter, hiring manager. Scores, missing hiring signals (marked supported-by-your-master or not), per-bullet fixes. Critique only — changes nothing.">🔬 Audit</button><button class="sm ghost" id="cmpBtn" data-act="cvCompare" title="Toggle — shows your parsed master beside the generated résumé so you can see exactly what changed. Collapses the ⌘ LaTeX Studio, which needs the same two columns.">⇆ vs master</button><button class="sm ghost" id="editBtn" data-act="edit" data-arg="resumeDoc" title="Edit any line in place; while editing, click a line for the ✦ AI edit popup">✎ Edit</button></div><div class="actionCluster"><button class="sm primary" data-act="downloadResume" title="Real vector PDF — clickable links, selectable text, no watermark">⬇ Download PDF</button><button class="sm ghost" data-act="copyDoc" data-arg="resumeDoc">Copy text</button><button class="sm ghost" id="texDlBtn" data-act="downloadTex" style="display:none" title="Downloads exactly what is in the ⌘ LaTeX Studio editor — compile it in Overleaf">⬇ Tailored .tex</button><button class="sm ghost" id="texCpBtn" data-act="copyTex" style="display:none" title="Copies exactly what is in the ⌘ LaTeX Studio editor">Copy LaTeX</button></div></div></div>
       <div class="hint" id="aiCvMsg" style="display:none;margin:0 0 8px"></div>
+      <div class="hint" id="cvPages" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvSumSrc" style="display:none;margin:0 0 8px"></div>
       <div class="hint" id="cvLoss" style="display:none;margin:0 0 8px"></div>
       <div class="cvsplit" id="cvSplit">
@@ -1574,7 +1576,7 @@ function bucketSkills(jd,src){ const J=" "+(jd||"").toLowerCase()+" ", s=" "+(sr
   return {reqHave,reqMiss,prefHave,prefMiss,nearMiss:near}; }
 
 /* ===== seniority + experience-fit ===== */
-const RANKS=[[0,/\b(intern|internship|trainee|co[- ]?op)\b/i],[1,/\b(entry[- ]?level|graduate|junior|jr\.?)\b/i],[2,/\b(analyst|specialist|coordinator|associate)\b/i],[3,/\b(mid[- ]?level|engineer ii|developer ii)\b/i],[4,/\b(senior|sr\.?|engineer iii)\b/i],[5,/\b(lead|staff|principal)\b/i],[6,/\b(manager|mgr|head of)\b/i],[7,/\b(director|senior manager|sr\.? manager)\b/i],[8,/\b(vp|vice president|svp|evp|chief|c[teiofm]o\b|executive|partner)\b/i]];
+const RANKS=[[0,/\b(intern|internship|trainee|co[- ]?op)\b/i],[1,/\b(entry[- ]?level|graduate|junior|jr\.?)\b/i],[2,/\b(analyst|specialist|coordinator|associate)\b/i],[3,/\b(mid[- ]?level|engineer ii|developer ii)\b/i],[4,/\b(senior|sr\.?|engineer iii)\b/i],[5,/\b(lead|staff|principal)\b/i],[6,/\b(manager|mgr|head of)\b/i],[7,/\b(director|senior manager|sr\.? manager)\b/i],[8,/\b(vp|vice president|svp|evp|chief|c[teiofm]o\b|executive (?:director|vice president|officer)|(?:managing|general|founding) partner)\b/i]];
 const RANKLAB=["Intern","Entry / Junior","Analyst / Associate","Mid-level","Senior","Lead / Staff","Manager","Director","VP / Executive"];
 function rankOf(text){ let r=-1; for(const [rk,re] of RANKS) if(re.test(text||"")) r=Math.max(r,rk); return r; }
 function reqYears(jd){ const re=/(?:(?:minimum|min\.?|at least|over)\s+)?(\d{1,2})\s*(?:\+|\s*-\s*\d{1,2})?\s*\+?\s*(?:years?|yrs?)\b/gi; let m,max=0;
@@ -1737,7 +1739,80 @@ function analyze(company,role,jd){ const parsed=parseResume(masterText()); if(!p
   const orig=scoreArrangement(buckets,need,have,struct,zoneOf(parsed));
   const tail=scoreArrangement(buckets,need,have,structureScore(cv),zoneOf(cv));
   if(tail.score<orig.score)tail.score=orig.score;
-  return {company,role,cv,parsed,buckets,need,have,orig,tail,recs:detRecs(buckets),cover:detCover(company,role,cv,buckets)}; }   /* v6: `parsed` powers the content-loss ribbon */
+  /* flags are advisory — a throw here must never take down the analysis (run() calls this inside a
+     setTimeout, where an exception would kill the staged animation with no error surfaced) */
+  let flags=[]; try{ flags=detFlags(parsed,need,have,buckets); }catch(e){ flags=[]; }
+  return {company,role,cv,parsed,buckets,need,have,orig,tail,recs:detRecs(buckets),flags:flags,cover:detCover(company,role,cv,buckets)}; }   /* v6: `parsed` powers the content-loss ribbon */
+/* ===== red flags — what a hiring manager spots in the first ten seconds (deterministic) =====
+   Every flag is computed from data the app has ALREADY parsed or scored: the dates the résumé itself
+   states, its own bullet/digit counts, and the JD's own demands. Nothing is inferred about the person
+   and nothing is invented — a flag the data cannot prove is simply not emitted. Severity-sorted;
+   renderKW shows the top three (a real screener never gets past three) and counts the rest.
+   ⚠ The timeline is interval-MERGED before gap/recency checks (same idea as candidateYears): concurrent
+   roles — an umbrella role with a contract inside it — must never read as a gap, and "your last role
+   ended" must come from the latest END across all islands, not from the last-started role. */
+function roleSpan(e){ const p=String((e&&e.dates)||"").split(/\s*[–—-]\s*/); if(p.length<2)return null;
+  const a=toMonths(p[0],false),b=toMonths(p.slice(1).join("-"),true); return (a==null||b==null||b<a)?null:[a,b]; }
+function detFlags(parsed,need,have,buckets){ const F=[],exp=(parsed.experience||[]);
+  const bl=[].concat.apply([],exp.map(e=>e.bullets||[]).concat((parsed.projects||[]).map(p=>p.bullets||[])));
+  buckets=buckets||{};
+  /* years — the first filter applied, often before a line is read */
+  if(need.years&&have.years<need.years)F.push({s:have.years<need.years*0.5?9:6,
+    t:"Your résumé reads ≈"+have.years+" yrs of experience; this JD asks for "+need.years+"+.",
+    w:"Years is the first screen a recruiter applies, usually before reading a bullet.",
+    f:"You cannot add years, so move the depth forward: lead your newest role with its largest-scope, most quantified bullet."});
+  /* seniority distance between the candidate's real latest title and the posting's level */
+  if(need.rank>=0&&have.rank>=0&&need.rank>have.rank)F.push({s:(need.rank-have.rank)>=3?8:4,
+    t:"Your latest title reads "+RANKLAB[have.rank]+"; this role is pitched at "+RANKLAB[need.rank]+".",
+    w:"A title two levels below the posting reads as a stretch in the first glance.",
+    f:"Surface the senior work you already do — owning, deciding, leading — inside the bullets. The title is fixed; the evidence is not."});
+  /* metric density — measured on the real bullets, and it NAMES the offender instead of guessing a number */
+  const noNum=bl.filter(b=>!/[0-9]/.test(b));
+  if(bl.length>=4&&noNum.length/bl.length>=0.5)F.push({s:7,
+    t:noNum.length+" of "+bl.length+" bullets carry no number at all.",
+    w:"A reader scanning for impact finds nothing to anchor on, so the résumé reads as duties rather than results.",
+    f:"Add the real %, ₹/$, count or time saved to your top three bullets with ✎ Edit — start with: “"+String(noNum[0]||"").slice(0,80)+"…”. Use the true figure or cut the claim; never estimate one."});
+  /* the merged timeline: sort by start, fuse overlapping or month-adjacent spans into islands */
+  const raw=exp.map(roleSpan).filter(Boolean).sort((a,b)=>a[0]-b[0]);
+  const iv=[]; raw.forEach(x=>{ const t=iv[iv.length-1]; if(t&&x[0]<=t[1]+1){ if(x[1]>t[1])t[1]=x[1]; } else iv.push([x[0],x[1]]); });
+  /* employment gaps, straight off the dates the résumé prints — a gap is EMPTY months between islands
+     (end May, start June = contiguous = no gap), which is why the -1 is there */
+  let gap=0; for(let i=1;i<iv.length;i++){ const g=iv[i][0]-iv[i-1][1]-1; if(g>gap)gap=g; }
+  if(gap>=6)F.push({s:gap>=12?7:4,t:"A "+gap+"-month gap sits between two roles on your timeline.",
+    w:"An unexplained gap is the classic ten-second stop — the reader invents an explanation when you do not give one.",
+    f:"If it was study, contract work, caregiving or building something, add it as a dated entry in your source file. If it was a job search, leave it: an unexplained gap beats an invented role."});
+  /* short tenures — per ROLE, not per island (that is the thing a screener reacts to) */
+  const shorts=raw.filter(x=>x[1]-x[0]<12).length;
+  if(shorts>=2)F.push({s:5,t:shorts+" roles on the résumé ran under 12 months.",
+    w:"Two or more short stints read as flight risk before the content is read.",
+    f:"If they were contracts, internships or an acquisition, say so in the role line — the fact explains the pattern by itself."});
+  /* a résumé whose newest dated role already ended — measured on the MERGED timeline's latest end */
+  const nowM=(new Date()).getFullYear()*12+(new Date()).getMonth(), last=iv.length?iv[iv.length-1][1]:null;
+  if(last!=null&&(nowM-last)>=6&&!exp.some(e=>/present|current|now|ongoing/i.test(String(e.dates||""))))F.push({s:6,
+    t:"Your most recent dated role ended about "+(nowM-last)+" months ago.",
+    w:"A résumé that stops in the past reads as out of date before anything else registers.",
+    f:"If you are still in the role, end its date range with “Present” in your source file and re-upload."});
+  /* undated roles — invisible to an ATS, suspicious to a human */
+  const undated=exp.filter(e=>!String(e.dates||"").trim()).length;
+  if(undated)F.push({s:6,t:undated+(undated>1?" roles carry":" role carries")+" no dates.",
+    w:"An undated role reads as something being hidden, and most parsers drop it outright.",
+    f:"Add month-year ranges in your source file and re-upload — ⓪ Master → 🔍 What an ATS sees will confirm they parsed."});
+  /* required-keyword coverage */
+  const rt=(buckets.reqHave||[]).length+(buckets.reqMiss||[]).length;
+  if(rt&&(buckets.reqHave||[]).length/rt<0.5)F.push({s:8,
+    t:"You match "+(buckets.reqHave||[]).length+" of "+rt+" required keywords.",
+    w:"Below half, a résumé usually does not survive the keyword screen to reach a human at all.",
+    f:"Work the missing terms above into Skills AND into a bullet — but only the ones that are genuinely true of you."});
+  /* no summary at the top */
+  if(!String(parsed.summary||"").trim())F.push({s:5,t:"Your master has no summary at the top.",
+    w:"The top third is the only part guaranteed to be read; without it the reader starts on your oldest job title.",
+    f:"The generated résumé already writes one from your own material — download that version rather than your master."});
+  /* wall-of-text bullets */
+  const longB=bl.filter(b=>wn(b)>40).length;
+  if(longB)F.push({s:4,t:longB+(longB>1?" bullets run":" bullet runs")+" past 40 words.",
+    w:"Long bullets get skipped whole, and the achievement inside them is never read.",
+    f:"② already splits over-long bullets — open ⇆ vs master to see the shorter version beside your original."});
+  return F.sort((a,b)=>b.s-a.s); }
 function detRecs(b){ const r=[];
   /* a tool the JD spells out is what an ATS keyword scan literally looks for — say so, and name the
      sibling tool the résumé does have so the human can judge the substitution. An "X / Y" alternation
@@ -1924,6 +1999,19 @@ function renderResume(){ document.getElementById("cvEmpty").style.display="none"
   const fs2=document.getElementById("cvFit"); if(fs2)fs2.value=fitGet();
   tplPaint(); const ts=document.getElementById("cvTpl"); if(ts)ts.value=tplGet();
   const ss=document.getElementById("cvSumSrc"); if(ss){ const sm=sumSource(); ss.style.display=sm?"block":"none"; ss.innerHTML=sm; }
+  /* the page readout — REAL pages counted from a real pdfmake render, so the choice in the Fit select
+     is informed. Async + token-guarded: a re-run mid-count just drops the stale answer. */
+  const pe=document.getElementById("cvPages");
+  if(pe&&!window.__noPdfMake&&window.pdfMake){ const tok=(renderResume._t=(renderResume._t||0)+1); const myCur=CUR;
+    const showPg=function(p,f,solved){ if(tok!==renderResume._t||myCur!==CUR)return; if(p==null){ pe.style.display="none"; return; }
+      pe.style.display="block";
+      pe.innerHTML="\ud83d\udcc4 This PDF: <b>"+p+" page"+(p>1?"s":"")+"</b> @ "+f+"pt"+(solved?" (auto-sized to fit — nothing dropped)":"")+(p>1&&fitGet()==="fit1"?" — even the smallest readable size needs "+p+" pages; nothing was dropped":"")+".";};
+    if(fitGet()==="fit1"){ fit1Solve(CUR.cv,function(sol){
+      if(!sol){ pe.style.display="none"; return; }
+      if(sol.font){ showPg(1,sol.font,sol.font<10.4); }
+      else { try{ const d=resumeDocDef(CUR.cv,FIT1_FLOOR); pdfPages(d,function(p){ showPg(p,FIT1_FLOOR,false); }); }catch(e){ pe.style.display="none"; } } }); }
+    else { try{ const d=resumeDocDef(CUR.cv); pdfPages(d,function(p){ showPg(p,fitFont(fitCvForPdf(CUR.cv)),false); }); }catch(e){ pe.style.display="none"; } } }
+  else if(pe)pe.style.display="none";
   const mpd=document.getElementById("masterDoc"); if(mpd&&CUR&&CUR.parsed)mpd.innerHTML=resumeDocHTML(CUR.parsed);   /* keep the ⇆ compare pane in step with re-runs */
   /* v6 loss ribbon — names exactly what the PDF will trim under the current fit; hidden when nothing is lost */
   const lossEl=document.getElementById("cvLoss");
@@ -1949,6 +2037,15 @@ function renderKW(){ const o=CUR.orig,t=CUR.tail,b=CUR.buckets;
   document.getElementById("bdBox").innerHTML=bar("Keyword coverage",t.kwScore)+bar("Seniority / experience fit",t.seniorityFit)+bar("Keyword placement",t.positional)+bar("Structure",t.structure);
   const nr=CUR.need.rank,hr=CUR.have.rank;
   document.getElementById("seniorityNote").innerHTML="Your résumé reads ≈ <b>"+CUR.have.years+" yrs</b>"+(hr>=0?" · "+RANKLAB[hr]:"")+" — this role targets "+(CUR.need.years?"<b>"+CUR.need.years+"+ yrs</b>":"unspecified years")+(nr>=0?" · "+RANKLAB[nr]:"")+".";
+  /* ⚑ red flags + the strong-candidate benchmark — both deterministic, both work with AI switched off */
+  const fl=CUR.flags||[],fb=document.getElementById("flagBox");
+  if(fb){ fb.style.display=fl.length?"block":"none";
+    fb.innerHTML=fl.length?("<h5>⚑ What a hiring manager sees in ten seconds</h5>"+fl.slice(0,3).map(x=>'<div class="ko'+(x.s>=7?" bad":"")+'" style="margin:5px 0"><b>'+esc(x.t)+'</b><div class="hint" style="margin-top:3px">'+esc(x.w)+'</div><div class="hint" style="margin-top:3px"><b>Fix:</b> '+esc(x.f)+'</div></div>').join("")
+      +(fl.length>3?'<div class="hint" style="margin-top:5px">'+(fl.length-3)+' more, lower severity — they surface as the top three are cleared.</div>':"")
+      +'<div class="hint" style="margin-top:6px">Computed from your own dates, bullet counts and this JD — no AI, nothing guessed about you. Run 🔬 Audit for the qualitative read.</div>'):""; }
+  const bmEl=document.getElementById("benchNote");
+  if(bmEl){ const req=(b.reqHave||[]).concat(b.reqMiss||[]);
+    bmEl.innerHTML="<b>A strong candidate for this posting reads:</b> "+(CUR.need.years?"<b>"+CUR.need.years+"+ yrs</b>":"years unspecified")+(nr>=0?" at <b>"+RANKLAB[nr]+"</b> level":"")+", covering all <b>"+req.length+"</b> required keywords"+(req.length?" ("+esc(req.slice(0,6).join(", "))+(req.length>6?", …":"")+")":"")+". You read as <b>"+CUR.have.years+" yrs</b>"+(hr>=0?" · "+RANKLAB[hr]:"")+", covering <b>"+(b.reqHave||[]).length+" of "+req.length+"</b>. That bar is the JD's own words restated, not a judgement of you."; }
   document.getElementById("kwReqHave").innerHTML=(b.reqHave.length?b.reqHave:["—"]).map(k=>'<span class="kchip have">'+esc(k)+'</span>').join("");
   document.getElementById("kwReqMiss").innerHTML=(b.reqMiss.length?b.reqMiss:["None — you cover every required keyword."]).map(k=>'<span class="kchip miss">'+esc(k)+'</span>').join("");
   const pref=b.prefHave.map(k=>'<span class="kchip pref">'+esc(k)+' ✓</span>').concat(b.prefMiss.map(k=>'<span class="kchip pref" style="opacity:.6">'+esc(k)+'</span>'));
@@ -2108,6 +2205,9 @@ function renderOutreach(){ document.getElementById("outEmpty").style.display="no
   const subj="Referral request: "+r+" at "+co+" (just applied)";
   const mail="Hi {First},\n\nI just submitted my application for the "+r+" role at "+co+" and wanted to reach out directly. I'm a "+selfPitch()+".\n\nIf my background looks like a fit, I'd be grateful for a referral or a pointer to the right person. Happy to share my résumé and the role link. Thanks for your time!\n\nBest,\n"+titleCaseName((cv.name)||M.name||"")+([cv.phone,cv.email].filter(Boolean).length?"\n"+[cv.phone,cv.email].filter(Boolean).join(" · "):"");
   const follow="Hi {First}, a quick nudge on my note about the "+r+" role at "+co+". I know inboxes get busy, so even a quick steer would mean a lot. Thanks!"+(fn!=="me"?" – "+fn:"");
+  /* post-interview thank-you — the one follow-up with a real deadline (24h). Same rule as everywhere
+     else: {Braces} are the user's own blanks, because the app cannot know what was said in the room. */
+  const thanks="Hi {First},\n\nThank you for the time today — I enjoyed the conversation about "+r+" at "+co+", and especially {the one thing they said that stuck}.\n\nOne thing I wish I had added: {the point you forgot}. It is the closest match to what you described needing.\n\nI am glad to send anything else that would help. Thanks again!\n\nBest,\n"+titleCaseName((cv.name)||M.name||"");
   body.innerHTML=
     '<div class="box"><h5>🔗 Find the right 2 people at '+esc(co)+'</h5><div class="row">'+
       '<a target="_blank" href="'+liPeople(c,r)+'"><button class="sm ghost">Team peers · current</button></a>'+
@@ -2121,6 +2221,7 @@ function renderOutreach(){ document.getElementById("outEmpty").style.display="no
       '<div class="hint"><b>Pattern-inferred — unverified.</b> The domain <span class="pill">'+esc(dom)+'</span> is a best-effort guess from the company name; confirm the real domain, then a likely address is <span class="pill">first.last@'+esc(dom)+'</span> or <span class="pill">flast@'+esc(dom)+'</span>. Verify on the company site or a tool like Hunter before sending — never treat this as confirmed.</div>'+
       '<div style="margin:6px 0"><b>Subject:</b> '+esc(subj)+'</div><div class="mono">'+esc(mail)+'</div></div>'+
     '<div class="box"><h5>↩️ Follow-up (after ~3 days) <button class="sm ghost" data-act="cpText">Copy</button></h5><div class="mono">'+esc(follow)+'</div></div>'+
+    '<div class="box"><h5>🕒 Post-interview thank-you (send within 24h) <button class="sm ghost" data-act="cpText">Copy</button></h5><div class="mono">'+esc(thanks)+'</div><div class="hint" style="margin-top:5px">The {braces} are yours to fill — the app was not in the room, so it will not invent what was said. Under 120 words once filled.</div></div>'+
     '<div class="row" style="margin-top:6px">'+(CUR.url?'<a target="_blank" href="'+esc(urlify(CUR.url))+'"><button class="sm ghost">Open job link ↗</button></a>':'')+'<button class="sm primary" data-act="logApp">✓ I applied — log it</button></div>';
   if(window.__outArm)window.__outArm();   /* account block injects the verified-contacts (Apollo) UI here */
 }
@@ -2190,10 +2291,30 @@ function baseFont(w){ return w<1500?10.4:w<2200?9.6:w<2900?9:w<3500?8.5:w<4200?8
    font floor is clamped readable; "one" restores the old condense-to-1-page behaviour (and the loss ribbon
    names exactly what the PDF will trim); "two" keeps full content at full size. Device-local, never synced. */
 const FITKEY="apply_fit_v1";
-function fitGet(){ try{ const v=localStorage.getItem(FITKEY); return v==="one"||v==="two"?v:"keep"; }catch(e){ return "keep"; } }
-function fitSet(v){ try{ localStorage.setItem(FITKEY,v==="one"||v==="two"?v:"keep"); }catch(e){} if(CUR)renderResume(); }
+function fitGet(){ try{ const v=localStorage.getItem(FITKEY); return v==="one"||v==="two"||v==="keep"?v:"fit1"; }catch(e){ return "fit1"; } }
+function fitSet(v){ try{ localStorage.setItem(FITKEY,v==="one"||v==="two"||v==="keep"?v:"fit1"); }catch(e){} if(CUR)renderResume(); }
 function fitCvForPdf(cv){ return fitGet()==="one"?finalizeOnePage(cv):JSON.parse(JSON.stringify(cv)); }
-function fitFont(cv){ const fit=fitGet(); return fit==="two"?10.4:fit==="keep"?Math.max(9.5,baseFont(cvWeight(cv))):baseFont(cvWeight(cv)); }
+function fitFont(cv){ const fit=fitGet(); return fit==="two"?10.4:fit==="keep"?Math.max(9.5,baseFont(cvWeight(cv))):fit==="fit1"?Math.max(FIT1_FLOOR,Math.min(10.4,baseFont(cvWeight(cv)))):baseFont(cvWeight(cv)); }
+/* fit1 — squeeze to ONE page dropping nothing: try the ladder from the weight-estimated font down to
+   the floor, rendering each candidate with the real pdfmake and counting real pages. Font only —
+   margins and leading stay put, so the page never turns into a wall. 8.6pt is the readability floor;
+   below it a second page is the more professional document, and the fallback says so honestly. */
+const FIT1_FLOOR=8.6;
+function pdfPages(def,cb){ try{ pdfMake.createPdf(def).getBuffer(function(buf){
+  try{ const s=String.fromCharCode.apply(null,buf.slice(0,Math.min(buf.length,400000)));
+       const m=s.match(/\/Type\s*\/Pages[^>]*?\/Count\s+(\d+)/); cb(m?+m[1]:null); }catch(e){ cb(null); } }); }
+  catch(e){ cb(null); } }
+function fit1Solve(cv,done){
+  if(window.__noPdfMake||!window.pdfMake){ done(null); return; }
+  const start=Math.max(FIT1_FLOOR,Math.min(10.4,baseFont(cvWeight(cv))));
+  const steps=[]; for(let f=start;f>=FIT1_FLOOR-0.01;f=Math.round((f-0.3)*10)/10)steps.push(f);
+  let i=0;
+  (function tryNext(){
+    if(i>=steps.length){ done({font:null,pages:null}); return; }   /* nothing fits — honest fallback */
+    const f=steps[i++];
+    let def; try{ def=resumeDocDef(cv,f); }catch(e){ done(null); return; }
+    pdfPages(def,function(p){ if(p===null){ done(null); return; } if(p<=1){ done({font:f,pages:1}); return; } tryNext(); });
+  })(); }
 /* what the PDF will trim under the current fit — null when nothing is lost (normBullets can only ADD) */
 function contentLoss(){ if(!CUR||!CUR.parsed)return null;
   const n=o=>((o.experience||[]).reduce((k,e)=>k+((e.bullets||[]).length),0))+((o.projects||[]).reduce((k,p)=>k+((p.bullets||[]).length),0));
@@ -2215,6 +2336,19 @@ function finalizeOnePage(cv0){ const cv=JSON.parse(JSON.stringify(cv0)); let g=0
   return cv; }
 /* JD-matched skills → bold runs inside PDF bullets (recruiter-skim pop; the on-screen doc stays plain
    text so aiMap/edit pull-back keep working). Returns the string untouched when nothing matches. */
+/* A bullet must never split across a page break, and a section heading must never be the last thing on
+   a page. pdfmake honours `unbreakable` per list ITEM and redraws the marker + hanging indent on the new
+   page — but it SILENTLY DELETES an unbreakable node taller than one page (measured on A4 @9.5pt: 7056
+   chars survive, 7448 vanish). Both helpers therefore carry a size guard and degrade to natural breaking. */
+const UNBRK_MAX=1200;
+function uitem(src,runs){ const s=String(src==null?"":src); const o={text:(runs===undefined?s:runs)}; if(s.length<=UNBRK_MAX)o.unbreakable=true; return o; }
+function txtLen(n){ if(n==null)return 0; if(typeof n==="string")return n.length; if(Array.isArray(n))return n.reduce((a,x)=>a+txtLen(x),0);
+  if(n.text!==undefined)return txtLen(n.text); if(n.ul)return txtLen(n.ul); if(n.columns)return txtLen(n.columns); if(n.stack)return txtLen(n.stack); return 0; }
+function keepHeads(c){ const o=[];
+  for(let i=0;i<c.length;i++){ const n=c[i];
+    if(n&&n.characterSpacing===0.6&&c[i+1]&&c[i+1].canvas&&c[i+2]&&txtLen(c[i+2])<=700){ o.push({stack:[n,c[i+1],c[i+2]],unbreakable:true}); i+=2; continue; }
+    o.push(n); }
+  return o; }
 function boldRuns(s,terms){ s=String(s==null?"":s); if(!terms||!terms.length)return s;
   const es=terms.map(t=>String(t||"").trim()).filter(t=>t.length>1).sort((a,b)=>b.length-a.length)
     .map(t=>(/^\w/.test(t)?"\\b":"")+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+(/\w$/.test(t)?"\\b":""));
@@ -2234,7 +2368,7 @@ function boldNums(seg){ const out=[]; const re=/\d[\d,.]*(?:\+|%)?/g; let last=0
 function goldRuns(s,terms){ const r=boldRuns(s,terms); const arr=(typeof r==="string")?[r]:r; const out=[];
   arr.forEach(x=>{ if(typeof x==="string")boldNums(x).forEach(y=>out.push(y)); else out.push(x); });
   return (out.length===1&&typeof out[0]==="string")?out[0]:out; }
-function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); const c=[]; const T=tplPal();
+function resumeDocDef(cv0,fOverride){ const cv=fitCvForPdf(cv0); const F=fOverride||fitFont(cv); const c=[]; const T=tplPal();
   /* bold set = JD-matched keywords + the candidate's OWN skills (paren details stripped) — the gold look */
   /* JD-matched terms + the candidate's own skills + anything they marked \textbf{} in the LaTeX Studio */
   const bset=new Set(jdTerms()); (TEXBOLD||[]).forEach(t=>bset.add(t)); (cv.skills||[]).forEach(g=>(g.items||[]).forEach(it=>{ const t=String(it||"").replace(/\s*\(.*\)\s*$/,"").trim(); if(t.length>2&&t.length<=30)bset.add(t); }));
@@ -2253,22 +2387,22 @@ function resumeDocDef(cv0){ const cv=fitCvForPdf(cv0); const F=fitFont(cv); cons
     /* closes the header band, mirroring the screen hairline; lighter than a section rule on purpose */
     c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.hairW,lineColor:T.rule}],margin:[0,0,0,2]}); }
   if(cv.summary){ sec(hdLab(cv,"summary","Summary")); c.push({text:goldRuns(cv.summary,jdTerms()),margin:[0,0,0,1]}); }
-  if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:T.head}].concat([boldRuns((g.items||[]).join(", "),jdTerms())]),margin:[0,0.6,0,0.6]})); }
+  if(cv.skills&&cv.skills.length){ sec(hdLab(cv,"skills","Skills")); cv.skills.forEach(g=>c.push({text:[{text:g.group+": ",bold:true,color:T.head}].concat(boldRuns((g.items||[]).join(", "),jdTerms())),margin:[0,0.6,0,0.6]})); }
   if(cv.experience&&cv.experience.length){ sec(hdLab(cv,"experience","Experience")); cv.experience.forEach(e=>{
     c.push({columns:[{width:"*",text:{text:e.role||e.org||"",bold:true,color:T.head}},{width:"auto",text:e.dates||"",alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,3,0,0]});
     const sub=[cleanSep(e.org),cleanSep(e.location)].filter(Boolean).join(" · "); if(sub&&e.role)c.push({text:sub,italics:true,color:T.sub,fontSize:F-1,margin:[0,0,0,1]});
-    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,1,0,3],markerColor:T.mark}); }); }
+    if((e.bullets||[]).length)c.push({ul:e.bullets.map(b=>uitem(b,goldRuns(b,bterms))),margin:[0,1,0,3],markerColor:T.mark}); }); }
   if(cv.projects&&cv.projects.length){ sec(hdLab(cv,"projects","Projects")); cv.projects.forEach(p=>{ const u=p.link==="__profile__"?(cv.github?urlify(cv.github):""):p.link;
     c.push({text:[{text:p.name,bold:true,color:T.head},p.tech?{text:"  |  "+p.tech,italics:true,color:T.sub,fontSize:F-1}:"",u?{text:"   "+projLabel(p,u),link:u,color:T.link,decoration:T.deco||undefined,fontSize:F-1}:""],margin:[0,3,0,1]});
-    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>({text:goldRuns(b,bterms)})),margin:[3,0,0,3],markerColor:T.mark}); }); }
+    if((p.bullets||[]).length)c.push({ul:p.bullets.map(b=>uitem(b,goldRuns(b,bterms))),margin:[0,0,0,3],markerColor:T.mark}); }); }
   if(cv.education&&cv.education.length){ sec(hdLab(cv,"education","Education")); cv.education.forEach(e=>{ if(e.raw){c.push({text:e.raw,margin:[0,2,0,0]});return;}
     c.push({columns:[{width:"*",text:{text:e.institution||"",bold:true,color:T.head}},{width:"auto",text:e.dates||"",alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,3,0,0]});
     const deg=cleanSep(e.degree||"")+(e.gpa?(cleanSep(e.degree)?" · ":"")+"CGPA "+e.gpa:"");
     if(deg||e.location)c.push({columns:[{width:"*",text:{text:deg,italics:true,color:T.sub}},{width:"auto",text:e.location||"",alignment:"right",color:T.muted,fontSize:F-1.4}]}); }); }
-  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications,margin:[3,1,0,2],markerColor:T.mark}); }
-  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements,margin:[3,1,0,2],markerColor:T.mark}); }
-  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications,margin:[3,1,0,2],markerColor:T.mark}); }
-  return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:T.ink,lineHeight:1.12}, content:c }; }
+  if(cv.certifications&&cv.certifications.length){ sec(hdLab(cv,"certs","Certifications")); c.push({ul:cv.certifications.map(x=>uitem(x)),margin:[0,1,0,2],markerColor:T.mark}); }
+  if(cv.achievements&&cv.achievements.length){ sec(hdLab(cv,"achievements","Achievements")); c.push({ul:cv.achievements.map(x=>uitem(x)),margin:[0,1,0,2],markerColor:T.mark}); }
+  if(cv.publications&&cv.publications.length){ sec(hdLab(cv,"publications","Publications")); c.push({ul:cv.publications.map(x=>uitem(x)),margin:[0,1,0,2],markerColor:T.mark}); }
+  return { pageSize:"A4", pageMargins:[34,32,34,32], defaultStyle:{fontSize:F,color:T.ink,lineHeight:1.12}, content:keepHeads(c) }; }
 function coverDocDef(cv,cover){ const today=new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   const paras=String(cover||"").split(/\n+/).map((p,i)=>(i===0&&/^Application for /.test(p))?{text:p,bold:true,margin:[0,0,0,8]}:{text:p,margin:[0,0,0,8]});
   return { pageSize:"A4", pageMargins:[48,46,48,46], defaultStyle:{fontSize:10.6,color:PDF_INK,lineHeight:1.32}, content:[{text:today,margin:[0,0,0,12],color:PDF_GRAY}].concat(paras) }; }
@@ -2281,23 +2415,39 @@ function domRuns(el){ const T=tplPal(); const a=[]; el.childNodes.forEach(n=>{ i
   return a.length?a:[el.textContent||""]; }
 function domToDocDef(node,isCover){
   if(isCover){ const c=[...node.children].map(p=>({text:p.innerText,margin:[0,0,0,8]})); return {pageSize:"A4",pageMargins:[48,46,48,46],defaultStyle:{fontSize:10.6,color:PDF_INK,lineHeight:1.32},content:c.length?c:[{text:node.innerText}]}; }
-  const F=baseFont((node.innerText||"").length); const c=[]; const T=tplPal();
+  const F=(function(){ const f=fitGet(); if(f==="two")return 10.4; const b=baseFont((node.innerText||"").length); return f==="keep"?Math.max(9.5,b):b; })(); const c=[]; const T=tplPal();
   [...node.children].forEach(el=>{ const cl=el.classList;
     if(el.tagName==="H3"){ c.push({text:el.textContent,bold:true,fontSize:F+T.nameUp,color:T.head,alignment:"center"}); }
     else if(cl.contains("ti")){ c.push({text:el.textContent,bold:T.hlBold,fontSize:F+0.5,color:T.hlColor,margin:[0,1,0,0],alignment:"center"}); }
-    else if(cl.contains("ct")){ c.push({text:domRuns(el),fontSize:F-1.4,color:T.muted,margin:[0,3,0,1],alignment:"center"}); }
-    else if(el.tagName==="H4"){ c.push({text:el.textContent.toUpperCase(),bold:true,fontSize:F-0.3,color:T.head,characterSpacing:0.6,margin:[0,F*0.85,0,1]}); c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.ruleW,lineColor:T.rule}],margin:[0,0,0,4]}); }
-    else if(cl.contains("role")||cl.contains("sub2")){ const sp=el.children; const left=sp[0]?domRuns(sp[0]):[el.textContent]; const right=sp[1]?sp[1].textContent:""; c.push({columns:[{width:"*",text:left},{width:"auto",text:right,alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,cl.contains("role")?3:0,0,0]}); }
+    else if(cl.contains("ct")){ c.push({text:domRuns(el),fontSize:F-1.4,color:T.muted,margin:[0,3,0,3],alignment:"center"});
+      c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.hairW,lineColor:T.rule}],margin:[0,0,0,2]}); }
+    else if(el.tagName==="H4"){ c.push({text:el.textContent.toUpperCase(),bold:true,fontSize:F+T.headUp,color:T.head,characterSpacing:0.6,margin:[0,F*0.85,0,1]}); c.push({canvas:[{type:"line",x1:0,y1:0,x2:CW_PT,y2:0,lineWidth:T.ruleW,lineColor:T.rule}],margin:[0,0,0,4]}); }
+    else if(cl.contains("role")||cl.contains("sub2")){ const sp=el.children; const s2=cl.contains("sub2"); const st=s2?{italics:true,color:T.sub}:{bold:true,color:T.head};
+      /* .rh bold and .sub2 italic sit on the element we descend INTO, and domRuns only styles CHILD
+         nodes - so a dirty-doc PDF lost the role, the org line and the school. Re-apply it here. */
+      const left=(sp[0]?domRuns(sp[0]):[el.textContent]).map(r=>(typeof r==="string")?Object.assign({text:r},st):r);
+      const right=sp[1]?sp[1].textContent:""; c.push({columns:[Object.assign({width:"*",text:left},s2?{fontSize:F-1}:{}),{width:"auto",text:right,alignment:"right",color:T.muted,fontSize:F-1.4}],margin:[0,s2?0:3,0,0]}); }
     else if(cl.contains("pj")){ c.push({text:domRuns(el),margin:[0,3,0,1]}); }
-    else if(el.tagName==="UL"){ const items=[...el.children].map(li=>li.textContent.trim()).filter(Boolean); if(items.length)c.push({ul:items,margin:[3,0,0,3],markerColor:T.mark}); }
+    else if(el.tagName==="UL"){ const items=[...el.children].map(li=>li.textContent.trim()).filter(Boolean); if(items.length)c.push({ul:items.map(t=>uitem({text:goldRuns(t,jdTerms())})),margin:[0,0,0,3],markerColor:T.mark}); }
     else if(el.tagName==="P"){ c.push({text:domRuns(el),margin:[0,1,0,1]}); }
+    else if((el.textContent||"").trim()){ c.push({text:domRuns(el),margin:[0,1,0,1]}); }
   });
-  return {pageSize:"A4",pageMargins:[34,32,34,32],defaultStyle:{fontSize:F,color:T.ink,lineHeight:1.12},content:c.length?c:[{text:node.innerText||""}]}; }
+  return {pageSize:"A4",pageMargins:[34,32,34,32],defaultStyle:{fontSize:F,color:T.ink,lineHeight:1.12},content:c.length?keepHeads(c):[{text:node.innerText||""}]}; }
 function makePdf(which){ const cv=CUR&&CUR.cv; if(!cv){alert("Run analysis first.");return;}
   if(window.__noPdfMake||!window.pdfMake){ printFallback(which); return; }
   const node=document.getElementById(which); const edited=node&&node.dataset&&node.dataset.dirty==="1"; let def;
   try{ def=edited?domToDocDef(node,which==="coverDoc"):(which==="coverDoc"?coverDocDef(cv,CUR.cover):resumeDocDef(cv)); }
   catch(e){ try{ def=which==="coverDoc"?coverDocDef(cv,CUR.cover):resumeDocDef(cv); }catch(e2){ printFallback(which); return; } }
+  /* fit1: solve for the largest one-page font before downloading. Only the clean résumé path — an
+     edited DOM ships WYSIWYG, and the cover letter is one page by construction. */
+  if(which==="resumeDoc"&&!edited&&fitGet()==="fit1"&&!window.__noPdfMake&&window.pdfMake){
+    fit1Solve(cv,function(sol){
+      let d2=def;
+      if(sol&&sol.font){ try{ d2=resumeDocDef(cv,sol.font); }catch(e){ d2=def; } }
+      else if(sol&&sol.font===null){ try{ const pe=document.getElementById("cvPages"); if(pe){ pe.style.display="block"; pe.textContent="Even at "+FIT1_FLOOR+"pt this content needs two pages — exporting the readable two-page version instead. Nothing was dropped. (Fit: condense to 1 page trims lowest-relevance bullets if one page matters more.)"; } }catch(e){} }
+      try{ pdfMake.createPdf(d2).download(fnameFor(which)+".pdf"); }catch(e){ printFallback(which); }
+    });
+    return true; }
   try{ pdfMake.createPdf(def).download(fnameFor(which)+".pdf"); return true; }
   catch(e){ console&&console.warn&&console.warn(e); printFallback(which); } }
 /* the download bubble lives in the MAIN window's chrome — from a side panel the user sees nothing,
@@ -2792,6 +2942,36 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     s=s.replace(/\s+[—–]\s+/g,", ").replace(/—/g,", ");
     s=s.replace(/\s+,/g,",").replace(/,{2,}/g,",").replace(/,([^\s\d])/g,", $1").replace(/ {2,}/g," ");
     return s.trim(); }
+  /* ---- HONEST failure reporting ----
+     Every distinct backend failure used to surface as "the server-side truthfulness guard rejected the AI's
+     suggestion": a model that answered prose, one that ran out of output budget, one that echoed the wrong
+     id, a banned word, a keyword-stuffing tail and a genuinely invented number were indistinguishable — so
+     the only advice the UI could give ("adjust the instruction") was wrong for five of the six. The server
+     now stamps _drop with the rule that fired; old deploys send none and get an honest "didn't say why". */
+  function aiDropMsg(d){ var r=(d&&typeof d._drop==="string")?d._drop:"";
+    var via=(d&&d._model)?(" [via "+String(d._model).replace(/[^\w./:-]/g,"").slice(0,60)+"]"):"";
+    if(/^digits:/.test(r))return "Rejected by the never-invent rule: the AI used the number "+r.slice(7).slice(0,40)+", which isn't anywhere in your résumé. Hit ↻ Try again — or add that figure to your master first."+via;
+    if(/^slop:/.test(r))return "Rejected: the AI used the banned word "+r.slice(5).slice(0,30)+". Hit ↻ Try again, or pick a different tone."+via;
+    if(r==="stuff")return "Rejected: the AI bolted a keyword list onto the end instead of writing a sentence. Hit ↻ Try again."+via;
+    if(r==="id")return "The model didn't label its answer, so it couldn't be matched back to what you selected. Hit ↻ Try again."+via;
+    if(r==="empty"){ var ct=(d&&d._usage&&+d._usage.completion_tokens)||0;
+      return "The model returned nothing usable — it answered in prose instead of JSON, or ran out of output budget"+(ct?" (it spent "+ct+" output tokens)":"")+". Hit ↻ Try again, or switch model in ⚙ AI."+via; }
+    return "The AI backend didn't return a usable suggestion and didn't say why — the edge function may need a re-paste. Manual editing keeps working."+via; }
+  /* names the ONE validSummary predicate that failed. Runs ONLY after validSummary already returned false,
+     so validSummary stays the single authority (stress_pro [7]/[16] scrape it unchanged). */
+  function sumWhyOne(src,nw,years,role,realTitle,maxLen){ nw=String(nw||"").trim();
+    if(nw.length<40)return "it came back too short (under 40 characters)";
+    if(nw.length>(maxLen||1400))return "it came back too long ("+nw.length+" characters, cap "+(maxLen||1400)+")";
+    if(nw.split(/\s+/).filter(Boolean).length>=200)return "it ran to 200 words or more (a summary stays under 200)";
+    var allowed=digitRuns(src).concat(digitRuns(String(Math.round(((+years)||0)*10)/10)));
+    var badn=digitRuns(nw).filter(function(x){return allowed.indexOf(x)<0;});
+    if(badn.length)return "it used the number "+badn.slice(0,3).join(", ")+", which isn't anywhere in your résumé";
+    if(/\d(?:\.\d+)?\s*\+\s*(?:years?|yrs?)\b/i.test(nw))return "it inflated your experience into a “N+ years” claim";
+    var rr=String(role||"").replace(/^\[.*?\]\s*/,"").trim();
+    if(rr&&rr!=="the role"&&String(realTitle||"").trim().toLowerCase()!==rr.toLowerCase()&&
+       new RegExp("^\\s*(?:an?\\s+|the\\s+)?"+rr.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i").test(nw))
+      return "it opened by calling you a “"+rr+"” — that's the job you're targeting, not your real title";
+    return "it failed the summary guardrail"; }
   /* ---- eval harness (deterministic, client-side; no extra LLM call, no quota cost) ---- */
   function aiPropers(s){ s=String(s); var out=[],re=/([A-Za-z][A-Za-z0-9.+#&-]*)/g,m,first=true;
     while(m=re.exec(s)){ var w=m[1];
@@ -2954,6 +3134,10 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     else if(c.kind==="cover"){ body.mode="rewrite"; body.section="cover-para"; body.text=c.text; }
     else if(c.kind==="item"){ body.mode="rewrite"; body.section="item"; body.text=c.text; }
     else { body.mode="rewrite"; body.section="bullet"; body.id=c.id; body.text=c.text; }
+    /* the server's digit guard for these two sections judges against what we send it. Ship the SAME corpus
+       our own validSummary/cover guards allow numbers from, or the model is told to quote a proof point it
+       was never shown and every honest rewrite gets dropped server-side. */
+    if(body.section==="summary"||body.section==="cover-para"){ try{ body.evidence=sumContext().src.slice(0,6000); }catch(e){} }
     var bk=byokAttach(body);
     _aiBusy=true; var seq=++_aiSeq; var d=null,eMsg=null;
     if(window.__AI_FAKE_EDIT){ d=window.__AI_FAKE_EDIT; }
@@ -2973,16 +3157,16 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     else if(c.kind==="cover"&&typeof d.cover==="string")nw=d.cover;
     nw=deSlop(String(nw||"").trim());
     if(!nw){ res.innerHTML="";
-      er.textContent=(d&&d._v===2)?"The server-side truthfulness guard rejected the AI's suggestion — try again or adjust the instruction.":"The AI backend returned an unexpected shape — it may need a re-deploy. Manual editing keeps working.";
+      er.textContent=((d&&d._v===2)?aiDropMsg(d):"The AI backend returned an unexpected shape — it may need a re-deploy. Manual editing keeps working.")+(byokNote(bk,viaOai,d)||"");
       er.style.display="block"; return; }
     var bad="";
     if(!slopFree(nw,c.text))bad="Rejected by the guardrail: the rewrite used AI-slop wording.";
     else if(c.kind==="tex"){
       if(!validTexSpan(c.text,nw))bad="Rejected by the guardrail: it changed your numbers or came back the wrong length for this span.";
       else if(c.sub==="summary"){ var scT=sumContext();
-        if(!validSummary(scT.src+" "+c.text,nw,scT.years,scT.role,scT.realTitle,1800))bad="Rejected by the guardrail: it changed your numbers, inflated years, or claimed the target role as your identity."; } }
+        if(!validSummary(scT.src+" "+c.text,nw,scT.years,scT.role,scT.realTitle,1800))bad="Rejected by the guardrail — "+sumWhyOne(scT.src+" "+c.text,nw,scT.years,scT.role,scT.realTitle,1800)+"."; } }
     else if(c.kind==="summary"){ var sc=sumContext();
-      if(!validSummary(sc.src+" "+c.text,nw,sc.years,sc.role,sc.realTitle,1500))bad="Rejected by the guardrail: it changed your numbers, inflated years, or claimed the target role as your identity."; }
+      if(!validSummary(sc.src+" "+c.text,nw,sc.years,sc.role,sc.realTitle,1500))bad="Rejected by the guardrail — "+sumWhyOne(sc.src+" "+c.text,nw,sc.years,sc.role,sc.realTitle,1500)+"."; }
     else if(c.kind==="cover"){ var sc2=sumContext(); var allowed=digitRuns(sc2.src+" "+c.text+" "+String(Math.round(sc2.years*10)/10));
       if(nw.length<20||nw.length>2200||!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;}))bad="Rejected by the guardrail: it invented numbers or came back the wrong length."; }
     else { if(!validRewrite(c.text,nw))bad="Rejected by the guardrail: it changed your numbers or isn't bullet-sized (20–320 chars)."; }
@@ -3138,7 +3322,9 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     var miss=(d.missing||[]).slice(0,8).map(function(m){ m=m||{}; return '<span class="kchip '+(m.supported?"have":"miss")+'" title="'+esc(String(m.where||""))+'">'+esc(String(m.signal||""))+(m.supported?" · your master covers this":" · NOT in your master — never invent it")+'</span>'; }).join(" ");
     var str=(d.strengths||[]).slice(0,6).map(function(s){ return '<span class="kchip pref">'+esc(String(s))+'</span>'; }).join(" ");
     var acts=(d.actions||[]).slice(0,6).map(function(a){ a=a||{}; return '<div class="hint" style="margin:3px 0">→ <b>'+esc(idLabel(a.id))+':</b> '+esc(String(a.fix||""))+'</div>'; }).join("");
-    aiMsg(W,'🔬 <b>Audit — '+sc(d)+'/100</b> · critique only, nothing was changed'+esc(byokNote(bk,viaOai,d))+
+    var bench=(typeof d.benchmark==="string"&&d.benchmark.trim())?'<div class="hint" style="margin:6px 0"><b>The bar for this posting:</b> '+esc(d.benchmark)+'</div>':"";
+    var flg=(d.flags||[]).slice(0,3).map(function(x){ x=x||{}; return '<div class="ko" style="margin:4px 0"><b>⚑ '+esc(String(x.flag||""))+'</b>'+(x.cost?'<div class="hint" style="margin-top:2px">'+esc(String(x.cost))+'</div>':"")+(x.fix?'<div class="hint" style="margin-top:2px"><b>Fix:</b> '+esc(String(x.fix))+'</div>':"")+'</div>'; }).join("");
+    aiMsg(W,'🔬 <b>Audit — '+sc(d)+'/100</b> · critique only, nothing was changed'+esc(byokNote(bk,viaOai,d))+bench+(flg?'<div style="margin:7px 0 2px"><b>Ten-second red flags (AI read)</b></div>'+flg:"")+
       lens("ATS",d.ats)+lens("Recruiter",d.recruiter)+lens("Hiring manager",d.hiring)+
       (miss?'<div style="margin:7px 0 2px"><b>Missing hiring signals</b><br>'+miss+'</div>':"")+
       (str?'<div style="margin:7px 0 2px"><b>Strengths</b> '+str+'</div>':"")+
@@ -3181,7 +3367,7 @@ document.addEventListener("input",e=>{ const id=e.target&&e.target.id;
     if(cd2&&cd2.dataset&&cd2.dataset.dirty==="1"){ aiMsg("aiClMsg","You started manual edits while AI was working — nothing was applied, so they stay safe."); return; }
     var nw=(typeof d.cover==="string")?deSlop(d.cover.trim()):"";
     nw=nw.replace(/^(?:Application for [^\n]*\n+)?(?:Dear [^\n]*\n+)?/,"").trim();   /* a disobedient model's own salutation would DOUBLE the re-attached pre */
-    if(!nw){ aiMsg("aiClMsg",(d&&d._v===2)?"The server-side truthfulness guard rejected the AI version — the deterministic letter stands.":"The AI backend returned an unexpected shape — it may need a re-deploy. The deterministic letter stands."); return; }
+    if(!nw){ aiMsg("aiClMsg",esc(((d&&d._v===2)?aiDropMsg(d):"The AI backend returned an unexpected shape — it may need a re-deploy.")+(byokNote(bk,viaOai,d)||"")+" The deterministic letter stands.")); return; }
     var sc=sumContext(); var allowed=digitRuns(sc.src+" "+pre+" "+prose+" "+String(Math.round(sc.years*10)/10));   /* pre stays part of the visible letter — its digits (role "SDE 2", "Next24Tech") are legit */
     if(!slopFree(nw,sc.src+" "+prose)||nw.length<200||nw.length>2600||!digitRuns(nw).every(function(x){return allowed.indexOf(x)>=0;})){
       aiMsg("aiClMsg","The guardrail rejected the AI version (changed numbers or slop wording) — the deterministic letter stands."); return; }
